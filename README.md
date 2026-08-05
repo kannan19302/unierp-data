@@ -1,46 +1,27 @@
 # unierp-data
 
-**Layer 2** of the UniERP layered repository architecture
-(`PLATFORM_ARCHITECTURE.md` § 4.2). Publishes `@unerp/database`.
+**Layer L2 — Runtime** of the [UniERP](../unierp-platform) platform.
+Depends on: L0.
 
-Depends on: L0 (`@unerp/contracts`).
+## What this is
 
-## What lives here
+The Prisma multi-file schema, migrations, RLS policies, seeds, and the tenant-isolation test generator.
 
-The Prisma multi-file schema, migrations, RLS policies, seeds, and the
-tenant-isolation test generator.
+## The invariant this repository owns
 
-## Why it is its own repository
+**This repository owns the only layer of tenant isolation that is proof rather than convention:** RLS `ENABLE` and `FORCE` on every tenant table, an application role that is `NOBYPASSRLS`, and a generated two-tenant test per table. Isolation tests must connect as the *application* role — a test run as the owner passes against a table with no policy at all.
 
-> "The data model versions independently of the code that uses it."
-> — § 4.2
+## The rule that applies everywhere
 
-`@unerp/database` can ship a migration *ahead* of the API that uses it, which is
-exactly what expand → migrate → contract requires (§ 4.3). A migration must stay
-backward-compatible for one full train (§ 9), because that property is what lets
-a rollback be one manifest rather than a database restore.
+A repository may depend only on published artifacts of a **strictly lower
+layer** — never sideways within a layer, never upward. A cycle is not
+discouraged; it is unrepresentable, because the lower layer's package cannot
+name the higher one.
 
-## The guarantee this repository owns
+See the [platform overview](../unierp-platform/README.md) for the full map, and
+[`PLATFORM_ARCHITECTURE.md`](../ERPSys/docs/PLATFORM_ARCHITECTURE.md) § 4.2 for
+the reasoning.
 
-Layer 4 of the four-layer tenant isolation model — **the only layer that is
-proof rather than convention** (§ 5.1):
+## Licence
 
-- every tenant table carries `tenant_id`
-- RLS `ENABLE` **and** `FORCE`, so the table owner is not exempt
-- the application role is `NOBYPASSRLS`
-- a two-tenant isolation test is *generated* per table, not hand-written
-
-**Isolation tests must connect as the application role.** The migration/seed
-role is a superuser, and a superuser bypasses RLS outright — a two-tenant test
-run as the owner passes against a table with no policy at all, which makes it
-worse than no test.
-
-## Extraction status
-
-Extracted from the `ERPSys` monorepo as § 14 Phase 3.3, **with full history**
-(61 commits, 178 migrations) via `git-filter-repo`. History mattered here in a
-way it did not for the shallower packages: these commits are the audit trail of
-every schema change the platform has made.
-
-The monorepo copy remains authoritative until a registry exists and consumers
-are switched deliberately.
+AGPL-3.0.
