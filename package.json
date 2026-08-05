@@ -1,6 +1,6 @@
 {
   "name": "@unerp/database",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "Prisma ORM schema, client, and migrations",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,13 +32,14 @@
     "@prisma/client": "^6.2.0"
   },
   "devDependencies": {
-    "@unerp/config": "^1.0.1",
+    "@nestjs/common": "^11.1.28",
     "@types/node": "^22.0.0",
+    "@unerp/config": "^1.0.1",
     "prisma": "^6.2.0",
+    "rimraf": "^6.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^2.1.0",
-    "rimraf": "^6.0.0"
+    "vitest": "^2.1.0"
   },
   "files": [
     "dist",
