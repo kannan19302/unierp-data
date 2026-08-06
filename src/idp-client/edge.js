@@ -816,7 +816,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\UniERP\\ERPSys\\packages\\database\\src\\idp-client",
+      "value": "D:\\UniERP\\unierp-data\\src\\idp-client",
       "fromEnvVar": null
     },
     "config": {
@@ -830,7 +830,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\UniERP\\ERPSys\\packages\\database\\prisma\\idp-schema.prisma",
+    "sourceFilePath": "D:\\UniERP\\unierp-data\\prisma\\idp-schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

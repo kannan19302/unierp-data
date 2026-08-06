@@ -19,7 +19,22 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const run = (cmd) => execSync(cmd, { cwd: root, stdio: "inherit" });
+
+// `prisma generate` parses the schema, and the schema reads env("DATABASE_URL").
+// Without it the generator exits non-zero and npm fails the whole install — so
+// `npm install @unerp/database` required a database URL to be present before you
+// could even install the package that talks to the database.
+//
+// Generation does not connect to anything; it only needs the value to be
+// syntactically valid. A placeholder lets the install finish, and the real URL
+// is read at runtime as normal.
+const env = {
+  ...process.env,
+  DATABASE_URL:
+    process.env.DATABASE_URL ?? "postgresql://placeholder:placeholder@localhost:5432/placeholder",
+};
+
+const run = (cmd) => execSync(cmd, { cwd: root, stdio: "inherit", env });
 
 try {
   if (existsSync(join(root, "prisma", "schema"))) {
@@ -37,7 +52,19 @@ try {
     }
   }
 } catch (error) {
-  console.error("\n@unerp/database: prisma generate failed.");
-  console.error("The package cannot be imported until this succeeds.\n");
-  throw error;
+  // Warn loudly; do not fail the install.
+  //
+  // Generation needs a working toolchain and network, and neither is guaranteed
+  // wherever someone runs `npm install` — a locked-down CI image, an offline
+  // machine, a transient registry error. Throwing here failed the entire
+  // install, so a consumer could not even add this package to their project,
+  // and npm's cleanup then left a half-removed directory that broke the next
+  // attempt too. That is how `unierp-auth` became uninstallable.
+  //
+  // Importing without a generated client fails with a clear message of its own,
+  // and `npx prisma generate` fixes it. A loud warning beats an install that
+  // cannot complete.
+  console.warn("\n  @unerp/database: prisma generate did not complete.");
+  console.warn(`  ${String(error?.message ?? error).split("\n")[0]}`);
+  console.warn("  Run `npx prisma generate` in this package before importing it.\n");
 }

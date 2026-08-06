@@ -1,6 +1,6 @@
 {
   "name": "@unerp/database",
-  "version": "1.0.7",
+  "version": "1.0.10",
   "description": "Prisma ORM schema, client, and migrations",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "build": "node --max-old-space-size=8192 ../../node_modules/typescript/bin/tsc && node ../../scripts/copy-generated-client.mjs",
+    "build": "node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc",
     "typecheck": "node --max-old-space-size=8192 ../../node_modules/typescript/bin/tsc --noEmit",
     "db:generate": "prisma generate --schema prisma/schema && prisma generate --schema prisma/idp-schema.prisma",
     "db:migrate": "prisma migrate dev --schema prisma/schema && prisma migrate dev --schema prisma/idp-schema.prisma",
