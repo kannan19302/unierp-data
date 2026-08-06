@@ -109,12 +109,7 @@ export const prisma = basePrisma.$extends({
           return query(scopedArgs);
         }
 
-        return basePrisma.$transaction(async (tx: {
-          $executeRaw: (
-            strings: TemplateStringsArray,
-            ...values: unknown[]
-          ) => Promise<unknown>;
-        }) => {
+        return basePrisma.$transaction(async (tx) => {
           await execute(tx);
           const modelProp = getModelPropertyName(model);
           const txModel = (
@@ -200,51 +195,7 @@ export class IdpPrismaService
     await this.$disconnect();
   }
 }
-const baseIdpPrisma = new IdpPrismaClient();
-
-/**
- * The IdP client sets the RLS tenant GUC, exactly as the main client does.
- *
- * Without this it set nothing, and the identity tables it serves — user_sessions
- * above all — carry RLS with ENABLE + FORCE while the application role is
- * NOBYPASSRLS. Every query returned zero rows rather than an error, so
- * JwtAuthGuard's session-revocation check found no session and rejected EVERY
- * authenticated request with "Session has been revoked or expired" while the row
- * sat in the table, active and unexpired.
- *
- * That made authentication impossible against a correctly-secured database. It
- * only appeared to work where RLS was unenforced or the connection was the table
- * owner — which is to say, it worked in exactly the environments where the
- * isolation guarantee was not real.
- *
- * Unlike the main client this deliberately does NOT inject tenantId into the
- * where clause: the IdP schema's models are keyed differently and some identity
- * lookups are legitimately by primary key. The GUC is what RLS reads, and RLS is
- * the layer that constitutes proof.
- */
-export const idpPrisma = baseIdpPrisma.$extends({
-  query: {
-    async $allOperations({ model, operation, args, query }) {
-      const session = getTenantSession();
-      if (!session || !model) return query(args);
-
-      // set_config(..., true) is TRANSACTION-local. Issued on its own it applies
-      // to the implicit transaction of that one statement and is gone before the
-      // next query runs — so the GUC was being set and immediately discarded,
-      // and RLS still saw no tenant. The setting and the query have to share one
-      // transaction, which is why the operation is re-issued on the transaction
-      // client rather than passed through.
-      return baseIdpPrisma.$transaction(async (tx) => {
-        await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${session.tenantId}, true)`;
-        const delegate = (tx as unknown as Record<string, unknown>)[
-          getModelPropertyName(model)
-        ] as Record<string, (a: unknown) => Promise<unknown>> | undefined;
-        if (!delegate?.[operation]) return query(args);
-        return delegate[operation](args);
-      });
-    },
-  },
-}) as unknown as typeof baseIdpPrisma;
+export const idpPrisma = new IdpPrismaClient();
 
 export { Prisma as IdpPrismaTypes } from "./idp-client/index.js";
 export * as IdpModels from "./idp-client/index.js";

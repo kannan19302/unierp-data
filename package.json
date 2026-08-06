@@ -1,6 +1,6 @@
 {
   "name": "@unerp/database",
-  "version": "1.0.10",
+  "version": "1.0.13",
   "description": "Prisma ORM schema, client, and migrations",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -12,11 +12,10 @@
   },
   "scripts": {
     "build": "node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc",
-    "typecheck": "node --max-old-space-size=8192 ../../node_modules/typescript/bin/tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate --schema prisma/schema && prisma generate --schema prisma/idp-schema.prisma",
     "db:migrate": "prisma migrate dev --schema prisma/schema && prisma migrate dev --schema prisma/idp-schema.prisma",
     "db:deploy": "prisma migrate deploy --schema prisma/schema && prisma migrate deploy --schema prisma/idp-schema.prisma",
-    "db:push": "node ../../scripts/forbid-db-push.mjs",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo.ts",
     "db:seed:platform": "tsx prisma/seed-platform.ts",
@@ -29,13 +28,14 @@
     "postinstall": "node scripts/postinstall.mjs"
   },
   "dependencies": {
-    "@prisma/client": "^6.2.0"
+    "@prisma/client": "^6.2.0",
+    "@prisma/config": "^6.19.3",
+    "prisma": "^6.2.0"
   },
   "devDependencies": {
     "@nestjs/common": "^11.1.28",
     "@types/node": "^22.0.0",
-    "@unerp/config": "^1.0.1",
-    "prisma": "^6.2.0",
+    "@unerp/config": "^1.0.2",
     "rimraf": "^6.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",

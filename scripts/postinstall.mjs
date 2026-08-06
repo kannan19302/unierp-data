@@ -14,6 +14,7 @@
 // './idp-client/index.js' relative to ITSELF, so the output is copied alongside
 // the compiled entrypoint.
 import { execSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { existsSync, rmSync, cpSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,16 +35,48 @@ const env = {
     process.env.DATABASE_URL ?? "postgresql://placeholder:placeholder@localhost:5432/placeholder",
 };
 
-const run = (cmd) => execSync(cmd, { cwd: root, stdio: "inherit", env });
+// Resolve the Prisma CLI from this package's own dependency tree — never `npx`.
+//
+// `npx prisma` looks for a local binary and, not finding one, **downloads the
+// latest from the network**. Installed as a dependency of another project this
+// package has no devDependencies of its own, so `npx` fetched Prisma 7.9.1
+// against a schema written for 6.x and failed validation:
+//
+//   error: The datasource property `url` is no longer supported in schema files
+//
+// The install then completed "successfully" with no generated client, and the
+// consumer failed 2,323 times at typecheck on missing model types. A build step
+// whose tool version is decided by whatever the registry published this morning
+// is not a build step. `prisma` is a runtime dependency of this package for
+// exactly this reason, and this resolves the binary it installed.
+const prismaBin = (() => {
+  const local = join(root, "node_modules", ".bin", "prisma");
+  if (existsSync(local) || existsSync(`${local}.cmd`)) return JSON.stringify(local);
+  try {
+    // Hoisted into the consumer's tree, which is the usual npm layout.
+    const pkg = createRequire(import.meta.url).resolve("prisma/package.json");
+    return JSON.stringify(join(dirname(pkg), "build", "index.js"));
+  } catch {
+    return null;
+  }
+})();
+
+const run = (args) => {
+  if (!prismaBin) throw new Error("the prisma CLI is not resolvable from this package");
+  const cmd = prismaBin.endsWith('index.js"')
+    ? `node ${prismaBin} ${args}`
+    : `${prismaBin} ${args}`;
+  execSync(cmd, { cwd: root, stdio: "inherit", env });
+};
 
 try {
   if (existsSync(join(root, "prisma", "schema"))) {
-    run("npx prisma generate --schema prisma/schema");
+    run("generate --schema prisma/schema");
   }
 
   const idpSchema = join(root, "prisma", "idp-schema.prisma");
   if (existsSync(idpSchema)) {
-    run("npx prisma generate --schema prisma/idp-schema.prisma");
+    run("generate --schema prisma/idp-schema.prisma");
     const from = join(root, "src", "idp-client");
     const to = join(root, "dist", "idp-client");
     if (existsSync(from) && existsSync(join(root, "dist"))) {
