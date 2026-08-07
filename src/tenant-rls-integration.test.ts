@@ -210,6 +210,15 @@ describeDb("RLS: Role and policy baseline", () => {
     expect(role.rolbypassrls).toBe(false);
   });
 
+  // A tenant-scoped table carries its tenant column under one of two names:
+  // snake_case `tenant_id` (mapped via @map) or camelCase `tenantId` (no map).
+  // Phase A05 (RLS coverage sweep) found that every prior gate only matched
+  // `tenant_id`, so all 16 camelCase tables were invisible and shipped with no
+  // RLS at all. These two queries must cover BOTH spellings, or the suite
+  // recreates the exact blind spot that caused the leak.
+  const TENANT_COLUMN =
+    `column_name IN ('tenant_id', 'tenantId')`;
+
   it("every tenant-scoped table has RLS enabled and forced", async () => {
     if (isSuperuser) return;
     const missingRls = await prisma.$queryRawUnsafe<Array<{ relname: string }>>(
@@ -220,7 +229,7 @@ describeDb("RLS: Role and policy baseline", () => {
          AND c.relname != '_prisma_migrations'
          AND EXISTS (
            SELECT 1 FROM information_schema.columns
-           WHERE table_schema = 'public' AND table_name = c.relname AND column_name = 'tenant_id'
+           WHERE table_schema = 'public' AND table_name = c.relname AND ${TENANT_COLUMN}
          )
          AND (c.relrowsecurity = false OR c.relforcerowsecurity = false)`,
     );
@@ -239,7 +248,7 @@ describeDb("RLS: Role and policy baseline", () => {
          AND c.relname != '_prisma_migrations'
          AND EXISTS (
            SELECT 1 FROM information_schema.columns
-           WHERE table_schema = 'public' AND table_name = c.relname AND column_name = 'tenant_id'
+           WHERE table_schema = 'public' AND table_name = c.relname AND ${TENANT_COLUMN}
          )
          AND NOT EXISTS (
            SELECT 1 FROM pg_policies p
@@ -502,5 +511,68 @@ describeDb("RLS: Write isolation (update and delete)", () => {
         expect(customer!.tenantId).toBe(TENANT_B);
       },
     );
+  });
+});
+
+describeDb("RLS: camelCase tenantId tables (Phase A05)", () => {
+  // Phase A05 (RLS coverage sweep) found 16 tables whose tenant column is the
+  // camelCase `tenantId` (their schema models lack @map("tenant_id")), so every
+  // prior `tenant_id`-only gate skipped them and they shipped with rls=false.
+  // This suite proves the fix mechanically over one of those tables, using the
+  // same non-bypass app role and raw SQL as the main isolation proof.
+  const CAMEL_TABLE = "tenant_lifecycle_events";
+
+  beforeAll(async () => {
+    if (!databaseAvailable) return;
+    await prisma.$executeRawUnsafe(
+      `DELETE FROM "${CAMEL_TABLE}" WHERE "tenantId" IN ($1, $2)`,
+      TENANT_A,
+      TENANT_B,
+    );
+  });
+
+  afterAll(async () => {
+    await prisma.$executeRawUnsafe(
+      `DELETE FROM "${CAMEL_TABLE}" WHERE "tenantId" IN ($1, $2)`,
+      TENANT_A,
+      TENANT_B,
+    );
+  });
+
+  it("seeds a row for each tenant in the camelCase table", async () => {
+    await asTenant(TENANT_A, (tx) =>
+      tx.$executeRawUnsafe(
+        `INSERT INTO "${CAMEL_TABLE}" (id, "tenantId", "eventType", "status", "initiatedBy")
+         VALUES (gen_random_uuid(), $1, 'EXPORT', 'COMPLETED', 'system')`,
+        TENANT_A,
+      ),
+    );
+    await asTenant(TENANT_B, (tx) =>
+      tx.$executeRawUnsafe(
+        `INSERT INTO "${CAMEL_TABLE}" (id, "tenantId", "eventType", "status", "initiatedBy")
+         VALUES (gen_random_uuid(), $1, 'EXPORT', 'COMPLETED', 'system')`,
+        TENANT_B,
+      ),
+    );
+  });
+
+  it("tenant A cannot read tenant B's camelCase row", async () => {
+    const rows = await asTenant(TENANT_A, (tx) =>
+      tx.$queryRawUnsafe<Array<{ id: string }>>(
+        `SELECT id FROM "${CAMEL_TABLE}" WHERE "tenantId" = $1`,
+        TENANT_B,
+      ),
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("tenant A sees its own camelCase row", async () => {
+    const rows = await asTenant(TENANT_A, (tx) =>
+      tx.$queryRawUnsafe<Array<{ id: string }>>(
+        `SELECT id FROM "${CAMEL_TABLE}" WHERE "tenantId" = $1`,
+        TENANT_A,
+      ),
+    );
+    expect(rows).toHaveLength(1);
   });
 });

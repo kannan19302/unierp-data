@@ -24,3 +24,45 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
         if: hashFiles('tsconfig.json') != ''
+
+  # Phase A05 — RLS coverage sweep. A hard, blocking gate: a schema-declared
+  # tenant table without RLS + FORCE + a tenant_isolation_<table> policy, or a
+  # DB table carrying a tenant column without RLS, fails the build. This is the
+  # mechanism that replaced the point-in-time catalogue loop — it re-derives the
+  # expected tenant tables from the schema on every run, so it cannot go stale.
+  # It runs against a live Postgres 16 service because it inspects pg_policies,
+  # which no static analysis can do.
+  rls:
+    name: RLS verification
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: unerp_dev
+          POSTGRES_USER: unerp
+          POSTGRES_PASSWORD: unerp_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U unerp -d unerp_dev"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://unerp:unerp_password@localhost:5432/unerp_dev?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy --schema prisma/schema
+
+      - name: RLS verification (schema-derived, per-table, zero exemptions)
+        run: node scripts/check-rls-verify.mjs
+
+      - name: RLS proof suite (two-tenant isolation over the non-bypass role)
+        run: npx vitest run src/tenant-rls-integration.test.ts
