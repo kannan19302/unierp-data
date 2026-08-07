@@ -25,7 +25,27 @@ function getModelPropertyName(modelName: string): string {
   return modelName.charAt(0).toLowerCase() + modelName.slice(1);
 }
 
-export const prisma = basePrisma.$extends({
+/**
+ * Apply the tenant-context extension to a Prisma client.
+ *
+ * Factored out so the IdP client gets the identical treatment rather than a
+ * second copy that drifts. `base` is the client the extension falls back to for
+ * interactive-transaction plumbing — it must be the same unextended client the
+ * extension is being applied to, or `_createItxClient` operates on the wrong
+ * connection.
+ */
+function withTenantContext<T extends object>(base: T): T {
+  return (base as unknown as { $extends: (ext: unknown) => T }).$extends(
+    tenantContextExtension(base as unknown as ItxCapableClient),
+  );
+}
+
+type ItxCapableClient = {
+  $transaction: <R>(fn: (tx: Record<string, unknown>) => Promise<R>) => Promise<R>;
+  _createItxClient?: (tx: unknown) => unknown;
+};
+
+const tenantContextExtension = (basePrisma: ItxCapableClient) => ({
   query: {
     $allModels: {
       async $allOperations({
@@ -109,8 +129,8 @@ export const prisma = basePrisma.$extends({
           return query(scopedArgs);
         }
 
-        return basePrisma.$transaction(async (tx) => {
-          await execute(tx);
+        return basePrisma.$transaction(async (tx: Record<string, unknown>) => {
+          await execute(tx as unknown as Parameters<typeof execute>[0]);
           const modelProp = getModelPropertyName(model);
           const txModel = (
             tx as unknown as Record<
@@ -134,7 +154,9 @@ export const prisma = basePrisma.$extends({
       },
     },
   },
-}) as unknown as PrismaClient;
+});
+
+export const prisma = withTenantContext(basePrisma) as unknown as PrismaClient;
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
@@ -195,7 +217,29 @@ export class IdpPrismaService
     await this.$disconnect();
   }
 }
-export const idpPrisma = new IdpPrismaClient();
+/**
+ * The IdP client carries the same tenant-context extension as the main one.
+ *
+ * It used to be a bare `new IdpPrismaClient()`, which meant
+ * `runWithTenantSession` had no effect on it: the session is held in an
+ * AsyncLocalStorage and only the **extension** turns it into
+ * `set_config('app.current_tenant_id', …)`. Every `idpPrisma` query therefore
+ * reached Postgres with no tenant GUC.
+ *
+ * That was invisible for as long as the application connected as the database
+ * owner, because the owner is a superuser and a superuser bypasses RLS
+ * outright. Running as `unerp_api` (NOBYPASSRLS) — which § 5.1 requires, and
+ * which the container stack was the first thing to actually do — every
+ * tenant-scoped read through this client returned nothing. Login failed with
+ * "Invalid credentials" against a user row that was present, ACTIVE and
+ * correctly hashed, because RLS was hiding it from the query that looked for
+ * it.
+ *
+ * § 5.2 gives the IdP its own realm; it does not exempt it from § 5.1.
+ */
+export const idpPrisma = withTenantContext(
+  new IdpPrismaClient(),
+) as unknown as IdpPrismaClient;
 
 export { Prisma as IdpPrismaTypes } from "./idp-client/index.js";
 export * as IdpModels from "./idp-client/index.js";
