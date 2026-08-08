@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaClient as IdpPrismaClient } from "../src/idp-client/index.js";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
@@ -39,6 +40,7 @@ import { resolve } from "node:path";
  */
 
 const prisma = new PrismaClient();
+const idpPrisma = new IdpPrismaClient();
 
 /** Reserved control-plane tenant. Never a customer; never billed or listed. */
 export const PLATFORM_TENANT_ID = "platform";
@@ -89,7 +91,7 @@ async function main() {
 
   const roleIds: Record<string, string> = {};
   for (const [key, role] of Object.entries(PLATFORM_ROLES)) {
-    const dbRole = await prisma.role.upsert({
+    const dbRole = await idpPrisma.role.upsert({
       where: { tenantId_name: { tenantId: tenant.id, name: role.name } },
       update: { permissions: JSON.stringify(role.permissions) },
       create: {
@@ -117,7 +119,7 @@ async function main() {
   // The account must already exist and must already belong to the reserved
   // tenant. This script grants authority; it does not mint identities, and it
   // will not quietly promote a customer's user into platform staff.
-  const staff = await prisma.user.findFirst({
+  const staff = await idpPrisma.user.findFirst({
     where: { email: staffEmail, tenantId: tenant.id },
   });
   if (!staff) {
@@ -128,7 +130,7 @@ async function main() {
     );
   }
 
-  await prisma.userRole.upsert({
+  await idpPrisma.userRole.upsert({
     where: {
       userId_roleId: { userId: staff.id, roleId: roleIds.PLATFORM_OWNER! },
     },

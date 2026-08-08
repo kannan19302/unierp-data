@@ -870,6 +870,24 @@ model SaasFeatureFlag {
   @@map("saas_feature_flags")
 }
 
+model TenantFeatureOverride {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  featureKey      String    @map("feature_key")
+  overrideType    String    @default("FLAG") // FLAG or LIMIT
+  isEnabled       Boolean?  @map("is_enabled")
+  limitValue      Int?      @map("limit_value")
+  reason          String    @db.Text
+  expiresAt       DateTime? @map("expires_at")
+  overriddenBy    String    @map("overridden_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, featureKey])
+  @@index([expiresAt])
+  @@map("tenant_feature_overrides")
+}
+
 model SaasTenantSetting {
   id        String   @id @default(cuid())
   tenantId  String   @map("tenant_id")

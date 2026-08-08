@@ -2,7 +2,10 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import { seedWebTemplates } from "./seed-web-templates";
 
+import { PrismaClient as IdpPrismaClient } from "../src/idp-client/index.js";
+
 const prisma = new PrismaClient();
+const idpPrisma = new IdpPrismaClient();
 
 // Pre-hashed password for 'admin123' using bcrypt (verified with bcryptjs@2.x)
 // To regenerate: node -e "require('bcryptjs').hash('admin123',10).then(console.log)"
@@ -81,6 +84,16 @@ async function withTenantContext<T>(
   });
 }
 
+async function withIdpTenantContext<T>(
+  tenantId: string,
+  fn: (tx: any) => Promise<T>,
+): Promise<T> {
+  return idpPrisma.$transaction(async (tx: any) => {
+    await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, true)`;
+    return fn(tx);
+  });
+}
+
 async function main() {
   console.log("🌱 Starting database seeding...");
 
@@ -101,7 +114,7 @@ async function main() {
   // 2. Create Default Roles
   const rolesMap: Record<string, string> = {};
   for (const [key, role] of Object.entries(DEFAULT_ROLES)) {
-    const dbRole = await prisma.role.upsert({
+    const dbRole = await idpPrisma.role.upsert({
       where: {
         tenantId_name: {
           tenantId: tenant.id,
@@ -124,7 +137,7 @@ async function main() {
   console.log("System roles upserted.");
 
   // 3. Create Super Admin User
-  const adminUser = await withTenantContext(tenant.id, (tx) =>
+  const adminUser = await withIdpTenantContext(tenant.id, (tx) =>
     tx.user.upsert({
       where: {
         tenantId_email: {
@@ -148,7 +161,7 @@ async function main() {
   // Assign Super Admin Role to User
   const superAdminRoleId = rolesMap["SUPER_ADMIN"];
   if (superAdminRoleId) {
-    await prisma.userRole.upsert({
+    await idpPrisma.userRole.upsert({
       where: {
         userId_roleId: {
           userId: adminUser.id,
@@ -965,12 +978,12 @@ async function main() {
   // checking existence by tenantId alone misses a stray row left over from a
   // prior tenant (e.g. after a manual wipe that recreated the tenant with a
   // new id), which then fails this create with P2002 instead of skipping it.
-  const existingApiKey = await prisma.apiKey.findFirst({
+  const existingApiKey = await idpPrisma.apiKey.findFirst({
     where: { hashedKey: "d3b07384d113edec49eaa6238ad5ff00" },
   });
   if (!existingApiKey) {
     // Phase 16: API Platform & Integrations
-    const apiKey = await prisma.apiKey.create({
+    const apiKey = await idpPrisma.apiKey.create({
       data: {
         tenantId: tenant.id,
         name: "Read-only API Key",

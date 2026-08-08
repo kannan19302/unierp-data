@@ -1552,8 +1552,8 @@ model ApiKeyScope {
   id        String   @id @default(cuid())
   tenantId  String   @map("tenant_id")
   apiKeyId  String   @map("api_key_id")
-  resource  String   // e.g. "finance.invoice", "crm.contact"
-  action    String   // read, write, admin
+  resource  String // e.g. "finance.invoice", "crm.contact"
+  action    String // read, write, admin
   createdAt DateTime @default(now()) @map("created_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -1564,14 +1564,14 @@ model ApiKeyScope {
 }
 
 model ApiUsageMetric {
-  id        String   @id @default(cuid())
-  tenantId  String   @map("tenant_id")
-  apiKeyId  String?  @map("api_key_id")
-  endpoint  String
-  method    String   // GET, POST, PUT, DELETE
-  statusCode Int     @map("status_code")
-  responseMs Int     @map("response_ms")
-  createdAt DateTime @default(now()) @map("created_at")
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  apiKeyId   String?  @map("api_key_id")
+  endpoint   String
+  method     String // GET, POST, PUT, DELETE
+  statusCode Int      @map("status_code")
+  responseMs Int      @map("response_ms")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -1582,17 +1582,17 @@ model ApiUsageMetric {
 }
 
 model EndpointRegistry {
-  id          String   @id @default(cuid())
-  tenantId    String   @map("tenant_id")
-  path        String
-  method      String   // GET, POST, PUT, DELETE, PATCH
-  module      String   // finance, hr, crm, etc.
-  description String?  @db.Text
-  authRequired Boolean @default(true) @map("auth_required")
-  rateLimit    Int?    @default(60) @map("rate_limit")
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  path         String
+  method       String // GET, POST, PUT, DELETE, PATCH
+  module       String // finance, hr, crm, etc.
+  description  String?  @db.Text
+  authRequired Boolean  @default(true) @map("auth_required")
+  rateLimit    Int?     @default(60) @map("rate_limit")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -1619,8 +1619,8 @@ model LanguageOverride {
 model Locale {
   id        String   @id @default(cuid())
   tenantId  String   @map("tenant_id")
-  code      String   // en, es, fr, ar, zh, hi, ja, de
-  name      String   // English, Español, Français, العربية
+  code      String // en, es, fr, ar, zh, hi, ja, de
+  name      String // English, Español, Français, العربية
   direction String   @default("ltr") // ltr, rtl
   isActive  Boolean  @default(true) @map("is_active")
   isDefault Boolean  @default(false) @map("is_default")
@@ -1628,9 +1628,9 @@ model Locale {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant           Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  translations     TranslationEntry[]
-  formattingRules  LocaleFormattingRule[]
+  tenant          Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  translations    TranslationEntry[]
+  formattingRules LocaleFormattingRule[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -1640,14 +1640,14 @@ model Locale {
 model TranslationKey {
   id          String   @id @default(cuid())
   tenantId    String   @map("tenant_id")
-  key         String   // e.g. "dashboard.welcome"
-  module      String   // e.g. "finance", "hr"
+  key         String // e.g. "dashboard.welcome"
+  module      String // e.g. "finance", "hr"
   description String?  @db.Text
   isDynamic   Boolean  @default(false) @map("is_dynamic")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   translations TranslationEntry[]
 
   @@unique([tenantId, key])
@@ -1657,14 +1657,14 @@ model TranslationKey {
 }
 
 model TranslationEntry {
-  id          String   @id @default(cuid())
-  tenantId    String   @map("tenant_id")
-  localeId    String   @map("locale_id")
-  keyId       String   @map("key_id")
-  value       String   @db.Text
-  isOverride  Boolean  @default(false) @map("is_override")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  localeId   String   @map("locale_id")
+  keyId      String   @map("key_id")
+  value      String   @db.Text
+  isOverride Boolean  @default(false) @map("is_override")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   locale Locale         @relation(fields: [localeId], references: [id], onDelete: Cascade)
@@ -1678,16 +1678,16 @@ model TranslationEntry {
 }
 
 model TranslationImport {
-  id            String   @id @default(cuid())
-  tenantId      String   @map("tenant_id")
-  localeCode    String   @map("locale_code")
-  fileName      String   @map("file_name")
-  totalEntries  Int      @default(0) @map("total_entries")
-  importedCount Int      @default(0) @map("imported_count")
-  skippedCount  Int      @default(0) @map("skipped_count")
-  status        String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
-  errorLog      String?  @map("error_log") @db.Text
-  createdAt     DateTime @default(now()) @map("created_at")
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  localeCode    String    @map("locale_code")
+  fileName      String    @map("file_name")
+  totalEntries  Int       @default(0) @map("total_entries")
+  importedCount Int       @default(0) @map("imported_count")
+  skippedCount  Int       @default(0) @map("skipped_count")
+  status        String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  errorLog      String?   @map("error_log") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at")
   completedAt   DateTime? @map("completed_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -1697,18 +1697,18 @@ model TranslationImport {
 }
 
 model LocaleFormattingRule {
-  id            String   @id @default(cuid())
-  tenantId      String   @map("tenant_id")
-  localeId      String   @map("locale_id")
-  dateFormat    String   @default("YYYY-MM-DD") @map("date_format")
-  timeFormat    String   @default("HH:mm") @map("time_format")
-  numberFormat  String   @default("#,##0.00") @map("number_format")
-  currencyCode  String   @default("USD") @map("currency_code")
-  currencySymbol String  @default("$") @map("currency_symbol")
-  firstDayOfWeek Int     @default(0) @map("first_day_of_week") // 0=Sunday
-  timezone      String   @default("UTC")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  localeId       String   @map("locale_id")
+  dateFormat     String   @default("YYYY-MM-DD") @map("date_format")
+  timeFormat     String   @default("HH:mm") @map("time_format")
+  numberFormat   String   @default("#,##0.00") @map("number_format")
+  currencyCode   String   @default("USD") @map("currency_code")
+  currencySymbol String   @default("$") @map("currency_symbol")
+  firstDayOfWeek Int      @default(0) @map("first_day_of_week") // 0=Sunday
+  timezone       String   @default("UTC")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   locale Locale @relation(fields: [localeId], references: [id], onDelete: Cascade)
@@ -1737,7 +1737,7 @@ model OfflineSyncQueue {
 model SaaSPlan {
   id            String   @id @default(cuid())
   name          String
-  stripePriceId String   @unique @map("stripe_price_id")
+  stripePriceId String?  @unique @map("stripe_price_id")
   maxUsers      Int      @map("max_users")
   maxStorage    Int      @map("max_storage") // In MB
   maxApiCalls   Int      @default(10000) @map("max_api_calls")
@@ -1745,7 +1745,9 @@ model SaaSPlan {
   description   String?
   isPublic      Boolean  @default(true) @map("is_public")
   sortOrder     Int      @default(0) @map("sort_order")
-  status        String   @default("ACTIVE") // ACTIVE, ARCHIVED, COMING_SOON
+  status        String   @default("ACTIVE") // ACTIVE, ARCHIVED, COMING_SOON, GRANDFATHERED
+  version       Int      @default(1)
+  supersededBy  String?  @map("superseded_by")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -1793,6 +1795,19 @@ model UsageRecord {
   @@unique([tenantId, metric])
   @@index([tenantId])
   @@map("usage_records")
+}
+
+model MeteringEvent {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  metric         String // STORAGE_MB, API_CALLS_COUNT, etc.
+  quantity       Int
+  idempotencyKey String   @unique @map("idempotency_key")
+  source         String
+  timestamp      DateTime @default(now())
+
+  @@index([tenantId, metric])
+  @@map("metering_events")
 }
 
 model SaaSCoupon {
@@ -1900,14 +1915,15 @@ model AppStorageUsage {
 }
 
 model SaaSPlanPrice {
-  id        String   @id @default(cuid())
-  planId    String   @map("plan_id")
-  currency  String   @default("USD")
-  region    String   @default("US") // US, EU, APAC, LATAM
-  monthly   Decimal  @default(0) @db.Decimal(15, 2)
-  yearly    Decimal  @default(0) @db.Decimal(15, 2)
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
+  id            String   @id @default(cuid())
+  planId        String   @map("plan_id")
+  currency      String   @default("USD")
+  region        String   @default("US") // US, EU, APAC, LATAM
+  monthly       Decimal  @default(0) @db.Decimal(15, 2)
+  yearly        Decimal  @default(0) @db.Decimal(15, 2)
+  stripePriceId String?  @map("stripe_price_id")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   plan SaaSPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
