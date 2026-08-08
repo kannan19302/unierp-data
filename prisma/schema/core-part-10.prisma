@@ -1000,6 +1000,37 @@ model ControlPlaneReviewTask {
   @@map("control_plane_review_tasks")
 }
 
+/// Records a tenant's explicit consent for support staff to impersonate them.
+model TenantConsent {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  grantedBy   String   @map("granted_by")
+  status      String   @default("ACTIVE") // ACTIVE, REVOKED, EXPIRED
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("tenant_consents")
+}
+
+/// Tracks an active or historical impersonation session by support staff.
+model ImpersonationSession {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  impersonatorId   String   @map("impersonator_id")
+  targetUserId     String   @map("target_user_id")
+  consentId        String   @map("consent_id")
+  status           String   @default("ACTIVE") // ACTIVE, EXPIRED
+  expiresAt        DateTime @map("expires_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  
+  @@index([tenantId])
+  @@index([impersonatorId])
+  @@map("impersonation_sessions")
+}
+
 model SaasWebhookEndpoint {
   id              String    @id @default(cuid())
   tenantId        String    @map("tenant_id")
