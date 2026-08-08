@@ -963,6 +963,43 @@ model ControlPlaneAuditLog {
   @@map("control_plane_audit_logs")
 }
 
+/// Token representing a two-person control approval.
+/// Used to authorize highly sensitive operations like tenant deletion.
+model ControlPlaneApproval {
+  id             String   @id @default(cuid())
+  requestedBy    String   @map("requested_by")
+  approvedBy     String?  @map("approved_by")
+  requestedAction String  @map("requested_action")
+  targetId       String?  @map("target_id")
+  status         String   @default("PENDING") // PENDING, APPROVED, REJECTED, USED, EXPIRED
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([requestedBy])
+  @@index([approvedBy])
+  @@index([status])
+  @@map("control_plane_approvals")
+}
+
+/// Task raised when an operator bypasses two-person control via break-glass.
+model ControlPlaneReviewTask {
+  id          String   @id @default(cuid())
+  actorId     String   @map("actor_id")
+  action      String
+  targetId    String?  @map("target_id")
+  reason      String
+  status      String   @default("OPEN") // OPEN, REVIEWED
+  reviewedBy  String?  @map("reviewed_by")
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([actorId])
+  @@map("control_plane_review_tasks")
+}
+
 model SaasWebhookEndpoint {
   id              String    @id @default(cuid())
   tenantId        String    @map("tenant_id")
