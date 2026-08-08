@@ -923,6 +923,46 @@ model SaasAuditLog {
   @@map("saas_audit_logs")
 }
 
+/// Immutable audit log for control-plane (provider) operations.
+/// Every mutation to system state (tenant lifecycle, billing, staff access) is
+/// recorded here before it is performed. The record cannot be deleted or updated;
+/// any attempt to do so via the Prisma client is a programming error.
+///
+/// Tamper-evidence: each row carries a SHA-256 hash of its own content fields
+/// (action, actorId, targetId, details, sequenceNum, previousHash) so an
+/// offline verifier can detect a modified row.
+model ControlPlaneAuditLog {
+  id          String   @id @default(cuid())
+  /// The staff actor who initiated the operation (providerUserId).
+  actorId     String   @map("actor_id")
+  /// The staff role at the time of the action.
+  actorRole   String   @map("actor_role")
+  /// Target tenant id (null for platform-wide operations).
+  targetId    String?  @map("target_id")
+  /// Action code, e.g. "tenant.provision", "tenant.suspend".
+  action      String
+  /// Free-form JSON payload with before/after where applicable.
+  details     Json     @default("{}")
+  /// Correlation identifier from the HTTP request (X-Correlation-ID header).
+  correlationId String? @map("correlation_id")
+  /// Monotonically increasing per-actor sequence for ordering.
+  sequenceNum BigInt   @default(autoincrement()) @map("sequence_num")
+  /// SHA-256 hex of (action||actorId||targetId||details||sequenceNum||previousHash).
+  contentHash String   @map("content_hash")
+  /// contentHash of the previous row for this actor (empty string for first row).
+  previousHash String  @default("") @map("previous_hash")
+  /// IP address of the provider staff member.
+  ipAddress   String?  @map("ip_address")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([actorId])
+  @@index([targetId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([sequenceNum])
+  @@map("control_plane_audit_logs")
+}
+
 model SaasWebhookEndpoint {
   id              String    @id @default(cuid())
   tenantId        String    @map("tenant_id")
