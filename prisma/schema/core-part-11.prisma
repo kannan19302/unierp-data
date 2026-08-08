@@ -1,0 +1,2183 @@
+model ValueStreamMapItem {
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  productId     String   @map("product_id")
+  mapName       String   @map("map_name")
+  stepNo        Int      @map("step_no")
+  stepName      String   @map("step_name")
+  stepType      String   @default("PROCESS") // PROCESS, INVENTORY, TRANSPORT, INSPECTION, DELAY
+  cycleTimeMin  Decimal? @map("cycle_time_min") @db.Decimal(10, 2)
+  changeoverMin Decimal? @map("changeover_min") @db.Decimal(10, 2)
+  uptimePct     Decimal? @map("uptime_pct") @db.Decimal(5, 2)
+  inventoryQty  Decimal? @map("inventory_qty") @db.Decimal(15, 3)
+  operators     Int?
+  isValueAdd    Boolean  @default(true) @map("is_value_add")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  product       Product  @relation(fields: [productId], references: [id])
+
+  @@index([tenantId])
+  @@index([productId])
+  @@map("value_stream_map_items")
+}
+
+model TpmPillar {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  code        String
+  pillarType  String   @default("AUTONOMOUS") // AUTONOMOUS, PLANNED, FOCUSED, QUALITY, TRAINING, SAFETY, TPM_OFFICE
+  description String?
+  score       Decimal? @default(0) @db.Decimal(5, 2)
+  targetScore Decimal? @default(100) @map("target_score") @db.Decimal(5, 2)
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  activities TpmPillarActivity[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("tpm_pillars")
+}
+
+model TpmPillarActivity {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  pillarId     String   @map("pillar_id")
+  title        String
+  description  String?
+  activityType String   @map("activity_type") // STEP_COMPLETION, AUDIT, MEETING, TRAINING
+  stepNo       Int?     @map("step_no")
+  score        Decimal? @db.Decimal(5, 2)
+  performedBy  String?  @map("performed_by")
+  performedAt  DateTime @default(now()) @map("performed_at")
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  pillar TpmPillar @relation(fields: [pillarId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([pillarId])
+  @@map("tpm_pillar_activities")
+}
+
+model TpmAudit5S {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  workstationId    String   @map("workstation_id")
+  auditorId        String?  @map("auditor_id")
+  sortScore        Int      @default(0) @map("sort_score") // 0-5
+  setInOrderScore  Int      @default(0) @map("set_in_order_score") // 0-5
+  shineScore       Int      @default(0) @map("shine_score") // 0-5
+  standardizeScore Int      @default(0) @map("standardize_score") // 0-5
+  sustainScore     Int      @default(0) @map("sustain_score") // 0-5
+  totalScore       Int      @default(0) @map("total_score")
+  maxScore         Int      @default(25) @map("max_score")
+  status           String   @default("PASSED") // PASSED, CONDITIONAL, FAILED
+  findings         String?
+  actionItems      Json?    @map("action_items")
+  auditedAt        DateTime @default(now()) @map("audited_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@index([workstationId])
+  @@map("tpm_audit_5s")
+}
+
+model TpmKpi {
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  pillarId      String?  @map("pillar_id")
+  workstationId String?  @map("workstation_id")
+  kpiType       String   @map("kpi_type") // OEE, AVAILABILITY, PERFORMANCE, QUALITY, MTBF, MTTR, PM_COMPLIANCE
+  value         Decimal  @db.Decimal(15, 6)
+  target        Decimal? @db.Decimal(15, 6)
+  period        String   @default("DAILY") // DAILY, WEEKLY, MONTHLY
+  recordedAt    DateTime @default(now()) @map("recorded_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@index([pillarId])
+  @@index([workstationId])
+  @@map("tpm_kpis")
+}
+
+model ContractManufacturer {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  code           String
+  name           String
+  vendorId       String    @map("vendor_id")
+  contactPerson  String?   @map("contact_person")
+  email          String?
+  phone          String?
+  address        String?
+  capabilities   Json      @default("[]")
+  certifications Json?     @default("[]")
+  rating         Decimal?  @db.Decimal(3, 2)
+  status         String    @default("ACTIVE") // ACTIVE, INACTIVE, UNDER_REVIEW
+  isApproved     Boolean   @default(false) @map("is_approved")
+  approvedAt     DateTime? @map("approved_at")
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  purchaseOrders OutsourcingPurchaseOrder[]
+  receipts       SubcontractedReceipt[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("contract_manufacturers")
+}
+
+model OutsourcingPurchaseOrder {
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  orderNo       String    @map("order_no")
+  contractMfgId String    @map("contract_mfg_id")
+  status        String    @default("DRAFT") // DRAFT, SENT, CONFIRMED, IN_PRODUCTION, SHIPPED, RECEIVED, CANCELLED
+  orderDate     DateTime  @default(now()) @map("order_date")
+  expectedDate  DateTime? @map("expected_date")
+  receivedDate  DateTime? @map("received_date")
+  shippingTerms String?   @map("shipping_terms")
+  paymentTerms  String?   @map("payment_terms")
+  totalAmount   Decimal   @default(0) @map("total_amount") @db.Decimal(15, 2)
+  notes         String?
+  createdBy     String?   @map("created_by")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  contractMfg ContractManufacturer   @relation(fields: [contractMfgId], references: [id])
+  items       OutsourcingPoItem[]
+  receipts    SubcontractedReceipt[]
+
+  @@unique([tenantId, orderNo])
+  @@index([tenantId])
+  @@index([contractMfgId])
+  @@map("outsourcing_purchase_orders")
+}
+
+model OutsourcingPoItem {
+  id          String  @id @default(cuid())
+  tenantId    String  @map("tenant_id")
+  poId        String  @map("po_id")
+  productId   String  @map("product_id")
+  quantity    Decimal @db.Decimal(15, 3)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(15, 2)
+  totalPrice  Decimal @map("total_price") @db.Decimal(15, 2)
+  receivedQty Decimal @default(0) @map("received_qty") @db.Decimal(15, 3)
+  bomId       String? @map("bom_id")
+  notes       String?
+
+  po      OutsourcingPurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  product Product                  @relation(fields: [productId], references: [id])
+
+  @@index([tenantId])
+  @@index([poId])
+  @@index([productId])
+  @@map("outsourcing_po_items")
+}
+
+model SubcontractedReceipt {
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  receiptNo     String   @map("receipt_no")
+  poId          String   @map("po_id")
+  contractMfgId String   @map("contract_mfg_id")
+  receivedAt    DateTime @default(now()) @map("received_at")
+  receivedBy    String?  @map("received_by")
+  status        String   @default("PENDING_INSPECTION") // PENDING_INSPECTION, INSPECTED, ACCEPTED, REJECTED
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  po          OutsourcingPurchaseOrder @relation(fields: [poId], references: [id])
+  contractMfg ContractManufacturer     @relation(fields: [contractMfgId], references: [id])
+
+  @@unique([tenantId, receiptNo])
+  @@index([tenantId])
+  @@index([poId])
+  @@index([contractMfgId])
+  @@map("subcontracted_receipts")
+}
+
+model DdmrpPart {
+  id                  String   @id @default(cuid())
+  tenantId            String   @map("tenant_id")
+  productId           String   @map("product_id")
+  leadTimeDays        Int      @map("lead_time_days")
+  demandTimeFenceDays Int      @default(3) @map("demand_time_fence_days")
+  ddmrpType           String   @default("STOCKED") // STOCKED, NON_STOCKED, DISTRIBUTED, MANUFACTURED
+  zone                String? // GREEN, YELLOW, RED
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  buffer  DdmrpBuffer?
+  product Product      @relation(fields: [productId], references: [id])
+
+  @@index([tenantId])
+  @@index([productId])
+  @@map("ddmrp_parts")
+}
+
+model DdmrpBuffer {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  partId          String   @unique @map("part_id")
+  greenZone       Decimal  @map("green_zone") @db.Decimal(15, 3)
+  yellowZone      Decimal  @map("yellow_zone") @db.Decimal(15, 3)
+  redZone         Decimal  @map("red_zone") @db.Decimal(15, 3)
+  topOfGreen      Decimal  @map("top_of_green") @db.Decimal(15, 3)
+  topOfYellow     Decimal  @map("top_of_yellow") @db.Decimal(15, 3)
+  topOfRed        Decimal  @map("top_of_red") @db.Decimal(15, 3)
+  currentStock    Decimal  @map("current_stock") @db.Decimal(15, 3)
+  onHand          Decimal  @map("on_hand") @db.Decimal(15, 3)
+  onOrder         Decimal  @map("on_order") @db.Decimal(15, 3)
+  qualifiedDemand Decimal  @map("qualified_demand") @db.Decimal(15, 3)
+  netFlowPosition Decimal? @map("net_flow_position") @db.Decimal(15, 3)
+  zoneStatus      String   @default("GREEN") // GREEN, YELLOW, RED, RED_ALERT
+  calculatedAt    DateTime @default(now()) @map("calculated_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  part DdmrpPart @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([partId])
+  @@map("ddmrp_buffers")
+}
+
+model DdmrpNetFlowStatus {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  partId          String   @map("part_id")
+  netFlow         Decimal  @map("net_flow") @db.Decimal(15, 3)
+  onHand          Decimal  @map("on_hand") @db.Decimal(15, 3)
+  onOrder         Decimal  @map("on_order") @db.Decimal(15, 3)
+  qualifiedDemand Decimal  @map("qualified_demand") @db.Decimal(15, 3)
+  dailyDemandRate Decimal? @map("daily_demand_rate") @db.Decimal(15, 3)
+  orderThreshold  Decimal? @map("order_threshold") @db.Decimal(15, 3)
+  suggestedOrder  Decimal? @map("suggested_order") @db.Decimal(15, 3)
+  zone            String   @default("GREEN") // GREEN, YELLOW, RED
+  recordedAt      DateTime @default(now()) @map("recorded_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@index([partId])
+  @@map("ddmrp_net_flow_statuses")
+}
+
+model DdmrpRecommendation {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  partId         String    @map("part_id")
+  recommendation String    @default("NO_ACTION") // NO_ACTION, ORDER, EXPEDITE, DELAY, CANCEL
+  priority       String    @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  quantity       Decimal?  @db.Decimal(15, 3)
+  reason         String?
+  actionType     String? // PURCHASE_ORDER, WORK_ORDER, TRANSFER
+  acknowledged   Boolean   @default(false)
+  acknowledgedBy String?   @map("acknowledged_by")
+  acknowledgedAt DateTime? @map("acknowledged_at")
+  targetDate     DateTime? @map("target_date")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@index([partId])
+  @@index([priority])
+  @@map("ddmrp_recommendations")
+}
+
+model AnalyticsReportFilter {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  reportId  String   @map("report_id")
+  field     String
+  operator  String // eq, neq, gt, gte, lt, lte, contains, in, between
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([reportId])
+  @@map("analytics_report_filters")
+}
+
+model AnalyticsDashboardWidget {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  dashboardId String   @map("dashboard_id")
+  widgetType  String   @map("widget_type") // CHART, TABLE, KPI, METRIC, TEXT
+  title       String
+  config      Json     @default("{}")
+  position    Json     @default("{}")
+  width       Int      @default(4)
+  height      Int      @default(3)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([dashboardId])
+  @@map("analytics_dashboard_widgets")
+}
+
+model AnalyticsKpiValue {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  kpiId       String   @map("kpi_id")
+  value       Decimal  @db.Decimal(15, 2)
+  periodStart DateTime @map("period_start")
+  periodEnd   DateTime @map("period_end")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  kpi KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([kpiId])
+  @@index([periodStart, periodEnd])
+  @@map("analytics_kpi_values")
+}
+
+model AnalyticsScheduledExport {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  name        String
+  description String?
+  dataset     String // invoices, products, employees, custom
+  format      String    @default("CSV") // CSV, XLSX, JSON, PDF
+  schedule    String    @default("DAILY") // DAILY, WEEKLY, MONTHLY, QUARTERLY
+  recipients  Json      @default("[]")
+  filters     Json?
+  lastRunAt   DateTime? @map("last_run_at")
+  nextRunAt   DateTime? @map("next_run_at")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@index([isActive, nextRunAt])
+  @@map("analytics_scheduled_exports")
+}
+
+model FormTemplate {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  slug        String
+  description String?
+  category    String?
+  icon        String?
+  status      String   @default("DRAFT")
+  fields      Json     @default("[]")
+  settings    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  submissions FormSubmission[]
+  fieldDefs   FormField[]
+
+  @@index([tenantId])
+  @@index([tenantId, slug])
+  @@map("form_templates")
+}
+
+model FormField {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  templateId   String   @map("template_id")
+  name         String
+  label        String?
+  fieldType    String
+  required     Boolean  @default(false)
+  placeholder  String?
+  defaultValue Json?
+  options      Json?
+  validation   Json?
+  uiConfig     Json?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  template FormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([templateId])
+  @@map("form_fields")
+}
+
+model FormSubmission {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  templateId  String   @map("template_id")
+  data        Json
+  metadata    Json?
+  status      String   @default("SUBMITTED")
+  submittedBy String?  @map("submitted_by")
+  submittedAt DateTime @default(now()) @map("submitted_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  template FormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([templateId])
+  @@map("form_submissions")
+}
+
+model FormAnalytic {
+  id                String   @id(map: "form_analytic_pkey") @default(cuid())
+  tenantId          String   @map("tenant_id")
+  templateId        String   @map("template_id")
+  totalViews        Int      @default(0) @map("total_views")
+  totalSubmissions  Int      @default(0) @map("total_submissions")
+  completionRate    Float?   @map("completion_rate")
+  avgTimeToComplete Int?     @map("avg_time_to_complete")
+  fieldStats        Json?    @map("field_stats")
+  dailyStats        Json?    @map("daily_stats")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@index([templateId])
+  @@map("form_analytic")
+}
+
+model PageTemplate {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  name           String
+  slug           String
+  description    String?
+  category       String?
+  layout         String   @default("FULL_WIDTH")
+  sections       Json     @default("[]")
+  themeOverrides Json?    @map("theme_overrides")
+  seoSettings    Json?    @map("seo_settings")
+  status         String   @default("DRAFT")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pageSections PageSection[]
+
+  @@index([tenantId])
+  @@index([tenantId, slug])
+  @@map("page_templates")
+}
+
+model PageSection {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  templateId String   @map("template_id")
+  name       String
+  type       String   @default("CUSTOM")
+  content    Json?
+  settings   Json?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  template PageTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([templateId])
+  @@map("page_sections")
+}
+
+model WorkflowDefinition {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  slug        String
+  description String?
+  category    String?
+  trigger     String   @default("MANUAL")
+  nodes       Json     @default("[]")
+  edges       Json     @default("[]")
+  settings    Json     @default("{}")
+  status      String   @default("DRAFT")
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  steps               WorkflowDefinitionStep[]
+  executions          WorkflowExecution[]
+  versions            WorkflowVersion[]
+  conditions          WorkflowCondition[]
+  loops               WorkflowLoop[]
+  parentSubprocesses  WorkflowSubprocess[]  @relation("ParentSubprocess")
+  childSubprocesses   WorkflowSubprocess[]  @relation("ChildSubprocess")
+  errorHandlers       WorkflowErrorHandler[]
+  notifications       WorkflowNotification[]
+  webhooks            WorkflowWebhook[]
+  tagAssignments      WorkflowTagAssignment[]
+  tenant              Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, slug])
+  @@map("workflow_definitions")
+}
+
+model WorkflowDefinitionStep {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  definitionId String   @map("definition_id")
+  name         String
+  type         String   @default("TASK")
+  config       Json?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  definition WorkflowDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([definitionId])
+  @@map("workflow_definition_steps")
+}
+
+model WorkflowExecution {
+  id           String    @id @default(cuid())
+  tenantId     String    @map("tenant_id")
+  definitionId String    @map("definition_id")
+  trigger      String?
+  input        Json?
+  output       Json?
+  status       String    @default("PENDING")
+  startedAt    DateTime? @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  error        String?
+  duration     Int?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  definition WorkflowDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([definitionId])
+  @@map("workflow_executions")
+}
+
+model WorkflowTransition {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  fromNodeId String   @map("from_node_id")
+  toNodeId   String   @map("to_node_id")
+  condition  Json?
+  label      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("workflow_transitions")
+}
+
+model WorkflowTask {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  instanceId      String    @map("instance_id")
+  nodeId          String    @map("node_id")
+  assigneeId      String?   @map("assignee_id")
+  assigneeRole    String?   @map("assignee_role")
+  status          String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, SKIPPED, FAILED
+  dueAt           DateTime? @map("due_at")
+  completedAt     DateTime? @map("completed_at")
+  completedBy     String?   @map("completed_by")
+  comments        String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([instanceId])
+  @@index([assigneeId])
+  @@map("workflow_tasks")
+}
+
+model WorkflowSlaRule {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  definitionId    String   @map("definition_id")
+  nodeId          String   @map("node_id")
+  slaLimitHours   Int      @map("sla_limit_hours")
+  severity        String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  notifyRoles     String?  @map("notify_roles")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("workflow_sla_rules")
+}
+
+model WorkflowEscalationRule {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  slaRuleId       String   @map("sla_rule_id")
+  escalateAfterMinutes Int  @map("escalate_after_minutes")
+  escalateToRole  String   @map("escalate_to_role")
+  escalateToUser  String?  @map("escalate_to_user")
+  notifyChannel   String   @default("EMAIL") // EMAIL, IN_APP, SMS
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("workflow_escalation_rules")
+}
+
+model WorkflowAuditLog {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  instanceId String?  @map("instance_id")
+  taskId     String?  @map("task_id")
+  action     String   // TASK_ASSIGNED, TASK_COMPLETED, SLA_BREACHED, ESCALATED
+  actorId    String?  @map("actor_id")
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([instanceId])
+  @@map("workflow_audit_logs")
+}
+
+model AiModel {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  name         String
+  provider     String   @default("ollama")
+  modelId      String   @map("model_id")
+  version      String?
+  description  String?
+  capabilities Json?    @default("[]")
+  config       Json?
+  status       String   @default("ACTIVE")
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  deployments      AiModelDeployment[]
+  tenant           Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  accuracyMetrics  AiModelAccuracyMetric[]
+
+  @@index([tenantId])
+  @@index([tenantId, provider])
+  @@map("ai_models")
+}
+
+model AiModelDeployment {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  modelId   String   @map("model_id")
+  endpoint  String?
+  apiKey    String?  @map("api_key")
+  config    Json?
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  model  AiModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([modelId])
+  @@map("ai_model_deployments")
+}
+
+model AiPrompt {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  slug        String
+  description String?
+  category    String?
+  prompt      String
+  variables   Json?
+  config      Json?
+  tags        String[]
+  isBuiltIn   Boolean  @default(false) @map("is_built_in")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, category])
+  @@map("ai_prompts")
+}
+
+model AiConversation {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  userId    String   @map("user_id")
+  title     String?
+  context   Json?
+  metadata  Json?
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  messages AiConversationMessage[]
+  tenant   Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, userId])
+  @@map("ai_conversations")
+}
+
+model AiConversationMessage {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  conversationId String   @map("conversation_id")
+  role           String   @default("user")
+  content        String
+  metadata       Json?
+  tokensUsed     Int?     @map("tokens_used")
+  modelUsed      String?  @map("model_used")
+  latency        Int?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([conversationId])
+  @@map("ai_conversation_messages")
+}
+
+model AiDocument {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  contentType String   @map("content_type")
+  content     String?
+  source      String?
+  metadata    Json?
+  status      String   @default("PROCESSED")
+  tokenCount  Int?     @map("token_count")
+  chunkCount  Int?     @default(0) @map("chunk_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  chunks AiDocumentChunk[]
+  tenant Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("ai_documents")
+}
+
+model AiDocumentChunk {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  documentId String   @map("document_id")
+  content    String
+  chunkIndex Int      @map("chunk_index")
+  tokenCount Int?     @map("token_count")
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  document AiDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([documentId])
+  @@map("ai_document_chunks")
+}
+
+model AiEmbedding {
+  id        String                      @id @default(cuid())
+  tenantId  String                      @map("tenant_id")
+  chunkId   String?                     @map("chunk_id")
+  vector    Unsupported("vector(1536)")
+  model     String
+  metadata  Json?
+  createdAt DateTime                    @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@index([chunkId])
+  @@map("ai_embeddings")
+}
+
+model AiAgent {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  name         String
+  slug         String
+  description  String?
+  systemPrompt String?  @map("system_prompt")
+  modelId      String?  @map("model_id")
+  config       Json?
+  status       String   @default("ACTIVE")
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  tools  AiAgentTool[]
+  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, slug])
+  @@map("ai_agents")
+}
+
+model AiAgentTool {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  agentId   String   @map("agent_id")
+  name      String
+  type      String   @default("FUNCTION")
+  config    Json?
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  agent AiAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([agentId])
+  @@map("ai_agent_tools")
+}
+
+model AiTrainingJob {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  name        String
+  description String?
+  modelId     String?   @map("model_id")
+  dataset     Json?
+  config      Json?
+  status      String    @default("PENDING")
+  progress    Float?    @default(0)
+  result      Json?
+  error       String?
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  runs   AiTrainingRun[]
+  tenant Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("ai_training_jobs")
+}
+
+model AiTrainingRun {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  jobId       String    @map("job_id")
+  epoch       Int       @default(0)
+  metrics     Json?
+  loss        Float?
+  accuracy    Float?
+  status      String    @default("PENDING")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  job AiTrainingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([jobId])
+  @@map("ai_training_runs")
+}
+
+model AiIntentTrainingExample {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  intent    String
+  text      String
+  language  String   @default("en")
+  confidence Float?  @default(0)
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  entities  AiNluEntity[]
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, intent])
+  @@map("ai_intent_training_examples")
+}
+
+model AiNluEntity {
+  id              String                 @id @default(cuid())
+  tenantId        String                 @map("tenant_id")
+  trainingExampleId String               @map("training_example_id")
+  entity          String
+  value           String
+  startPos        Int?                   @map("start_pos")
+  endPos          Int?                   @map("end_pos")
+  createdAt       DateTime               @default(now()) @map("created_at")
+
+  trainingExample AiIntentTrainingExample @relation(fields: [trainingExampleId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([trainingExampleId])
+  @@map("ai_nlu_entities")
+}
+
+model AiModelAccuracyMetric {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  modelId     String   @map("model_id")
+  metric      String   // accuracy, precision, recall, f1, latency
+  value       Float
+  recordedAt  DateTime @default(now()) @map("recorded_at")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  model  AiModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([modelId])
+  @@map("ai_model_accuracy_metrics")
+}
+
+model AnalyticsKpiDefinition {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  name            String
+  code            String
+  description     String?
+  formula         String   // e.g. "SUM(revenue) / COUNT(orders)"
+  target          Float?
+  unit            String?  // %, $, count, days
+  visualization   String   @default("NUMBER") // NUMBER, GAUGE, BAR, LINE, PIE
+  category        String?
+  sourceTable     String?  // e.g. "invoices", "orders"
+  sourceColumn    String?
+  isActive        Boolean  @default(true) @map("is_active")
+  config          Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  trendResults    AnalyticsTrendResult[]
+  tenant          Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, category])
+  @@map("analytics_kpi_definitions")
+}
+
+model AnalyticsTrendResult {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  kpiDefinitionId String   @map("kpi_definition_id")
+  period          String   // MONTHLY, QUARTERLY, YEARLY
+  periodStart     DateTime @map("period_start")
+  periodEnd       DateTime @map("period_end")
+  value           Float
+  previousValue   Float?
+  changePercent   Float?
+  trend           String?  // UP, DOWN, FLAT
+  metadata        Json?
+  computedAt      DateTime @default(now()) @map("computed_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  kpiDefinition AnalyticsKpiDefinition @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([kpiDefinitionId, period, periodStart, periodEnd])
+  @@index([tenantId])
+  @@index([kpiDefinitionId])
+  @@index([periodStart, periodEnd])
+  @@map("analytics_trend_results")
+}
+
+model AnalyticsCrossFilterDashboard {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  description String?
+  layout      Json     @default("[]")   // widget layout config
+  filters     Json     @default("[]")   // linked filter definitions
+  widgets     Json     @default("[]")   // chart/widget configs
+  isActive    Boolean  @default(true) @map("is_active")
+  createdBy   String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("analytics_cross_filter_dashboards")
+}
+
+model AnalyticsBiMetricDefinition {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  name            String
+  code            String
+  description     String?
+  sourceTable     String   // schema.table_name
+  sourceColumn    String   // column_name
+  aggregation     String   @default("SUM") // SUM, COUNT, AVG, MIN, MAX, DISTINCT_COUNT
+  dataType        String   @default("NUMBER") // NUMBER, CURRENCY, PERCENTAGE, STRING, DATE
+  unit            String?
+  category        String?
+  formula         String?  // custom SQL expression
+  isActive        Boolean  @default(true) @map("is_active")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, category])
+  @@map("analytics_bi_metric_definitions")
+}
+
+model ChatRoom {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  type        String   @default("GROUP")
+  description String?
+  topic       String?
+  isArchived  Boolean  @default(false) @map("is_archived")
+  isPrivate   Boolean  @default(false) @map("is_private")
+  settings    Json?
+  createdBy   String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members  ChatRoomMember[]
+  messages ChatMessage[]
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, type])
+  @@map("chat_rooms")
+}
+
+model ChatRoomMember {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  roomId    String   @map("room_id")
+  userId    String   @map("user_id")
+  role      String   @default("MEMBER")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([roomId])
+  @@index([userId])
+  @@map("chat_room_members")
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  roomId      String   @map("room_id")
+  senderId    String   @map("sender_id")
+  content     String
+  contentType String   @default("TEXT") @map("content_type")
+  metadata    Json?
+  isEdited    Boolean  @default(false) @map("is_edited")
+  isPinned    Boolean  @default(false) @map("is_pinned")
+  parentId    String?  @map("parent_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  room         ChatRoom              @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  reactions    ChatMessageReaction[]
+  readReceipts MessageReadReceipt[]
+
+  @@index([tenantId])
+  @@index([roomId])
+  @@index([senderId])
+  @@map("chat_messages")
+}
+
+model ChatMessageReaction {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  messageId String   @map("message_id")
+  userId    String   @map("user_id")
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([messageId])
+  @@map("chat_message_reactions")
+}
+
+model MessageReadReceipt {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  messageId String   @map("message_id")
+  userId    String   @map("user_id")
+  readAt    DateTime @default(now()) @map("read_at")
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([messageId])
+  @@index([userId])
+  @@map("message_read_receipts")
+}
+
+model VideoCallRoom {
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  name      String
+  roomId    String    @map("room_id")
+  type      String    @default("ONE_TO_ONE")
+  status    String    @default("ACTIVE")
+  settings  Json?
+  createdBy String    @map("created_by")
+  startedAt DateTime? @map("started_at")
+  endedAt   DateTime? @map("ended_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  participants VideoCallParticipant[]
+  tenant       Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("video_call_rooms")
+}
+
+model VideoCallParticipant {
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  callId    String    @map("call_id")
+  userId    String    @map("user_id")
+  role      String    @default("PARTICIPANT")
+  status    String    @default("JOINED")
+  joinedAt  DateTime? @map("joined_at")
+  leftAt    DateTime? @map("left_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  call VideoCallRoom @relation(fields: [callId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([callId])
+  @@map("video_call_participants")
+}
+
+model CommunicationFileShare {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  roomId     String?  @map("room_id")
+  messageId  String?  @map("message_id")
+  uploadedBy String   @map("uploaded_by")
+  name       String
+  mimeType   String   @map("mime_type")
+  size       Int
+  url        String?
+  thumbnail  String?
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([roomId])
+  @@map("communication_file_shares")
+}
+
+model Announcement {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  title       String
+  content     String
+  priority    String    @default("NORMAL")
+  status      String    @default("DRAFT")
+  createdBy   String    @map("created_by")
+  scheduledAt DateTime? @map("scheduled_at")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  targets AnnouncementTarget[]
+  tenant  Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("announcements")
+}
+
+model AnnouncementTarget {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  announcementId String   @map("announcement_id")
+  targetType     String   @default("ALL") // ALL, ROLE, DEPARTMENT, USER
+  targetId       String?  @map("target_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([announcementId])
+  @@map("announcement_targets")
+}
+
+model DriveFolder {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  name        String
+  parentId    String?   @map("parent_id")
+  ownerId     String    @map("owner_id")
+  description String?
+  color       String?
+  icon        String?
+  isStarred   Boolean   @default(false) @map("is_starred")
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  path        String?
+  size        BigInt    @default(0)
+  fileCount   Int       @default(0) @map("file_count")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  parent      DriveFolder?            @relation("DriveFolderTree", fields: [parentId], references: [id])
+  children    DriveFolder[]           @relation("DriveFolderTree")
+  permissions DriveFolderPermission[]
+  files       DriveFile[]
+  activities  DriveActivity[]
+  shares      DriveFolderShare[]
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([parentId])
+  @@index([tenantId, isDeleted])
+  @@index([tenantId, isStarred])
+  @@map("drive_folders")
+}
+
+model DriveFolderPermission {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  folderId  String   @map("folder_id")
+  userId    String   @map("user_id")
+  role      String   @default("VIEWER")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  folder DriveFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([folderId])
+  @@index([userId])
+  @@map("drive_folder_permissions")
+}
+
+model DriveFile {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  folderId       String?   @map("folder_id")
+  name           String
+  mimeType       String    @map("mime_type")
+  extension      String?
+  size           BigInt    @default(0)
+  storagePath    String    @map("storage_path")
+  checksum       String?
+  ownerId        String    @map("owner_id")
+  description    String?
+  isStarred      Boolean   @default(false) @map("is_starred")
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at")
+  currentVersion Int       @default(1) @map("current_version")
+  metadata       Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  folder     DriveFolder?       @relation(fields: [folderId], references: [id])
+  versions   DriveFileVersion[]
+  comments   DriveFileComment[]
+  shareLinks DriveShareLink[]
+  activities DriveActivity[]
+  tagMappings DriveFileTagMapping[]
+  trashItems  DriveTrashItem[]
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([folderId])
+  @@index([tenantId, isDeleted])
+  @@index([tenantId, isStarred])
+  @@map("drive_files")
+}
+
+model DriveFileVersion {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  fileId      String   @map("file_id")
+  version     Int
+  size        BigInt   @default(0)
+  storagePath String   @map("storage_path")
+  checksum    String?
+  metadata    Json?
+  uploadedBy  String   @map("uploaded_by")
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  file DriveFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([fileId])
+  @@map("drive_file_versions")
+}
+
+model DriveFileComment {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  fileId    String   @map("file_id")
+  userId    String   @map("user_id")
+  content   String
+  parentId  String?  @map("parent_id")
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  file    DriveFile          @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  parent  DriveFileComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies DriveFileComment[] @relation("CommentReplies")
+
+  @@index([tenantId])
+  @@index([fileId])
+  @@index([parentId])
+  @@map("drive_file_comments")
+}
+
+model DriveShareLink {
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  fileId        String    @map("file_id")
+  token         String    @unique
+  permission    String    @default("VIEW")
+  password      String?
+  expiresAt     DateTime? @map("expires_at")
+  maxDownloads  Int?      @map("max_downloads")
+  downloadCount Int       @default(0) @map("download_count")
+  createdBy     String    @map("created_by")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  file DriveFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([fileId])
+  @@index([token])
+  @@map("drive_share_links")
+}
+
+model DriveStorageQuota {
+  id           String   @id @default(cuid())
+  tenantId     String   @unique @map("tenant_id")
+  storageUsed  BigInt   @default(0) @map("storage_used")
+  storageLimit BigInt   @default(1073741824) @map("storage_limit")
+  fileCount    Int      @default(0) @map("file_count")
+  folderCount  Int      @default(0) @map("folder_count")
+  trashedSize  BigInt   @default(0) @map("trashed_size")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("drive_storage_quotas")
+}
+
+model DriveActivity {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  userId     String   @map("user_id")
+  action     String // CREATE_FOLDER, UPLOAD_FILE, DELETE, RESTORE, SHARE, COMMENT, etc.
+  entityType String?  @map("entity_type") // FOLDER, FILE
+  entityId   String?  @map("entity_id")
+  entityName String?  @map("entity_name")
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  folder DriveFolder? @relation(fields: [entityId], references: [id], map: "drive_activities_folder_fkey")
+  file   DriveFile?   @relation(fields: [entityId], references: [id], map: "drive_activities_file_fkey")
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([tenantId, createdAt])
+  @@map("drive_activities")
+}
+
+model DriveFolderShare {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  folderId         String   @map("folder_id")
+  sharedWithUserId String   @map("shared_with_user_id")
+  permission       String   @default("VIEW") // VIEW, EDIT
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  folder DriveFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([folderId])
+  @@index([sharedWithUserId])
+  @@map("drive_folder_shares")
+}
+
+model DriveFileTag {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id")
+  name     String
+  color    String @default("#6366f1")
+
+  files    DriveFileTagMapping[]
+
+  @@index([tenantId])
+  @@map("drive_file_tags")
+}
+
+model DriveFileTagMapping {
+  id     String       @id @default(cuid())
+  fileId String       @map("file_id")
+  tagId  String       @map("tag_id")
+
+  file DriveFile  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  tag  DriveFileTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, tagId])
+  @@index([fileId])
+  @@index([tagId])
+  @@map("drive_file_tag_mappings")
+}
+
+model DriveTrashItem {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  fileId       String   @map("file_id")
+  deletedAt    DateTime @default(now()) @map("deleted_at")
+  originalPath String?  @map("original_path")
+  deletedBy    String   @map("deleted_by")
+
+  file DriveFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([fileId])
+  @@map("drive_trash_items")
+}
+
+model DynamicDiscountOffer {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  invoiceId       String    @map("invoice_id")
+  customerId      String    @map("customer_id")
+  discountPercent Decimal   @map("discount_percent") @db.Decimal(5, 2)
+  discountDays    Int       @map("discount_days")
+  offerAmount     Decimal   @map("offer_amount") @db.Decimal(15, 2)
+  status          String    @default("PENDING")
+  offeredAt       DateTime  @default(now()) @map("offered_at")
+  respondedAt     DateTime? @map("responded_at")
+  settledAt       DateTime? @map("settled_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, invoiceId])
+  @@index([tenantId, status])
+  @@map("dynamic_discount_offers")
+}
+
+model SupplyChainFinanceProgram {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  name           String
+  programType    String    @map("program_type")
+  fundingLimit   Decimal   @map("funding_limit") @db.Decimal(15, 2)
+  utilizedAmount Decimal   @default(0) @map("utilized_amount") @db.Decimal(15, 2)
+  interestRate   Decimal   @map("interest_rate") @db.Decimal(5, 2)
+  feeStructure   Json?     @map("fee_structure")
+  status         String    @default("ACTIVE")
+  startDate      DateTime  @map("start_date")
+  endDate        DateTime? @map("end_date")
+  approvedBy     String?   @map("approved_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, programType])
+  @@index([tenantId, status])
+  @@map("supply_chain_finance_programs")
+}
+
+model CloseTaskDependency {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  taskId          String   @map("task_id")
+  dependsOnTaskId String   @map("depends_on_task_id")
+  dependencyType  String   @map("dependency_type")
+  lagDays         Int      @default(0) @map("lag_days")
+  isCritical      Boolean  @default(false) @map("is_critical")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, taskId])
+  @@index([tenantId, dependsOnTaskId])
+  @@map("close_task_dependencies")
+}
+
+model CloseTaskSla {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  taskId          String    @map("task_id")
+  deadlineAt      DateTime  @map("deadline_at")
+  slaMinutes      Int       @map("sla_minutes")
+  priority        String    @default("NORMAL")
+  escalateAfter   Int       @default(30) @map("escalate_after")
+  escalationLevel Int       @default(1) @map("escalation_level")
+  breachedAt      DateTime? @map("breached_at")
+  status          String    @default("ACTIVE")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, taskId])
+  @@index([tenantId, status])
+  @@map("close_task_slas")
+}
+
+model CloseCalendarEvent {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  periodId    String    @map("period_id")
+  eventType   String    @map("event_type")
+  title       String
+  description String?   @db.Text
+  dueAt       DateTime  @map("due_at")
+  completedAt DateTime? @map("completed_at")
+  status      String    @default("PENDING")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, periodId])
+  @@index([tenantId, eventType, dueAt])
+  @@map("close_calendar_events")
+}
+
+model CloseEscalationRule {
+  id                String   @id @default(cuid())
+  tenantId          String   @map("tenant_id")
+  name              String
+  conditionField    String   @map("condition_field")
+  conditionOperator String   @map("condition_operator")
+  conditionValue    String   @map("condition_value")
+  escalateToRole    String?  @map("escalate_to_role")
+  escalateToUser    String?  @map("escalate_to_user")
+  notifyMethod      String   @default("EMAIL") @map("notify_method")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, isActive])
+  @@map("close_escalation_rules")
+}
+
+model CloseAnalyticsSnapshot {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  periodId       String   @map("period_id")
+  totalTasks     Int      @map("total_tasks")
+  completedTasks Int      @map("completed_tasks")
+  overdueTasks   Int      @map("overdue_tasks")
+  breachedSlas   Int      @map("breached_slas")
+  avgCompletion  Decimal? @map("avg_completion") @db.Decimal(5, 2)
+  cycleTimeHours Decimal? @map("cycle_time_hours") @db.Decimal(10, 2)
+  snapshotData   Json?    @map("snapshot_data")
+  capturedAt     DateTime @default(now()) @map("captured_at")
+
+  @@index([tenantId, periodId])
+  @@map("close_analytics_snapshots")
+}
+
+model ConsolidationGroup {
+  id                  String   @id @default(cuid())
+  tenantId            String   @map("tenant_id")
+  name                String
+  groupType           String   @map("group_type")
+  baseCurrency        String   @map("base_currency")
+  consolidationMethod String   @map("consolidation_method")
+  ownershipThreshold  Decimal  @default(50) @map("ownership_threshold") @db.Decimal(5, 2)
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, groupType])
+  @@map("consolidation_groups")
+}
+
+model ConsolidationGroupMember {
+  id                  String    @id @default(cuid())
+  tenantId            String    @map("tenant_id")
+  groupId             String    @map("group_id")
+  entityId            String    @map("entity_id")
+  ownershipPercent    Decimal   @map("ownership_percent") @db.Decimal(5, 2)
+  consolidationMethod String    @map("consolidation_method")
+  functionalCurrency  String    @map("functional_currency")
+  isDirectSubsidiary  Boolean   @default(true) @map("is_direct_subsidiary")
+  consolidationDate   DateTime? @map("consolidation_date")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, groupId])
+  @@map("consolidation_group_members")
+}
+
+model ConsolidationExecution {
+  id                    String    @id @default(cuid())
+  tenantId              String    @map("tenant_id")
+  groupId               String    @map("group_id")
+  periodId              String    @map("period_id")
+  status                String    @default("DRAFT")
+  totalEliminations     Int       @default(0) @map("total_eliminations")
+  minorityInterest      Decimal?  @map("minority_interest") @db.Decimal(15, 2)
+  translationAdjustment Decimal?  @map("translation_adjustment") @db.Decimal(15, 2)
+  consolidatedRevenue   Decimal?  @map("consolidated_revenue") @db.Decimal(15, 2)
+  consolidatedNetIncome Decimal?  @map("consolidated_net_income") @db.Decimal(15, 2)
+  startedAt             DateTime? @map("started_at")
+  completedAt           DateTime? @map("completed_at")
+  reviewedBy            String?   @map("reviewed_by")
+  postedAt              DateTime? @map("posted_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, groupId, periodId])
+  @@index([tenantId, status])
+  @@map("consolidation_executions")
+}
+
+model ConsolidationEliminationRule {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  groupId         String   @map("group_id")
+  name            String
+  ruleType        String   @map("rule_type")
+  sourceEntityId  String?  @map("source_entity_id")
+  targetEntityId  String?  @map("target_entity_id")
+  matchCriteria   Json     @map("match_criteria")
+  autoPost        Boolean  @default(false) @map("auto_post")
+  toleranceAmount Decimal? @map("tolerance_amount") @db.Decimal(15, 2)
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, groupId])
+  @@map("consolidation_elimination_rules")
+}
+
+model ConsolidationEliminationEntry {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  runId           String    @map("run_id")
+  ruleId          String?   @map("rule_id")
+  sourceEntityId  String?   @map("source_entity_id")
+  targetEntityId  String?   @map("target_entity_id")
+  accountId       String    @map("account_id")
+  amount          Decimal   @db.Decimal(15, 2)
+  entryType       String    @map("entry_type")
+  eliminationType String    @map("elimination_type")
+  status          String    @default("DRAFT")
+  postedAt        DateTime? @map("posted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, runId])
+  @@map("consolidation_elimination_entries")
+}
+
+model ConsolidationTranslationAdjustment {
+  id                String   @id @default(cuid())
+  tenantId          String   @map("tenant_id")
+  runId             String   @map("run_id")
+  entityId          String   @map("entity_id")
+  accountId         String   @map("account_id")
+  originalAmount    Decimal  @map("original_amount") @db.Decimal(15, 2)
+  translatedAmount  Decimal  @map("translated_amount") @db.Decimal(15, 2)
+  exchangeRate      Decimal  @map("exchange_rate") @db.Decimal(12, 6)
+  translationMethod String   @map("translation_method")
+  adjustmentAmount  Decimal  @map("adjustment_amount") @db.Decimal(15, 2)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId, runId])
+  @@map("consolidation_translation_adjustments")
+}
+
+model MinorityInterestSchedule {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  runId           String   @map("run_id")
+  entityId        String   @map("entity_id")
+  nciPercentage   Decimal  @map("nci_percentage") @db.Decimal(5, 2)
+  netIncomeShare  Decimal  @map("net_income_share") @db.Decimal(15, 2)
+  equityShare     Decimal  @map("equity_share") @db.Decimal(15, 2)
+  dividendShare   Decimal? @map("dividend_share") @db.Decimal(15, 2)
+  goodwillAmount  Decimal? @map("goodwill_amount") @db.Decimal(15, 2)
+  attributionType String   @map("attribution_type")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId, runId])
+  @@map("minority_interest_schedules")
+}
+
+model CustomerCreditScorecard {
+  id                      String   @id @default(cuid())
+  tenantId                String   @map("tenant_id")
+  name                    String
+  scoreRangeMin           Int      @map("score_range_min")
+  scoreRangeMax           Int      @map("score_range_max")
+  weightPaymentHistory    Decimal  @map("weight_payment_history") @db.Decimal(5, 2)
+  weightCreditUtilization Decimal  @map("weight_credit_utilization") @db.Decimal(5, 2)
+  weightInvoiceAging      Decimal  @map("weight_invoice_aging") @db.Decimal(5, 2)
+  weightOrderFrequency    Decimal  @map("weight_order_frequency") @db.Decimal(5, 2)
+  weightCompanyHealth     Decimal  @map("weight_company_health") @db.Decimal(5, 2)
+  riskRatingLow           String   @map("risk_rating_low")
+  riskRatingMedium        String   @map("risk_rating_medium")
+  riskRatingHigh          String   @map("risk_rating_high")
+  riskRatingCritical      String   @map("risk_rating_critical")
+  isDefault               Boolean  @default(false) @map("is_default")
+  isActive                Boolean  @default(true) @map("is_active")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, isDefault])
+  @@map("customer_credit_scorecards")
+}
+
+model CustomerCreditScore {
+  id               String    @id @default(cuid())
+  tenantId         String    @map("tenant_id")
+  customerId       String    @map("customer_id")
+  scorecardId      String    @map("scorecard_id")
+  overallScore     Int       @map("overall_score")
+  riskRating       String    @map("risk_rating")
+  paymentScore     Decimal?  @map("payment_score") @db.Decimal(5, 2)
+  utilizationScore Decimal?  @map("utilization_score") @db.Decimal(5, 2)
+  agingScore       Decimal?  @map("aging_score") @db.Decimal(5, 2)
+  frequencyScore   Decimal?  @map("frequency_score") @db.Decimal(5, 2)
+  healthScore      Decimal?  @map("health_score") @db.Decimal(5, 2)
+  recommendedLimit Decimal?  @map("recommended_limit") @db.Decimal(15, 2)
+  scoredAt         DateTime  @default(now()) @map("scored_at")
+  expiresAt        DateTime? @map("expires_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@index([tenantId, customerId])
+  @@index([tenantId, riskRating])
+  @@map("customer_credit_scores")
+}
+
+model VendorRiskAssessment {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  vendorId       String    @map("vendor_id")
+  assessmentType String    @map("assessment_type")
+  riskScore      Decimal   @map("risk_score") @db.Decimal(5, 2)
+  riskRating     String    @map("risk_rating")
+  assessmentData Json?     @map("assessment_data")
+  assessorId     String?   @map("assessor_id")
+  assessedAt     DateTime  @default(now()) @map("assessed_at")
+  nextReviewAt   DateTime? @map("next_review_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, vendorId])
+  @@index([tenantId, riskRating])
+  @@map("vendor_risk_assessments")
+}
+
+model MarketRiskExposure {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  riskType        String    @map("risk_type")
+  exposureAmount  Decimal   @map("exposure_amount") @db.Decimal(15, 2)
+  currency        String
+  instrumentType  String?   @map("instrument_type")
+  counterparty    String?   @map("counterparty")
+  maturityDate    DateTime? @map("maturity_date")
+  hedgingStrategy String?   @map("hedging_strategy")
+  fairValue       Decimal?  @map("fair_value") @db.Decimal(15, 2)
+  valuationDate   DateTime? @map("valuation_date")
+  status          String    @default("ACTIVE")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, riskType])
+  @@map("market_risk_exposures")
+}
+
+model OperationalRiskEvent {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  eventType      String    @map("event_type")
+  severity       String    @default("MEDIUM")
+  description    String    @db.Text
+  lossAmount     Decimal?  @map("loss_amount") @db.Decimal(15, 2)
+  recoveryAmount Decimal?  @map("recovery_amount") @db.Decimal(15, 2)
+  rootCause      String?   @map("root_cause") @db.Text
+  controlId      String?   @map("control_id")
+  status         String    @default("OPEN")
+  occurredAt     DateTime  @map("occurred_at")
+  resolvedAt     DateTime? @map("resolved_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, eventType])
+  @@index([tenantId, severity, status])
+  @@map("operational_risk_events")
+}
+
+model RiskControlMeasure {
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  name          String
+  controlType   String    @map("control_type")
+  riskCategory  String    @map("risk_category")
+  description   String?   @db.Text
+  controlOwner  String?   @map("control_owner")
+  testFrequency String    @default("QUARTERLY") @map("test_frequency")
+  lastTestedAt  DateTime? @map("last_tested_at")
+  effectiveness String?   @map("effectiveness")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, controlType])
+  @@map("risk_control_measures")
+}
+
+model EmissionSourceRecord {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  sourceName     String   @map("source_name")
+  scope          String
+  category       String?
+  fuelType       String?  @map("fuel_type")
+  quantity       Decimal  @db.Decimal(15, 4)
+  unit           String
+  emissionFactor Decimal  @map("emission_factor") @db.Decimal(10, 6)
+  co2eKg         Decimal  @map("co2e_kg") @db.Decimal(15, 4)
+  fiscalYear     Int      @map("fiscal_year")
+  period         String?
+  verified       Boolean  @default(false)
+  verifiedBy     String?  @map("verified_by")
+  recordedAt     DateTime @default(now()) @map("recorded_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, scope, fiscalYear])
+  @@index([tenantId, fiscalYear])
+  @@map("emission_source_records")
+}
+
+model EmissionOffsetCredit {
+  id               String    @id @default(cuid())
+  tenantId         String    @map("tenant_id")
+  creditType       String    @map("credit_type")
+  quantityTonnes   Decimal   @map("quantity_tonnes") @db.Decimal(10, 2)
+  creditPrice      Decimal   @map("credit_price") @db.Decimal(10, 2)
+  totalCost        Decimal   @map("total_cost") @db.Decimal(15, 2)
+  vintageYear      Int       @map("vintage_year")
+  registryId       String?   @map("registry_id")
+  projectName      String?   @map("project_name")
+  status           String    @default("AVAILABLE")
+  retiredAt        DateTime? @map("retired_at")
+  retirementReason String?   @map("retirement_reason") @db.Text
+  purchasedAt      DateTime  @default(now()) @map("purchased_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, status])
+  @@map("emission_offset_credits")
+}
+
+model EsgKpiDefinition {
+  id                 String   @id @default(cuid())
+  tenantId           String   @map("tenant_id")
+  kpiCode            String   @map("kpi_code")
+  kpiName            String   @map("kpi_name")
+  category           String
+  subCategory        String?  @map("sub_category")
+  unit               String
+  description        String?  @db.Text
+  calculationMethod  String?  @map("calculation_method") @db.Text
+  targetDirection    String   @default("HIGHER_IS_BETTER") @map("target_direction")
+  reportingFramework String?  @map("reporting_framework")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, kpiCode])
+  @@index([tenantId, category])
+  @@map("esg_kpi_definitions")
+}
+
+model EsgKpiActualValue {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  kpiId           String   @map("kpi_id")
+  fiscalYear      Int      @map("fiscal_year")
+  period          String?
+  actualValue     Decimal  @map("actual_value") @db.Decimal(15, 4)
+  targetValue     Decimal? @map("target_value") @db.Decimal(15, 4)
+  variance        Decimal? @db.Decimal(15, 4)
+  variancePercent Decimal? @map("variance_percent") @db.Decimal(5, 2)
+  dataSource      String?  @map("data_source")
+  verified        Boolean  @default(false)
+  verifiedBy      String?  @map("verified_by")
+  recordedAt      DateTime @default(now()) @map("recorded_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, kpiId, fiscalYear])
+  @@map("esg_kpi_actual_values")
+}
+
+model EsgReportTemplate {
+  id                 String    @id @default(cuid())
+  tenantId           String    @map("tenant_id")
+  templateName       String    @map("template_name")
+  reportingFramework String    @map("reporting_framework")
+  templateConfig     Json      @map("template_config")
+  isDefault          Boolean   @default(false) @map("is_default")
+  lastGeneratedAt    DateTime? @map("last_generated_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, reportingFramework])
+  @@map("esg_report_templates")
+}
+
+model EsgDisclosureMapping {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  framework      String
+  standardCode   String   @map("standard_code")
+  disclosureName String   @map("disclosure_name")
+  mappedKpiId    String?  @map("mapped_kpi_id")
+  mappedField    String?  @map("mapped_field")
+  notes          String?  @db.Text
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, framework])
+  @@map("esg_disclosure_mappings")
+}
+
+model SustainabilityTarget {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  targetName      String    @map("target_name")
+  targetType      String    @map("target_type")
+  baselineYear    Int       @map("baseline_year")
+  baselineValue   Decimal   @map("baseline_value") @db.Decimal(15, 4)
+  targetValue     Decimal   @map("target_value") @db.Decimal(15, 4)
+  targetYear      Int       @map("target_year")
+  currentValue    Decimal?  @map("current_value") @db.Decimal(15, 4)
+  progressPercent Decimal?  @map("progress_percent") @db.Decimal(5, 2)
+  status          String    @default("ON_TRACK")
+  targetUnit      String    @map("target_unit")
+  approvedBy      String?   @map("approved_by")
+  achievedAt      DateTime? @map("achieved_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, targetType, status])
+  @@map("sustainability_targets")
+}
+
+model TaxProvisionRun {
+  id                 String    @id @default(cuid())
+  tenantId           String    @map("tenant_id")
+  fiscalYear         Int       @map("fiscal_year")
+  period             String
+  status             String    @default("DRAFT")
+  effectiveTaxRate   Decimal?  @map("effective_tax_rate") @db.Decimal(5, 2)
+  currentTaxExpense  Decimal?  @map("current_tax_expense") @db.Decimal(15, 2)
+  deferredTaxExpense Decimal?  @map("deferred_tax_expense") @db.Decimal(15, 2)
+  totalTaxProvision  Decimal?  @map("total_tax_provision") @db.Decimal(15, 2)
+  pretaxIncome       Decimal?  @map("pretax_income") @db.Decimal(15, 2)
+  statutoryRate      Decimal?  @map("statutory_rate") @db.Decimal(5, 2)
+  reviewedBy         String?   @map("reviewed_by")
+  postedAt           DateTime? @map("posted_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, fiscalYear, period])
+  @@map("tax_provision_runs")
+}
+
+model TaxProvisionDetail {
+  id                   String   @id @default(cuid())
+  tenantId             String   @map("tenant_id")
+  runId                String   @map("run_id")
+  jurisdiction         String
+  taxableIncome        Decimal  @map("taxable_income") @db.Decimal(15, 2)
+  taxRate              Decimal  @map("tax_rate") @db.Decimal(5, 2)
+  currentTaxAmount     Decimal  @map("current_tax_amount") @db.Decimal(15, 2)
+  credits              Decimal? @default(0) @db.Decimal(15, 2)
+  payments             Decimal? @default(0) @db.Decimal(15, 2)
+  withholding          Decimal? @default(0) @db.Decimal(15, 2)
+  netTaxPayable        Decimal? @map("net_tax_payable") @db.Decimal(15, 2)
+  temporaryDifferences Json?    @map("temporary_differences")
+  filingStatus         String   @default("ESTIMATED")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, runId])
+  @@map("tax_provision_details")
+}
+
+model DeferredTaxSchedule {
+  id                   String   @id @default(cuid())
+  tenantId             String   @map("tenant_id")
+  runId                String   @map("run_id")
+  accountId            String   @map("account_id")
+  temporaryDifference  Decimal  @map("temporary_difference") @db.Decimal(15, 2)
+  deferredTaxAsset     Decimal? @map("deferred_tax_asset") @db.Decimal(15, 2)
+  deferredTaxLiability Decimal? @map("deferred_tax_liability") @db.Decimal(15, 2)
+  taxRate              Decimal  @map("tax_rate") @db.Decimal(5, 2)
+  reversalYear         Int?     @map("reversal_year")
+  reversalType         String?  @map("reversal_type")
+  categorization       String?
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, runId])
+  @@map("deferred_tax_schedules")
+}
+
+model UncertainTaxPosition {
+  id                 String    @id @default(cuid())
+  tenantId           String    @map("tenant_id")
+  runId              String    @map("run_id")
+  positionName       String    @map("position_name")
+  jurisdiction       String
+  description        String    @db.Text
+  taxAmountAtRisk    Decimal   @map("tax_amount_at_risk") @db.Decimal(15, 2)
+  probabilityOfLoss  Decimal   @map("probability_of_loss") @db.Decimal(5, 2)
+  expectedLossAmount Decimal?  @map("expected_loss_amount") @db.Decimal(15, 2)
+  reserveAmount      Decimal?  @map("reserve_amount") @db.Decimal(15, 2)
+  status             String    @default("IDENTIFIED")
+  evaluationDate     DateTime? @map("evaluation_date")
+  settlementDate     DateTime? @map("settlement_date")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, runId])
+  @@map("uncertain_tax_positions")
+}
+
+model ValuationAllowanceAssessment {
+  id                 String    @id @default(cuid())
+  tenantId           String    @map("tenant_id")
+  runId              String    @map("run_id")
+  jurisdiction       String
+  deferredTaxAssetId String?   @map("deferred_tax_asset_id")
+  allowanceAmount    Decimal   @map("allowance_amount") @db.Decimal(15, 2)
+  assessmentType     String    @map("assessment_type")
+  positiveEvidence   Json?     @map("positive_evidence")
+  negativeEvidence   Json?     @map("negative_evidence")
+  conclusion         String?   @db.Text
+  reviewerId         String?   @map("reviewer_id")
+  reviewedAt         DateTime? @map("reviewed_at")
+  status             String    @default("DRAFT")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, runId])
+  @@map("valuation_allowance_assessments")
+}
+
+model ApprovalRoutingRule {
+  id                String   @id @default(cuid())
+  tenantId          String   @map("tenant_id")
+  name              String
+  triggerEvent      String   @map("trigger_event")
+  conditionField    String   @map("condition_field")
+  conditionOperator String   @map("condition_operator")
+  conditionValue    String   @map("condition_value")
+  approverId        String?  @map("approver_id")
+  approverRole      String?  @map("approver_role")
+  chainId           String?  @map("chain_id")
+  fallbackApprover  String?  @map("fallback_approver")
+  isActive          Boolean  @default(true) @map("is_active")
+  priority          Int      @default(100)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, triggerEvent])
+  @@map("approval_routing_rules")
+}
+
+model AiForecastScenario {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  scenarioName    String    @map("scenario_name")
+  scenarioType    String    @map("scenario_type")
+  forecastHorizon String    @map("forecast_horizon")
+  baseCurrency    String    @default("USD") @map("base_currency")
+  assumptions     Json?     @map("assumptions")
+  confidenceLevel Decimal?  @map("confidence_level") @db.Decimal(5, 2)
+  status          String    @default("DRAFT")
+  generatedAt     DateTime? @map("generated_at")
+  createdBy       String?   @map("created_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, scenarioType, status])
+  @@map("ai_forecast_scenarios")
+}
+
+model AiForecastScenarioLine {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  scenarioId      String   @map("scenario_id")
+  periodDate      DateTime @map("period_date")
+  category        String
+  subCategory     String?  @map("sub_category")
+  projectedAmount Decimal  @map("projected_amount") @db.Decimal(15, 2)
+  actualAmount    Decimal? @map("actual_amount") @db.Decimal(15, 2)
+  varianceAmount  Decimal? @map("variance_amount") @db.Decimal(15, 2)
+  variancePercent Decimal? @map("variance_percent") @db.Decimal(5, 2)
+  driverVariable  String?  @map("driver_variable")
+  driverValue     Decimal? @map("driver_value") @db.Decimal(15, 4)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, scenarioId, periodDate])
+  @@map("ai_forecast_scenario_lines")
+}
+
+model AnomalyDetectionRun {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  runName        String    @map("run_name")
+  detectionScope String    @map("detection_scope")
+  algorithmType  String    @map("algorithm_type")
+  dateRangeStart DateTime  @map("date_range_start")
+  dateRangeEnd   DateTime  @map("date_range_end")
+  totalScanned   Int       @default(0) @map("total_scanned")
+  anomaliesFound Int       @default(0) @map("anomalies_found")
+  falsePositives Int       @default(0) @map("false_positives")
+  sensitivity    Decimal   @default(2.0) @map("sensitivity") @db.Decimal(3, 1)
+  status         String    @default("PENDING")
+  startedAt      DateTime? @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, status])
+  @@map("anomaly_detection_runs")
+}
