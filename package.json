@@ -1,5 +1,5 @@
 {
-  "name": "@unerp/database",
+  "name": "@kannan19302/database",
   "version": "1.0.14",
   "description": "Prisma ORM schema, client, and migrations",
   "main": "./dist/index.js",
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@nestjs/common": "^11.1.28",
     "@types/node": "^22.0.0",
-    "@unerp/config": "^1.0.2",
+    "@kannan19302/config": "^1.0.2",
     "rimraf": "^6.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",

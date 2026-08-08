@@ -31,8 +31,8 @@ import { resolve } from "node:path";
  *     Staff are provisioned explicitly, by email, via PLATFORM_STAFF_EMAIL.
  *
  * Usage:
- *   pnpm --filter @unerp/database db:seed:platform
- *   PLATFORM_STAFF_EMAIL=you@example.com pnpm --filter @unerp/database db:seed:platform
+ *   pnpm --filter @kannan19302/database db:seed:platform
+ *   PLATFORM_STAFF_EMAIL=you@example.com pnpm --filter @kannan19302/database db:seed:platform
  *
  * Without PLATFORM_STAFF_EMAIL the roles are created but assigned to nobody,
  * which leaves the control plane closed. That is the intended default.
@@ -109,7 +109,7 @@ async function main() {
     console.log(
       "\n  No PLATFORM_STAFF_EMAIL set — roles exist but are assigned to nobody,\n" +
         "  so the control plane stays closed. Assign a real account with:\n" +
-        "    PLATFORM_STAFF_EMAIL=you@example.com pnpm --filter @unerp/database db:seed:platform",
+        "    PLATFORM_STAFF_EMAIL=you@example.com pnpm --filter @kannan19302/database db:seed:platform",
     );
     return;
   }

@@ -7,7 +7,7 @@
  * version is incremented atomically. A concurrent writer that committed first
  * changes `version`, so the stale writer matches 0 rows and receives
  * `StaleWriteError` — surfaced by the API's global filter as HTTP 409 with
- * the contract code `STALE_WRITE` (see @unerp/shared ERROR_CODES).
+ * the contract code `STALE_WRITE` (see @kannan19302/shared ERROR_CODES).
  *
  * Existing aggregates gain their `version` columns in the post-Track-A
  * migration window; new entities get them from the scaffolder immediately.

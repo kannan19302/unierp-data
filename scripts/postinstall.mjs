@@ -1,6 +1,6 @@
 // Generate the Prisma clients at install time.
 //
-// @unerp/database ships prisma/ but not the generated clients: they are
+// @kannan19302/database ships prisma/ but not the generated clients: they are
 // platform-specific binaries, and a published artifact that pins a query engine
 // to whoever ran `npm publish` is wrong. So the consumer generates them — and
 // must, because dist/index.js imports both.
@@ -23,7 +23,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // `prisma generate` parses the schema, and the schema reads env("DATABASE_URL").
 // Without it the generator exits non-zero and npm fails the whole install — so
-// `npm install @unerp/database` required a database URL to be present before you
+// `npm install @kannan19302/database` required a database URL to be present before you
 // could even install the package that talks to the database.
 //
 // Generation does not connect to anything; it only needs the value to be
@@ -97,7 +97,7 @@ try {
   // Importing without a generated client fails with a clear message of its own,
   // and `npx prisma generate` fixes it. A loud warning beats an install that
   // cannot complete.
-  console.warn("\n  @unerp/database: prisma generate did not complete.");
+  console.warn("\n  @kannan19302/database: prisma generate did not complete.");
   console.warn(`  ${String(error?.message ?? error).split("\n")[0]}`);
   console.warn("  Run `npx prisma generate` in this package before importing it.\n");
 }

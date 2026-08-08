@@ -129,13 +129,13 @@ async function main() {
       where: {
         tenantId_email: {
           tenantId: tenant.id,
-          email: "admin@unerp.dev",
+          email: "admin@kannan19302.dev",
         },
       },
       update: {},
       create: {
         tenantId: tenant.id,
-        email: "admin@unerp.dev",
+        email: "admin@kannan19302.dev",
         passwordHash: DEFAULT_PASSWORD_HASH,
         firstName: "System",
         lastName: "Administrator",
@@ -953,7 +953,7 @@ async function main() {
         queryConfig: JSON.stringify({ filter: "all" }),
         isScheduled: true,
         scheduleCron: "0 8 * * 1",
-        recipientEmails: "admin@unerp.dev",
+        recipientEmails: "admin@kannan19302.dev",
       },
     });
 
@@ -1940,7 +1940,7 @@ async function main() {
           requestedAmount: 12000.0,
           requestedScheduleDays: 7,
           status: "APPROVED",
-          approvedBy: "admin@unerp.dev",
+          approvedBy: "admin@kannan19302.dev",
           approvedAt: new Date("2026-06-12T00:00:00Z"),
         },
       ],
@@ -2312,7 +2312,7 @@ async function main() {
         inspectedQty: 10.0,
         passedQty: 10.0,
         rejectedQty: 0.0,
-        inspectedBy: "admin@unerp.dev",
+        inspectedBy: "admin@kannan19302.dev",
         checklist: JSON.stringify([
           {
             parameter: "Chassis Thickness (mm)",
@@ -2347,7 +2347,7 @@ async function main() {
           "3 laptops in batch WO-LAP-002 had backlight leakage exceeding threshold checks.",
         disposition: "REWORK",
         status: "OPEN",
-        loggedBy: "inspector.qc@unerp.dev",
+        loggedBy: "inspector.qc@kannan19302.dev",
       },
     });
 
@@ -2358,7 +2358,7 @@ async function main() {
         bomId: bom.id,
         changeDescription:
           "Upgrade chassis to grade-A brushed aluminum finish and motherboard BIOS configuration updates.",
-        requestedBy: "lead.designer@unerp.dev",
+        requestedBy: "lead.designer@kannan19302.dev",
         status: "PENDING",
       },
     });
@@ -2808,7 +2808,7 @@ async function main() {
         storeSlug: tenant.slug,
         isEnabled: true,
         currency: "USD",
-        contactEmail: "store@unerp.dev",
+        contactEmail: "store@kannan19302.dev",
       },
     });
   }
