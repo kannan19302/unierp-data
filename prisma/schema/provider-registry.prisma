@@ -38,12 +38,14 @@ model ProviderBinding {
   id           String   @id @default(cuid())
   providerId   String   @map("provider_id")
   capabilityId String   @map("capability_id")
+  /// Lower number = tried first. M06's primary/secondary/fallback order.
+  priority     Int      @default(100)
   createdAt    DateTime @default(now()) @map("created_at")
 
   provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, capabilityId])
-  @@index([capabilityId])
+  @@index([capabilityId, priority])
   @@map("provider_bindings")
 }
 
@@ -127,6 +129,54 @@ model ProviderQuota {
 
   @@unique([providerId, capabilityId])
   @@map("provider_quotas")
+}
+
+// ── M06 · routing, priority, fallback and tenant selection ──
+
+/// A tenant pinned to a specific provider for a capability. Absolute: M06's
+/// router checks this BEFORE priority/health/fallback, and a pinned tenant
+/// is never routed to anything else — including while that provider's own
+/// health would otherwise trigger fallback for every other tenant.
+model TenantProviderOverride {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  capabilityId String   @map("capability_id")
+  providerId   String   @map("provider_id")
+  reason       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@unique([tenantId, capabilityId])
+  @@map("tenant_provider_overrides")
+}
+
+/// Sticky routing: once a (tenant, capability, stickyKey) triple is routed
+/// to a provider, later calls with the same key return to it as long as
+/// it's still healthy — for providers that hold state across calls (a
+/// conversational session, a multi-step upload).
+model StickyRouteAssignment {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  capabilityId String   @map("capability_id")
+  stickyKey    String   @map("sticky_key")
+  providerId   String   @map("provider_id")
+  assignedAt   DateTime @default(now()) @map("assigned_at")
+
+  @@unique([tenantId, capabilityId, stickyKey])
+  @@map("sticky_route_assignments")
+}
+
+/// Consecutive-failure circuit breaking, independent of M04's health probe:
+/// a provider can pass its periodic health check and still be failing every
+/// real call (slow degradation a probe's own cadence hasn't caught yet).
+model ProviderCircuitState {
+  id                  String    @id @default(cuid())
+  providerId          String    @unique @map("provider_id")
+  consecutiveFailures Int       @default(0) @map("consecutive_failures")
+  /// Set when the breaker trips; cleared on the next successful call after
+  /// the cool-down window has passed.
+  openedAt            DateTime? @map("opened_at")
+
+  @@map("provider_circuit_states")
 }
 
 /// The single price sheet M06 (routing) and M25 (cost allocation) both read
