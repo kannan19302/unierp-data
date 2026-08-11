@@ -263,3 +263,22 @@ model BudgetPolicy {
   @@unique([tenantId, period])
   @@map("budget_policies")
 }
+
+/// M30 — a provider's OWN reported consumption for one tenant/metric/
+/// period, independent of anything UniERP itself counted. Reconciliation
+/// compares this against C14's MeteringEvent sum for the same
+/// tenant/metric/period — two genuinely independent sources of truth for
+/// the same real-world quantity, not a self-consistency check against
+/// our own snapshot (that is what C14's own `reconcile()` already does).
+model ProviderConsumptionReport {
+  id                String   @id @default(cuid())
+  providerId        String   @map("provider_id")
+  tenantId          String   @map("tenant_id")
+  metric            String
+  period            String
+  reportedQuantity  Int      @map("reported_quantity")
+  reportedAt        DateTime @default(now()) @map("reported_at")
+
+  @@unique([providerId, tenantId, metric, period])
+  @@map("provider_consumption_reports")
+}
