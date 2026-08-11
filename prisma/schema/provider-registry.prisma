@@ -23,6 +23,9 @@ model Provider {
   bindings     ProviderBinding[]
   credentials  ProviderCredential[]
   capabilities ProviderCapability[]
+  healthChecks ProviderHealthCheck[]
+  quotas       ProviderQuota[]
+  priceSheet   ProviderPriceSheetEntry[]
 
   @@index([status])
   @@map("providers")
@@ -75,4 +78,71 @@ model ProviderCapability {
 
   @@unique([providerId, capabilityId])
   @@map("provider_capabilities")
+}
+
+// ── M04 · health, limits, quotas and pricing — all observed, not declared ──
+//
+// The one exception is the health-check INTERVAL itself (M04's exit
+// criterion names it "declared"): how often a probe should run is
+// configuration; whether the provider is actually healthy is only ever
+// what the most recent probe observed.
+
+model ProviderHealthConfig {
+  id               String @id @default(cuid())
+  providerId       String @unique @map("provider_id")
+  intervalSeconds  Int    @map("interval_seconds")
+
+  @@map("provider_health_configs")
+}
+
+/// One probe result. Health is derived from the MOST RECENT row for a
+/// provider, not stored as a mutable flag — an unhealthy provider's history
+/// stays intact rather than being overwritten by its next check.
+model ProviderHealthCheck {
+  id         String   @id @default(cuid())
+  providerId String   @map("provider_id")
+  checkedAt  DateTime @default(now()) @map("checked_at")
+  healthy    Boolean
+  latencyMs  Int?     @map("latency_ms")
+  error      String?
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, checkedAt])
+  @@map("provider_health_checks")
+}
+
+/// Observed, not configured: what has actually been measured for a
+/// provider+capability, e.g. by reading the provider's own rate-limit
+/// response headers or its published quota — never a value someone typed in.
+model ProviderQuota {
+  id           String   @id @default(cuid())
+  providerId   String   @map("provider_id")
+  capabilityId String   @map("capability_id")
+  limitValue   Int      @map("limit_value")
+  windowSeconds Int     @map("window_seconds")
+  observedAt   DateTime @default(now()) @map("observed_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, capabilityId])
+  @@map("provider_quotas")
+}
+
+/// The single price sheet M06 (routing) and M25 (cost allocation) both read
+/// — not a second copy either phase maintains on its own.
+model ProviderPriceSheetEntry {
+  id           String   @id @default(cuid())
+  providerId   String   @map("provider_id")
+  capabilityId String   @map("capability_id")
+  operation    String
+  unit         String
+  pricePerUnit Decimal  @map("price_per_unit") @db.Decimal(19, 4)
+  currency     String   @default("USD")
+  observedAt   DateTime @default(now()) @map("observed_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, capabilityId, operation, unit])
+  @@map("provider_price_sheet_entries")
 }
