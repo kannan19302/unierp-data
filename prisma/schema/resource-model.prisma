@@ -245,3 +245,21 @@ model FailoverRehearsal {
 
   @@map("failover_rehearsals")
 }
+
+/// M37 — proof that a retention schedule actually ran, for one dataClass
+/// declared in unierp-workspace/scripts/retention-matrix.json (C24's own
+/// source of truth) — `RetentionScheduleService` enforces the IDENTICAL
+/// dataClass/model/timestampField/retentionDays that file declares, and
+/// writes one of these on every run, regardless of whether anything was
+/// actually deleted, so "executed on time" has a record even for a
+/// run that finds zero candidates.
+model RetentionCertificate {
+  id            String   @id @default(cuid())
+  dataClass     String
+  cutoff        DateTime
+  candidateCount Int     @map("candidate_count")
+  deletedCount  Int      @map("deleted_count")
+  executedAt    DateTime @default(now()) @map("executed_at")
+
+  @@map("retention_certificates")
+}
