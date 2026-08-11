@@ -1,0 +1,78 @@
+// ─────────────────────────────────────────────────
+// Provider registry — Track M (Provider Admin OS), M03.
+//
+// Platform-owned, not tenant-owned: no tenantId, no RLS. Same precedent as
+// ControlPlaneAuditLog / ControlPlaneApproval / ControlPlaneReviewTask —
+// these describe the platform's own capability-to-vendor bindings, not a
+// customer's business data.
+//
+// ProviderCredential is secret-ref only. There is deliberately no column a
+// literal secret value could be written into — a `secretRef` points at an
+// external secrets manager entry (Vault path, cloud secrets-manager ARN).
+// ─────────────────────────────────────────────────
+
+model Provider {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  /// ACTIVE | DISABLED | DISABLED_EXPIRED_CREDENTIAL
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  bindings     ProviderBinding[]
+  credentials  ProviderCredential[]
+  capabilities ProviderCapability[]
+
+  @@index([status])
+  @@map("providers")
+}
+
+/// A provider's CLAIM to serve a capability (capability-registry.ts's
+/// CapabilityContract.id, e.g. "email.send"). Distinct from ProviderCapability,
+/// which is what discovery actually found the provider supports.
+model ProviderBinding {
+  id           String   @id @default(cuid())
+  providerId   String   @map("provider_id")
+  capabilityId String   @map("capability_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, capabilityId])
+  @@index([capabilityId])
+  @@map("provider_bindings")
+}
+
+model ProviderCredential {
+  id         String    @id @default(cuid())
+  providerId String    @map("provider_id")
+  /// Pointer into an external secrets manager. Never the secret itself.
+  secretRef  String    @map("secret_ref")
+  label      String?
+  rotatedAt  DateTime? @map("rotated_at")
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+  @@index([expiresAt])
+  @@map("provider_credentials")
+}
+
+/// What discovery against the live provider actually found, as opposed to
+/// what ProviderBinding claims. discoveredAt is when this row was last
+/// refreshed by a discovery run, not when the row was first created.
+model ProviderCapability {
+  id              String   @id @default(cuid())
+  providerId      String   @map("provider_id")
+  capabilityId    String   @map("capability_id")
+  discoveredAt    DateTime @default(now()) @map("discovered_at")
+  discoveryDetail Json?    @map("discovery_detail")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, capabilityId])
+  @@map("provider_capabilities")
+}
