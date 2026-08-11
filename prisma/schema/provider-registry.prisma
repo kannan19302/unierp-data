@@ -306,3 +306,73 @@ model FinOpsRecommendation {
   @@index([resourceId])
   @@map("finops_recommendations")
 }
+
+// ── M32 · staff identity, SSO, MFA and session governance ──
+
+/// A completed step-up MFA challenge for one operator, presented as a
+/// short-lived token on the destructive request itself. Consumed once:
+/// `usedAt` set on first successful check, so a token cannot be replayed
+/// across two separate destructive calls.
+model StepUpMfaVerification {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  token       String    @unique
+  verifiedAt  DateTime  @default(now()) @map("verified_at")
+  expiresAt   DateTime  @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+
+  @@map("step_up_mfa_verifications")
+}
+
+/// A just-in-time privilege grant with a hard expiry. Audited on BOTH
+/// grant and expiry — `expiredAuditedAt` is set the first time
+/// `isElevated()`/`expireDue()` discovers the grant has passed its
+/// `expiresAt`, so the expiry audit fires exactly once, not on every
+/// subsequent check.
+model PrivilegeElevation {
+  id               String    @id @default(cuid())
+  userId           String    @map("user_id")
+  privilege        String
+  grantedBy        String    @map("granted_by")
+  grantedAt        DateTime  @default(now()) @map("granted_at")
+  expiresAt        DateTime  @map("expires_at")
+  expiredAuditedAt DateTime? @map("expired_audited_at")
+
+  @@index([userId, privilege])
+  @@map("privilege_elevations")
+}
+
+// ── M35 · incidents, SLO/SLA, error budgets and on-call ──
+
+model SloDefinition {
+  id             String   @id @default(cuid())
+  service        String
+  tenantId       String?  @map("tenant_id")
+  targetPercent  Float    @map("target_percent") // e.g. 99.9
+  /// The tenant's monthly fee this SLO's credits are computed against —
+  /// Decimal(19,4), never a Float, consistent with M25/M27's own money
+  /// discipline.
+  monthlyFee     Decimal  @map("monthly_fee") @db.Decimal(19, 4)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  incidents Incident[]
+
+  @@map("slo_definitions")
+}
+
+model Incident {
+  id              String    @id @default(cuid())
+  sloDefinitionId String    @map("slo_definition_id")
+  tenantId        String    @map("tenant_id")
+  severity        String    // MINOR | MAJOR | CRITICAL
+  status          String    @default("OPEN") // OPEN | RESOLVED
+  actualPercent   Float     @map("actual_percent")
+  creditAmount    Decimal   @map("credit_amount") @db.Decimal(19, 4)
+  invoiceAdjustmentId String? @map("invoice_adjustment_id")
+  openedAt        DateTime  @default(now()) @map("opened_at")
+  resolvedAt      DateTime? @map("resolved_at")
+
+  slo SloDefinition @relation(fields: [sloDefinitionId], references: [id])
+
+  @@map("incidents")
+}
