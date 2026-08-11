@@ -1337,6 +1337,10 @@ model SaasTenantNodeRouting {
   databaseHost   String   @map("database_host")
   redisHost      String   @map("redis_host")
   isDedicated    Boolean  @default(false) @map("is_dedicated")
+  /// M19 — traffic-steering weight for this tenant/cluster pair, changed
+  /// only through the M09 plan pipeline (KubernetesFleetService), never
+  /// written directly.
+  weight         Int      @default(100)
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
