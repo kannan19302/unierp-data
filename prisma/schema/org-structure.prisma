@@ -1,0 +1,51 @@
+// ─────────────────────────────────────────────────
+// Organisation structure — Track D (Tenant Admin), D04. Tenant-scoped
+// (tenantId on every row) — legal entities, business units, branches,
+// teams and cost centres are all OrgUnit kinds; the reporting hierarchy
+// approvals route through is OrgPosition's manager chain.
+// ─────────────────────────────────────────────────
+
+model OrgUnit {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  kind      String   // LEGAL_ENTITY | BUSINESS_UNIT | BRANCH | TEAM | COST_CENTRE
+  parentId  String?  @map("parent_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@map("org_units")
+}
+
+/// A position in the reporting hierarchy. `managerPositionId` is the edge
+/// approval routing climbs; `occupantUserId` null means VACANT — the
+/// thing this phase's escalation mechanism exists to handle without
+/// silently dropping the approval.
+model OrgPosition {
+  id                String   @id @default(cuid())
+  tenantId          String   @map("tenant_id")
+  orgUnitId         String   @map("org_unit_id")
+  title             String
+  managerPositionId String?  @map("manager_position_id")
+  occupantUserId    String?  @map("occupant_user_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@map("org_positions")
+}
+
+/// One completed routing decision — the full chain walked (including any
+/// vacant positions escalated past) and the position/user it actually
+/// resolved to, so "routed correctly" is a checkable record, not a claim.
+model ApprovalRouting {
+  id                  String   @id @default(cuid())
+  tenantId            String   @map("tenant_id")
+  requestId           String   @map("request_id")
+  startPositionId     String   @map("start_position_id")
+  approverChain       Json     @map("approver_chain")
+  finalApproverUserId String   @map("final_approver_user_id")
+  routedAt            DateTime @default(now()) @map("routed_at")
+
+  @@index([tenantId, requestId])
+  @@map("approval_routings")
+}
