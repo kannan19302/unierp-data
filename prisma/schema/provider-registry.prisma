@@ -196,3 +196,41 @@ model ProviderPriceSheetEntry {
   @@unique([providerId, capabilityId, operation, unit])
   @@map("provider_price_sheet_entries")
 }
+
+// ── M25 · provider billing and cost ingestion ──
+//
+// One batch per (providerId, period): re-ingesting the same period
+// upserts this row and REPLACES its line items rather than appending —
+// that replace-not-append is the entire "does not double-count"
+// mechanism, not a dedup step layered on top of an append.
+model CostIngestionBatch {
+  id            String   @id @default(cuid())
+  providerId    String   @map("provider_id")
+  /// The billing period, e.g. "2026-08" — one batch per provider per period.
+  period        String
+  currency      String   @default("USD")
+  invoiceTotal  Decimal  @map("invoice_total") @db.Decimal(19, 4)
+  lineItemCount Int      @default(0) @map("line_item_count")
+  ingestedAt    DateTime @default(now()) @map("ingested_at")
+
+  lineItems CostLineItem[]
+
+  @@unique([providerId, period])
+  @@map("cost_ingestion_batches")
+}
+
+model CostLineItem {
+  id          String  @id @default(cuid())
+  batchId     String  @map("batch_id")
+  /// The provider's own line identifier from the billing export — kept
+  /// only for traceability; uniqueness within a batch is not required
+  /// since a replace-on-reingest batch is deleted and recreated whole.
+  sourceLineId String @map("source_line_id")
+  description String
+  amount      Decimal @db.Decimal(19, 4)
+
+  batch CostIngestionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@map("cost_line_items")
+}
