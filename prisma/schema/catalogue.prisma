@@ -1,0 +1,59 @@
+// ─────────────────────────────────────────────────
+// Products, modules, suites and marketplace bind — Track M (Provider
+// Admin OS), M44. Platform-owned, no tenantId/RLS, same precedent as
+// every other Track M model.
+// ─────────────────────────────────────────────────
+
+/// A catalogue product, optionally bound to the M02 capability it depends
+/// on — a suite composed from products whose capability is UNSATISFIED
+/// (M02's own resolve()) is refused at provisioning time, never silently
+/// installed half-working.
+model CatalogueProduct {
+  id           String   @id @default(cuid())
+  name         String
+  capabilityId String?  @map("capability_id")
+  priceCents   Int      @map("price_cents")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  items CatalogueSuiteItem[]
+
+  @@map("catalogue_products")
+}
+
+/// An industry suite: a named bundle of products, composed and priced by
+/// summing its items — never a second, hand-entered suite price.
+model CatalogueSuite {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  items CatalogueSuiteItem[]
+
+  @@map("catalogue_suites")
+}
+
+model CatalogueSuiteItem {
+  id        String @id @default(cuid())
+  suiteId   String @map("suite_id")
+  productId String @map("product_id")
+
+  suite   CatalogueSuite   @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  product CatalogueProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([suiteId, productId])
+  @@map("catalogue_suite_items")
+}
+
+/// One completed provisioning of a suite for a tenant — the M07 Resource
+/// it created, and the exact price charged at that moment (prices can
+/// change later; this row is what was actually agreed).
+model CatalogueProvisioning {
+  id              String   @id @default(cuid())
+  suiteId         String   @map("suite_id")
+  tenantId        String   @map("tenant_id")
+  resourceId      String   @map("resource_id")
+  totalPriceCents Int      @map("total_price_cents")
+  provisionedAt   DateTime @default(now()) @map("provisioned_at")
+
+  @@map("catalogue_provisionings")
+}
