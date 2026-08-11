@@ -93,3 +93,55 @@ model ScheduledOperation {
   @@index([scheduledFor, status])
   @@map("scheduled_operations")
 }
+
+// ── M41 · platform event catalogue, outbox and signed webhooks ──
+//
+// Plane-1, platform-owned — distinct from the tenant-scoped, BullMQ-backed
+// modules/outbox (RLS'd, per-tenant). Every event here is emitted through
+// this table (never delivered directly to a webhook in the same call) so
+// replay is "read this table again", not a separate mechanism.
+
+/// One emitted platform event. `sequence` is the single global, strictly
+/// increasing order every webhook delivery is required to preserve —
+/// replay and in-order delivery both read off this column, never
+/// `occurredAt` (wall-clock ties are possible; sequence never ties).
+model PlatformEventOutboxEntry {
+  id         String   @id @default(cuid())
+  sequence   BigInt   @default(autoincrement())
+  eventType  String   @map("event_type")
+  payload    Json
+  occurredAt DateTime @default(now()) @map("occurred_at")
+
+  @@index([sequence])
+  @@map("platform_event_outbox_entries")
+}
+
+/// A registered webhook subscriber. `secret` signs every delivery (HMAC);
+/// `lastDeliveredSequence` is the exactly-once/in-order cursor — a
+/// recovering endpoint resumes from here, never from "now".
+model WebhookEndpoint {
+  id                    String   @id @default(cuid())
+  url                   String
+  secret                String
+  eventTypes            String[] @map("event_types")
+  healthy               Boolean  @default(true)
+  lastDeliveredSequence BigInt   @default(0) @map("last_delivered_sequence")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("webhook_endpoints")
+}
+
+/// One delivery attempt's outcome, append-only — the audit trail proving
+/// "received its backlog in order, exactly once" is a checkable fact, not
+/// a claim.
+model WebhookDeliveryAttempt {
+  id         String   @id @default(cuid())
+  endpointId String   @map("endpoint_id")
+  sequence   BigInt
+  eventType  String   @map("event_type")
+  success    Boolean
+  deliveredAt DateTime @default(now()) @map("delivered_at")
+
+  @@index([endpointId, sequence])
+  @@map("webhook_delivery_attempts")
+}
