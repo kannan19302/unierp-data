@@ -27,6 +27,13 @@ model Job {
   id          String   @id @default(cuid())
   planId      String?  @map("plan_id")
   resourceId  String?  @map("resource_id")
+  /// M34 — the SAME correlation id ControlPlaneAuditInterceptor already
+  /// generates/reads (`x-correlation-id`) for the console request that
+  /// triggered this job, when the caller threads it through. Folded into
+  /// every one of this job's own pipeline-step audit records, so a single
+  /// query by this id returns the console click and every provider call
+  /// it led to, in order — one correlated view, no second trace store.
+  correlationId String? @map("correlation_id")
   /// PENDING | RUNNING | DONE | FAILED | HALTED | COMPENSATED
   status      String   @default("PENDING")
   /// Index of the next step to run. Steps [0, stepIndex) are DONE.
