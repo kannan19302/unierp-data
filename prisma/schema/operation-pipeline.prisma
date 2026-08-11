@@ -15,6 +15,30 @@ model BlackoutPeriod {
   @@map("blackout_periods")
 }
 
+// ── M12 · durable execution ──
+//
+// A Job is the durable record of one plan's execution: its steps, and each
+// step's own state. `stepIndex` advances ONLY after a step's write commits,
+// so a process killed mid-step leaves stepIndex pointing at the last
+// COMPLETED step, never a partially-applied one — that is the entire
+// mechanism "resumes without repeating a completed step" rests on.
+
+model Job {
+  id          String   @id @default(cuid())
+  planId      String?  @map("plan_id")
+  resourceId  String?  @map("resource_id")
+  /// PENDING | RUNNING | DONE | FAILED | HALTED | COMPENSATED
+  status      String   @default("PENDING")
+  /// Index of the next step to run. Steps [0, stepIndex) are DONE.
+  stepIndex   Int      @default(0) @map("step_index")
+  steps       Json     // [{ name, status, result?, error? }, ...]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("jobs")
+}
+
 /// A plan scheduled for future (or recurring) execution. `approvalId`, when
 /// set, points at the ControlPlaneApproval (C04's own model) this
 /// destructive plan required — the same table, not a second one.
