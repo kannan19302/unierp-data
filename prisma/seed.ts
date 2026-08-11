@@ -158,6 +158,27 @@ async function main() {
   );
   console.log(`User verified: ${adminUser.email}`);
 
+  const standardUser = await withIdpTenantContext(tenant.id, (tx) =>
+    tx.user.upsert({
+      where: {
+        tenantId_email: {
+          tenantId: tenant.id,
+          email: "john.miller@company.com",
+        },
+      },
+      update: {},
+      create: {
+        tenantId: tenant.id,
+        email: "john.miller@company.com",
+        passwordHash: DEFAULT_PASSWORD_HASH,
+        firstName: "John",
+        lastName: "Miller",
+        status: "ACTIVE",
+      },
+    }),
+  );
+  console.log(`User verified: ${standardUser.email}`);
+
   // Assign Super Admin Role to User
   const superAdminRoleId = rolesMap["SUPER_ADMIN"];
   if (superAdminRoleId) {

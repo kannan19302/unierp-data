@@ -53,6 +53,24 @@ model DesiredState {
   @@map("desired_states")
 }
 
+/// M14 — full history DesiredState itself never kept. Every version a
+/// resource's desired state has ever held, so "roll back to any prior
+/// version" has something to roll back TO. A rollback does not resurrect a
+/// row here; it reads one and submits its state as a NEW plan through the
+/// same pipeline every other change goes through — version-control
+/// semantics, not a special-cased bypass.
+model DesiredStateVersion {
+  id         String   @id @default(cuid())
+  resourceId String   @map("resource_id")
+  version    Int
+  state      Json
+  setAt      DateTime @default(now()) @map("set_at")
+
+  @@unique([resourceId, version])
+  @@index([resourceId])
+  @@map("desired_state_versions")
+}
+
 /// The last known ACTUAL state, as reported by whatever observes the real
 /// resource — a probe, a webhook, a reconciliation sweep. Overwritten on
 /// each report; DriftRecord is what preserves history of divergence.
