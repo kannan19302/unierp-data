@@ -1369,9 +1369,19 @@ model SaasSslCertificate {
   tenantId       String   @map("tenant_id")
   provider       String   @default("LETS_ENCRYPT") @map("provider")
   status         String   @default("ACTIVE") @map("status")
+  /// M23 — a pointer into an external secrets manager (Vault path, KMS
+  /// ARN, ...). There is no `pem`/`privateKey`/`value` field on this
+  /// model at all: the certificate material itself is never persisted
+  /// here, which is what makes "no secret value is readable through any
+  /// console API" true by construction rather than by convention.
+  secretRef      String?  @map("secret_ref")
   issuedAt       DateTime @default(now()) @map("issued_at")
   expiresAt      DateTime @map("expires_at")
   autoRenew      Boolean  @default(true) @map("auto_renew")
+  /// The certificate this one replaced on rotation, if any — kept ACTIVE
+  /// alongside the new one until the new one is confirmed, so there is
+  /// never an instant with zero valid certificates for a domain.
+  rotatedFromId  String?  @map("rotated_from_id")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
