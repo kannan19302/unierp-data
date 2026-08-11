@@ -1,0 +1,19 @@
+// ─────────────────────────────────────────────────
+// Reconciler — Track M (Provider Admin OS), M13.
+// Platform-owned, no tenantId/RLS, same precedent as every other Track M
+// model.
+// ─────────────────────────────────────────────────
+
+/// A manual hold suppresses reconciliation entirely while active — "an
+/// incident" is exactly the situation where auto-healing a resource an
+/// operator has deliberately taken down would be actively harmful.
+model ReconciliationHold {
+  id         String    @id @default(cuid())
+  reason     String
+  setBy      String    @map("set_by")
+  setAt      DateTime  @default(now()) @map("set_at")
+  releasedAt DateTime? @map("released_at")
+
+  @@index([releasedAt])
+  @@map("reconciliation_holds")
+}
