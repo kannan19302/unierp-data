@@ -1,0 +1,34 @@
+// ─────────────────────────────────────────────────
+// Operation pipeline scheduling — Track M (Provider Admin OS), M11.
+// Platform-owned, no tenantId/RLS, same precedent as every other Track M
+// model.
+// ─────────────────────────────────────────────────
+
+model BlackoutPeriod {
+  id        String   @id @default(cuid())
+  reason    String
+  startTime DateTime @map("start_time")
+  endTime   DateTime @map("end_time")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([startTime, endTime])
+  @@map("blackout_periods")
+}
+
+/// A plan scheduled for future (or recurring) execution. `approvalId`, when
+/// set, points at the ControlPlaneApproval (C04's own model) this
+/// destructive plan required — the same table, not a second one.
+model ScheduledOperation {
+  id            String    @id @default(cuid())
+  planId        String    @map("plan_id")
+  resourceId    String    @map("resource_id")
+  scheduledFor  DateTime  @map("scheduled_for")
+  /// Cron-style recurrence, null for a one-off.
+  recurrence    String?
+  approvalId    String?   @map("approval_id")
+  status        String    @default("SCHEDULED") // SCHEDULED | EXECUTED | CANCELLED
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([scheduledFor, status])
+  @@map("scheduled_operations")
+}
