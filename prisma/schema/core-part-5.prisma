@@ -934,6 +934,28 @@ model RecordLegalHold {
   @@map("record_legal_holds")
 }
 
+/// D17 — a pending approval for a change to a sensitive setting. Created
+/// PENDING by the requester; a DIFFERENT actor must approve (or reject)
+/// it before the change is ever applied — a sensitive setting cannot
+/// change without an approver is this row's own status field, not an
+/// implicit convention. Kept permanently (never deleted) so "who
+/// requested/approved/rejected this, and when" stays answerable.
+model SettingChangeApproval {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  key         String
+  newValue    Json      @map("new_value")
+  requestedBy String    @map("requested_by")
+  reason      String
+  status      String    @default("PENDING")
+  approvedBy  String?   @map("approved_by")
+  decidedAt   DateTime? @map("decided_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([tenantId, key, status])
+  @@map("setting_change_approvals")
+}
+
 model SsoConfig {
   id               String   @id @default(cuid())
   tenantId         String   @map("tenant_id")
