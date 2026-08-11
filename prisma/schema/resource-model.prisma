@@ -120,3 +120,21 @@ model DriftRecord {
   @@index([resourceId, resolved])
   @@map("drift_records")
 }
+
+/// M18 — the ONE attribution mapping resource, service and environment
+/// ownership hangs off. A resource with no row here (or one missing any of
+/// the four fields) is unattributed — read via `age` against
+/// `Resource.createdAt`, never hidden by omission. M27 (cost allocation)
+/// reads this same table rather than building its own tenant/resource map.
+model ResourceAttribution {
+  id          String   @id @default(cuid())
+  resourceId  String   @unique @map("resource_id")
+  tenantId    String?  @map("tenant_id")
+  service     String?
+  environment String?
+  owner       String?
+  attributedAt DateTime @default(now()) @map("attributed_at")
+  attributedBy String  @map("attributed_by")
+
+  @@map("resource_attributions")
+}
