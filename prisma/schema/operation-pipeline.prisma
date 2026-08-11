@@ -39,6 +39,36 @@ model Job {
   @@map("jobs")
 }
 
+// ── M15 · bulk operations ──
+//
+// A BulkOperation applies one plan-shaped action across many resources, one
+// item at a time, committing each item's outcome before moving to the next
+// — the same "advance the cursor only after a durable write" invariant M12's
+// Job uses, so a bulk run over 500 resources survives a crash mid-way and
+// resumes at the first unprocessed item rather than repeating or skipping.
+// Per-item outcomes are never collapsed into a single pass/fail: a partial
+// failure names exactly which resourceId failed and why.
+
+// Named PlatformBulkOperation, not BulkOperation: that name is already
+// taken by the tenant-scoped ERP model in core-part-5.prisma (bulk edits
+// over business records, with tenantId/RLS). This one is platform-owned,
+// no tenantId, same precedent as every other Track M model — it bulk-plans
+// over Resources (M07), not tenant business data.
+model PlatformBulkOperation {
+  id          String   @id @default(cuid())
+  kind        String   @map("kind")
+  /// PENDING | RUNNING | DONE | FAILED (FAILED = at least one item failed; still DONE-terminal)
+  status      String   @default("PENDING")
+  /// Index of the next resourceId to process. items[0, cursor) are settled.
+  cursor      Int      @default(0)
+  items       Json     // [{ resourceId, status: PENDING|SUCCESS|FAILED, error? }, ...]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("platform_bulk_operations")
+}
+
 /// A plan scheduled for future (or recurring) execution. `approvalId`, when
 /// set, points at the ControlPlaneApproval (C04's own model) this
 /// destructive plan required — the same table, not a second one.
