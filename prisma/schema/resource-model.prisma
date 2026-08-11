@@ -170,3 +170,25 @@ model TelemetrySample {
   @@index([resourceId, metric, observedAt])
   @@map("telemetry_samples")
 }
+
+/// M33 — an attribute-scoped grant over the estate, independent of C02's
+/// RBAC permission registry: no `platform.*` (or any other) RBAC
+/// wildcard is ever consulted by EstateAbacService, so a role's general
+/// permissions can never satisfy an estate-scoped check. Every non-null
+/// field on a grant NARROWS it — a grant with `region` set only matches
+/// resources whose actual region equals it; a resource in a different
+/// region provably does not match, not "matches but gets filtered."
+model EstateGrant {
+  id          String   @id @default(cuid())
+  subjectId   String   @map("subject_id")
+  capability  String   // "read" | "plan"
+  resourceKind String? @map("resource_kind")
+  region      String?
+  environment String?
+  tenantId    String?  @map("tenant_id")
+  accountId   String?  @map("account_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([subjectId, capability])
+  @@map("estate_grants")
+}
