@@ -138,3 +138,20 @@ model ResourceAttribution {
 
   @@map("resource_attributions")
 }
+
+/// M24 — a real, timestamped capacity reading for one resource/metric
+/// pair (e.g. cpu_utilization on a compute-instance). The capacity
+/// forecaster reads a SERIES of these, never a single synthetic number —
+/// "checked against a real historical shortfall" means the trend the
+/// model projects from is exactly what got recorded here over time.
+model CapacityObservation {
+  id         String   @id @default(cuid())
+  resourceId String   @map("resource_id")
+  metric     String
+  value      Float
+  capacity   Float
+  observedAt DateTime @map("observed_at")
+
+  @@index([resourceId, metric, observedAt])
+  @@map("capacity_observations")
+}
