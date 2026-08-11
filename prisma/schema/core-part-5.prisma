@@ -881,6 +881,31 @@ model DataErasureRequest {
   @@map("data_erasure_requests")
 }
 
+/// D11 — the crypto-shredding key for one data subject's erasure. This is
+/// the WRITTEN-DOWN resolution to the erasure-vs-immutable-audit conflict:
+/// the audit trail (AuditLog/ChangeHistory) is APPEND-ONLY and never
+/// mutated or deleted by an erasure — its integrity is preserved by never
+/// touching it. Instead, any personal-data reference an erasure-triggering
+/// action writes INTO the audit trail (e.g. GDPR_ERASURE's own log entry,
+/// which would otherwise recreate the very email address it just erased)
+/// is encrypted under this per-subject key before being stored. Executing
+/// the erasure deletes this row — the encryption key exists nowhere else
+/// — so every audit-trail reference encrypted under it becomes
+/// PERMANENTLY unrecoverable from that instant, without a single byte of
+/// the audit log itself ever being altered. This is crypto-shredding
+/// applied narrowly to the one place PII genuinely enters the audit
+/// trail, not a redesign of the audit system.
+model SubjectErasureKey {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  subjectEmailHash String   @map("subject_email_hash")
+  encryptionKey    String   @map("encryption_key")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@unique([tenantId, subjectEmailHash])
+  @@map("subject_erasure_keys")
+}
+
 model SsoConfig {
   id               String   @id @default(cuid())
   tenantId         String   @map("tenant_id")
