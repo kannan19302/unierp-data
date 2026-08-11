@@ -192,3 +192,56 @@ model EstateGrant {
   @@index([subjectId, capability])
   @@map("estate_grants")
 }
+
+// ── M36 · backup, restore, DR and failover ──
+//
+// Platform-owned, resource-scoped — architecturally distinct from C22's
+// tenant migration (which operates on Tenant/SaasMultiTenantCluster/
+// UsageRecord, moving a TENANT between clusters). This models backup
+// objectives and rehearsal HISTORY for one M07 Resource; a "restore" is
+// a plan against that resource's desired state, never a tenant-level
+// data move.
+
+model BackupPolicy {
+  id                 String   @id @default(cuid())
+  resourceId         String   @unique @map("resource_id")
+  rpoObjectiveMinutes Int     @map("rpo_objective_minutes")
+  rtoObjectiveMinutes Int     @map("rto_objective_minutes")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("backup_policies")
+}
+
+/// One rehearsed restore's MEASURED numbers against the policy's
+/// objective — "measured rather than declared." `passed` is false the
+/// instant either measurement exceeds its objective; a miss is recorded
+/// as a failure here, never silently averaged away.
+model RestoreRehearsal {
+  id                  String   @id @default(cuid())
+  resourceId          String   @map("resource_id")
+  measuredRpoMinutes  Int      @map("measured_rpo_minutes")
+  measuredRtoMinutes  Int      @map("measured_rto_minutes")
+  rpoObjectiveMinutes Int      @map("rpo_objective_minutes")
+  rtoObjectiveMinutes Int      @map("rto_objective_minutes")
+  passed              Boolean
+  reconciled          Boolean
+  rehearsedAt         DateTime @default(now()) @map("rehearsed_at")
+
+  @@map("restore_rehearsals")
+}
+
+/// One rehearsed region failover, and (once complete) its failback —
+/// "a region failover is rehearsed with a PROVEN failback": `failbackAt`
+/// and `failbackVerified` are null/false until a second, separate call
+/// actually reverts the resource's region and confirms it.
+model FailoverRehearsal {
+  id               String    @id @default(cuid())
+  resourceId       String    @map("resource_id")
+  fromRegion       String    @map("from_region")
+  toRegion         String    @map("to_region")
+  failedOverAt     DateTime  @default(now()) @map("failed_over_at")
+  failbackAt       DateTime? @map("failback_at")
+  failbackVerified Boolean   @default(false) @map("failback_verified")
+
+  @@map("failover_rehearsals")
+}
