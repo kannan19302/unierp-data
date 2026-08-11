@@ -244,3 +244,22 @@ model CostLineItem {
   @@index([batchId])
   @@map("cost_line_items")
 }
+
+// ── M29 · budgets, forecasts and quota binding ──
+
+/// A budget threshold for one tenant/period. `enforcementResourceId` +
+/// `enforcementDesiredState`, when both set, are what a crossed budget
+/// executes AS A PLAN through M09/M12 — never a direct write. Null means
+/// "alert only," a deliberately valid, common configuration.
+model BudgetPolicy {
+  id                      String   @id @default(cuid())
+  tenantId                String   @map("tenant_id")
+  period                  String
+  thresholdAmount         Decimal  @map("threshold_amount") @db.Decimal(19, 4)
+  enforcementResourceId   String?  @map("enforcement_resource_id")
+  enforcementDesiredState Json?    @map("enforcement_desired_state")
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  @@unique([tenantId, period])
+  @@map("budget_policies")
+}
