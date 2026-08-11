@@ -282,3 +282,27 @@ model ProviderConsumptionReport {
   @@unique([providerId, tenantId, metric, period])
   @@map("provider_consumption_reports")
 }
+
+/// M31 — a FinOps recommendation is never advice-only: it always carries
+/// a `recommendedDesiredState`, the exact M07 desired-state change
+/// executing it means, and a `predictedSaving` sourced from M25's real
+/// ingested cost, never an estimate typed in free text. `actualSaving`/
+/// `variance` are filled in only after execution AND a follow-up cost
+/// measurement — the "measured afterwards, difference shown" half.
+model FinOpsRecommendation {
+  id                     String    @id @default(cuid())
+  resourceId             String    @map("resource_id")
+  kind                   String    // IDLE | ORPHANED | OVER_PROVISIONED | UNATTRIBUTED
+  costBefore             Decimal   @map("cost_before") @db.Decimal(19, 4)
+  predictedSaving        Decimal   @map("predicted_saving") @db.Decimal(19, 4)
+  recommendedDesiredState Json     @map("recommended_desired_state")
+  status                 String    @default("PENDING") // PENDING | EXECUTED
+  executedAt             DateTime? @map("executed_at")
+  actualCostAfter        Decimal?  @map("actual_cost_after") @db.Decimal(19, 4)
+  actualSaving           Decimal?  @map("actual_saving") @db.Decimal(19, 4)
+  variance               Decimal?  @db.Decimal(19, 4)
+  createdAt              DateTime  @default(now()) @map("created_at")
+
+  @@index([resourceId])
+  @@map("finops_recommendations")
+}
