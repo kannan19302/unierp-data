@@ -906,6 +906,34 @@ model SubjectErasureKey {
   @@map("subject_erasure_keys")
 }
 
+/// D12 — a legal hold on one specific record, generic across any
+/// entityType (documents/folders already have their own boolean
+/// `legalHold` field for the same purpose — see documents.service.ts;
+/// this is the equivalent mechanism made reusable for every OTHER
+/// entity type, not a replacement for that one). While `releasedAt` is
+/// null, the hold is ACTIVE and RecordLegalHoldService.isOnHold()
+/// returns true for that (entityType, entityId) pair — the check any
+/// deletion path (retention enforcement, GDPR erasure, a user-triggered
+/// delete) must consult before removing a held record. Released holds
+/// are kept, never deleted, so "was this ever held, by whom, why, for
+/// how long" stays answerable. Named distinctly from the pre-existing
+/// `LegalHold` model (a litigation matter/custodian case record) to
+/// avoid conflating two different concepts under one name.
+model RecordLegalHold {
+  id         String    @id @default(cuid())
+  tenantId   String    @map("tenant_id")
+  entityType String    @map("entity_type")
+  entityId   String    @map("entity_id")
+  reason     String
+  heldBy     String    @map("held_by")
+  heldAt     DateTime  @default(now()) @map("held_at")
+  releasedBy String?   @map("released_by")
+  releasedAt DateTime? @map("released_at")
+
+  @@index([tenantId, entityType, entityId])
+  @@map("record_legal_holds")
+}
+
 model SsoConfig {
   id               String   @id @default(cuid())
   tenantId         String   @map("tenant_id")
