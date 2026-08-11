@@ -228,6 +228,16 @@ model CostLineItem {
   sourceLineId String @map("source_line_id")
   description String
   amount      Decimal @db.Decimal(19, 4)
+  /// M27 — the single resource this line item bills, when the export
+  /// says one. Null for genuinely shared or unattributable lines; not a
+  /// "0 means unattributed" convention, an actual absent value.
+  resourceId  String? @map("resource_id")
+  /// M27 — set instead of `resourceId` when this line item is a SHARED
+  /// cost the provider billed once for several resources (e.g. a
+  /// shared load balancer). Split evenly across these, in whole cents,
+  /// with any remainder cent assigned to the first resource in the list
+  /// so the split always sums back to the line item's own amount exactly.
+  sharedResourceIds Json?  @map("shared_resource_ids")
 
   batch CostIngestionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
