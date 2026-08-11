@@ -1,0 +1,35 @@
+// ─────────────────────────────────────────────────
+// Automation, runbooks and event-driven response — Track M (Provider
+// Admin OS), M45. Platform-owned, no tenantId/RLS, same precedent as
+// every other Track M model.
+// ─────────────────────────────────────────────────
+
+/// A versioned, testable automation: an ordered list of {resourceId,
+/// proposedState} steps. DRAFT until publish() proves every step clears
+/// M08 policy; PUBLISHED is the only status executeFromIncident() will
+/// run.
+model Runbook {
+  id        String   @id @default(cuid())
+  name      String
+  steps     Json
+  version   Int      @default(1)
+  status    String   @default("DRAFT") // DRAFT | PUBLISHED
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("runbooks")
+}
+
+/// One real execution of a published runbook, from a real incident,
+/// through a real two-person approval, as a real M12 job — every field
+/// here points at a row that actually exists, never a synthetic id.
+model RunbookExecution {
+  id          String   @id @default(cuid())
+  runbookId   String   @map("runbook_id")
+  incidentId  String   @map("incident_id")
+  approvalId  String   @map("approval_id")
+  jobId       String   @map("job_id")
+  planIds     Json     @map("plan_ids")
+  executedAt  DateTime @default(now()) @map("executed_at")
+
+  @@map("runbook_executions")
+}
