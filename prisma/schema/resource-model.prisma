@@ -1,0 +1,104 @@
+// ─────────────────────────────────────────────────
+// Resource model — Track M (Provider Admin OS), M07.
+//
+// Platform-owned, not tenant-owned: same precedent as the provider-registry
+// models. Every resource the platform manages — compute, DNS zones, storage
+// buckets, whatever a later stage provisions — is declared here once, with
+// its desired state, its last observed actual state, its dependency edges,
+// and any detected drift between the two.
+// ─────────────────────────────────────────────────
+
+model ResourceKind {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+
+  resources Resource[]
+
+  @@map("resource_kinds")
+}
+
+model Resource {
+  id           String   @id @default(cuid())
+  kindId       String   @map("kind_id")
+  name         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  kind ResourceKind @relation(fields: [kindId], references: [id])
+
+  desiredState DesiredState?
+  observedState ObservedState?
+  driftRecords DriftRecord[]
+
+  /// Edges where THIS resource depends on another.
+  dependsOn    Dependency[] @relation("DependentResource")
+  /// Edges where another resource depends on THIS one — read before delete.
+  dependedOnBy Dependency[] @relation("DependencyResource")
+
+  @@map("resources")
+}
+
+/// The single current desired state per resource, versioned so M14 can build
+/// rollback on top without this phase needing to keep full history itself.
+model DesiredState {
+  id         String   @id @default(cuid())
+  resourceId String   @unique @map("resource_id")
+  state      Json
+  version    Int      @default(1)
+  setAt      DateTime @default(now()) @map("set_at")
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@map("desired_states")
+}
+
+/// The last known ACTUAL state, as reported by whatever observes the real
+/// resource — a probe, a webhook, a reconciliation sweep. Overwritten on
+/// each report; DriftRecord is what preserves history of divergence.
+model ObservedState {
+  id         String   @id @default(cuid())
+  resourceId String   @unique @map("resource_id")
+  state      Json
+  observedAt DateTime @default(now()) @map("observed_at")
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@map("observed_states")
+}
+
+/// A directed edge: `resourceId` depends on `dependsOnId`. The dependency
+/// GRAPH refuses a cycle at insert time — enforced in code, not by this
+/// table's own constraints, since Postgres cannot express "no cycle" as a
+/// column-level check.
+model Dependency {
+  id          String @id @default(cuid())
+  resourceId  String @map("resource_id")
+  dependsOnId String @map("depends_on_id")
+
+  resource  Resource @relation("DependentResource", fields: [resourceId], references: [id], onDelete: Cascade)
+  dependsOn Resource @relation("DependencyResource", fields: [dependsOnId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, dependsOnId])
+  @@index([dependsOnId])
+  @@map("dependencies")
+}
+
+/// One detected divergence between desired and observed state. Append-only:
+/// resolving drift (by reconciliation or by accepting the new actual state
+/// as desired) marks a record resolved rather than deleting it, so drift
+/// history survives.
+model DriftRecord {
+  id         String   @id @default(cuid())
+  resourceId String   @map("resource_id")
+  detectedAt DateTime @default(now()) @map("detected_at")
+  /// Field-level diff: [{ field, desiredValue, observedValue }, ...]
+  diff       Json
+  resolved   Boolean  @default(false)
+  resolvedAt DateTime? @map("resolved_at")
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId, resolved])
+  @@map("drift_records")
+}
