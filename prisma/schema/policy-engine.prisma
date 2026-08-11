@@ -1,0 +1,46 @@
+// ─────────────────────────────────────────────────
+// Policy-as-code — Track M (Provider Admin OS), M08.
+//
+// The RULE is code (registered via PolicyEngineService.registerPolicy, the
+// same registry-of-code pattern M02/M03/M05 already use for capabilities,
+// adapters and providers) — this file only models the metadata: which
+// policies exist, at which scope level, and what overrides are active
+// against them. Platform-owned, no tenantId/RLS, same precedent as every
+// other Track M model.
+// ─────────────────────────────────────────────────
+
+model Policy {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  /// Bumped whenever the registered rule's logic changes — "versioned code"
+  /// from the exit criterion, made visible rather than only implicit in git
+  /// history.
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  overrides PolicyOverride[]
+
+  @@map("policies")
+}
+
+/// `platform` inheritance has no scopeId; region/tenant/resource do.
+/// Evaluation walks resource -> tenant -> region -> platform and applies
+/// the most specific override that exists for the target.
+model PolicyOverride {
+  id         String    @id @default(cuid())
+  policyId   String    @map("policy_id")
+  scopeType  String    @map("scope_type") // PLATFORM | REGION | TENANT | RESOURCE
+  scopeId    String?   @map("scope_id")
+  reason     String
+  grantedBy  String    @map("granted_by")
+  expiresAt  DateTime  @map("expires_at")
+  revertedAt DateTime? @map("reverted_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([policyId, scopeType, scopeId])
+  @@index([expiresAt, revertedAt])
+  @@map("policy_overrides")
+}
