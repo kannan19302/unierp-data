@@ -155,3 +155,18 @@ model CapacityObservation {
   @@index([resourceId, metric, observedAt])
   @@map("capacity_observations")
 }
+
+/// M26 — a single telemetry reading. `getUtilization()` reads the most
+/// recent row for a resource/metric; whether that row is "fresh enough"
+/// is a property of the CALLER's clock at read time versus this row's
+/// observedAt, never baked into the row itself.
+model TelemetrySample {
+  id         String   @id @default(cuid())
+  resourceId String   @map("resource_id")
+  metric     String
+  value      Float
+  observedAt DateTime @map("observed_at")
+
+  @@index([resourceId, metric, observedAt])
+  @@map("telemetry_samples")
+}
