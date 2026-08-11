@@ -60,10 +60,46 @@ export const PLATFORM_ROLES = {
     name: "Platform Support",
     description:
       "Read-only control-plane access for support triage. Cannot suspend, delete or offboard a tenant.",
+    // M47 / D046: the read halves of the plane-1 surfaces a support agent needs
+    // to answer "who is this tenant and what is wrong" (C06, C20) without
+    // escalating. Enumerated one code at a time, deliberately: `system.*` would
+    // be correct-and-catastrophic here, since it also carries
+    // system.release.rollback and system.offboarding.write.
+    //
+    // Every code here ends in `.read`. That is the invariant for this role, and
+    // seed-platform.spec.ts asserts it — a `.write`/`.execute`/`.rollback` code
+    // added to this list fails the build rather than quietly widening support.
     permissions: [
       "system.tenant.read",
+      "system.tenant.lifecycle.read",
       "system.health.read",
+      "system.analytics.read",
       "platform.audit.read",
+      "system.support.read",
+      "system.audit.read",
+      "system.invoice.read",
+      "system.subscription.read",
+      "system.dunning.read",
+      "system.metering.read",
+      "system.quota.read",
+      "system.plan.read",
+      "system.flags.read",
+      "system.upgrade.read",
+      "system.migration.read",
+      "system.offboarding.read",
+      "system.import.read",
+      "system.broadcast.read",
+      "system.release.read",
+      "system.clusters.read",
+      "system.domain.read",
+      "system.whitelabel.read",
+      "system.residency.read",
+      "system.isolation.read",
+      "system.sla.read",
+      "system.backup.read",
+      "system.security.read",
+      "system.soc.read",
+      "system.operations.read",
     ],
   },
 } as const;
