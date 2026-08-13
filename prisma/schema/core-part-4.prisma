@@ -1202,6 +1202,9 @@ model BuilderWorkflow {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  /// G11 — execution history of this workflow definition.
+  runs BuilderWorkflowRun[]
+
   @@index([tenantId])
   @@map("builder_workflows")
 }

@@ -1,0 +1,77 @@
+// ─── G11 — Workflow runtime: run and run-step records ───────────────────────
+//
+// The workflow *definition* lives in BuilderWorkflow (core-part-4.prisma); its
+// nodes/edges are stored as JSON and edited on the canvas. These two models are
+// the *execution* side — a concrete attempt of a workflow definition, and the
+// ordered, per-node step trail of that attempt. Every run is inspectable step
+// by step, and a failed run can be resumed from the failing step.
+//
+// One run row per attempt; one step row per node visited. Steps are numbered
+// with sortOrder so the run's trajectory is reproducible. Statuses:
+//   run   PENDING → RUNNING → COMPLETED | FAILED | WAITING
+//   step  PENDING → RUNNING → SUCCESS | FAILED | SKIPPED | COMPENSATED
+//
+// Both tables carry tenant_id + both indexes + RLS, like every tenant table.
+// Hand-authored migration (20260813020000_g11_workflow_runtime), never
+// `prisma migrate dev` — its diff against this schema proposes dropping live
+// IDP tables (D141).
+
+model BuilderWorkflowRun {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  workflowId String   @map("workflow_id")
+  /// PENDING, RUNNING, WAITING, COMPLETED, FAILED
+  status     String   @default("PENDING")
+  /// MANUAL (builder Test Run), WEBHOOK, SCHEDULE
+  trigger    String   @default("MANUAL")
+  /// The payload the run started with.
+  input      Json     @default("{}")
+  /// Aggregate result produced by the run (nodes may write into it).
+  output     Json     @default("{}")
+  /// Populated when the run FAILED — the failing node's error message.
+  error      String?  @db.Text
+  /// nodeId the run can be resumed from after a failure.
+  resumeFrom String?  @map("resume_from")
+  startedAt  DateTime @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  workflow BuilderWorkflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  steps    BuilderWorkflowRunStep[]
+
+  @@index([tenantId])
+  @@index([workflowId, tenantId])
+  @@map("builder_workflow_runs")
+}
+
+model BuilderWorkflowRunStep {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  runId      String   @map("run_id")
+  /// nodeId as it appears in the workflow definition's nodes[].
+  nodeId     String   @map("node_id")
+  /// approval | email | notification | condition | delay | webhook | trigger
+  nodeType   String   @map("node_type")
+  nodeLabel  String?  @map("node_label")
+  /// PENDING, RUNNING, SUCCESS, FAILED, SKIPPED, COMPENSATED
+  status     String   @default("PENDING")
+  /// 0-based position in the run's execution order.
+  sortOrder  Int      @map("sort_order")
+  /// Input the node executed with (evaluated from run input + prior outputs).
+  input      Json?
+  /// Output the node produced.
+  output     Json?
+  /// Populated when the step FAILED.
+  error      String?  @db.Text
+  startedAt  DateTime @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  run BuilderWorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([runId, tenantId])
+  @@map("builder_workflow_run_steps")
+}
