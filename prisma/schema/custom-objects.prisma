@@ -1,0 +1,74 @@
+// ─────────────────────────────────────────────────────────────
+// Developer-platform custom objects — G09, 16-TRACK-G-DEVELOPER-PLATFORM § Wave 4.
+//
+// A tenant admin defines an object and its fields through the Data Object
+// Builder. These two models are metadata only — the *definition*. The actual
+// per-object data table (`co_<id>`, one real Postgres table per custom
+// object, always tenant_id + both indexes + RLS) is generated at creation
+// time by CustomObjectSchemaService (unierp-api), never by hand and never
+// deferred to a later "activate" step: an object row here cannot exist
+// without its backing table already isolated, because both are written in
+// the same transaction.
+//
+// This is deliberately a *separate* mechanism from SchemaRegistry/
+// CustomRecord (core-part-4.prisma): that pair is a generic JSON/EAV page
+// registry consumed by built-in app/page provisioning as well as
+// developer-authored forms, with a freeform `fields: Json` shape that admits
+// UI field types no closed DDL type map could safely translate to a column.
+// Reusing it here would mean generating a table from a field list this
+// platform already uses for things that are not columns. Custom objects need
+// a closed, DDL-safe field type set — the same one G01's extension schema
+// mechanism already defined and validates against — so this reuses that
+// contract (`@kannan19302/extension-api`) rather than SchemaRegistry's.
+// ─────────────────────────────────────────────────────────────
+
+model CustomObjectDefinition {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id")
+
+  /// lower_snake_case, unique per tenant — the generated table is `co_<id>`,
+  /// not derived from this, so renaming the label never touches the table.
+  apiName     String  @map("api_name")
+  label       String
+  description String?
+
+  /// ACTIVE | ARCHIVED. Archiving stops new field additions; it never drops
+  /// the table — reclaiming storage is a separate, deliberate operation,
+  /// same rule as extension uninstall (§ 8.2, G03).
+  status String @default("ACTIVE")
+
+  /// Recorded for traceability even though it is always derivable from `id`.
+  tableName String @map("table_name")
+
+  createdByUserId String?  @map("created_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  fields CustomObjectFieldDefinition[]
+
+  @@unique([tenantId, apiName])
+  @@index([tenantId, status])
+  @@map("custom_object_definitions")
+}
+
+model CustomObjectFieldDefinition {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id")
+  objectId String @map("object_id")
+
+  /// lower_snake_case column name in the generated table.
+  name     String
+  label    String
+  /// One of `@kannan19302/extension-api`'s closed FIELD_TYPES.
+  type     String
+  required Boolean @default(false)
+  indexed  Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  object CustomObjectDefinition @relation(fields: [objectId], references: [id], onDelete: Cascade)
+
+  @@unique([objectId, name])
+  @@index([tenantId, objectId])
+  @@map("custom_object_field_definitions")
+}
