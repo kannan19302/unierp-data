@@ -1,0 +1,210 @@
+// ─────────────────────────────────────────────────
+// AI governance — Track M (Provider Admin OS), M39.
+//
+// Platform-owned, not tenant-owned: no tenantId, no RLS. Same precedent as
+// Provider / ProviderBinding / ControlPlaneAuditLog — these describe the
+// platform's own AI capability-to-vendor bindings and governance posture,
+// not a customer's business data.
+//
+// AiProviderModel is deliberately decoupled from Provider (no Prisma
+// relation, plain providerId string) exactly as CostIngestionBatch is: it
+// names a provider the caller already resolved through M06, and the AI
+// adapter itself (M05's CapabilityAdapter, registered in-process) is what
+// actually talks to the vendor.
+// ─────────────────────────────────────────────────
+
+/// A model a provider offers for the `llm.complete` capability. The
+/// provider is registered via M03; this row records which MODELS it
+/// serves. Swapping traffic between providers is a M06 routing decision
+/// (priority / health / tenant pin) — a data change, never a code change.
+model AiProviderModel {
+  id           String   @id @default(cuid())
+  providerId   String   @map("provider_id")
+  /// The provider's own model identifier, e.g. "llama3.2:3b".
+  modelId      String   @map("model_id")
+  version      String?
+  /// Capabilities the model itself claims, e.g. ["chat", "tools", "json"].
+  capabilities Json?    @default("[]")
+  /// Adapter-level configuration, e.g. temperature default, context window.
+  config       Json?
+  /// ACTIVE | DEPRECATED
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([providerId, modelId])
+  @@index([providerId])
+  @@map("ai_provider_models")
+}
+
+/// Versioned prompt templates. Version is monotonic per slug; a slug's
+/// active version is the one the AI gateway renders calls with. Versioning
+/// is append-only: a prompt is never edited in place, it is superseded.
+model AiPromptVersion {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String
+  version   Int
+  content   String
+  /// Variable placeholders rendered by the gateway, e.g. ["tenantName"].
+  variables Json?    @default("[]")
+  isActive  Boolean  @default(false) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([slug, version])
+  @@index([slug, isActive])
+  @@map("ai_prompt_versions")
+}
+
+/// An MCP (Model Context Protocol) server registration. endpoint is where
+/// the gateway connects; authSecretRef points into the secrets manager —
+/// never a literal secret, exactly as ProviderCredential.
+model AiMcpServer {
+  id            String   @id @default(cuid())
+  name          String
+  endpoint      String
+  authSecretRef String?  @map("auth_secret_ref")
+  capabilities  Json?    @default("[]")
+  /// ACTIVE | DISABLED
+  status        String   @default("ACTIVE")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_mcp_servers")
+}
+
+/// A RAG index registration. What chunking/embedding it uses and how many
+/// chunks it holds is observed state, recorded by the indexing pipeline.
+model AiRagIndex {
+  id            String   @id @default(cuid())
+  name          String
+  source        String?
+  embeddingModel String  @map("embedding_model")
+  chunkCount    Int      @default(0) @map("chunk_count")
+  /// ACTIVE | INDEXING | DISABLED
+  status        String   @default("ACTIVE")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_rag_indexes")
+}
+
+/// A platform-approved agent registration. The tenant-side `AiAgent`
+/// (core-part-11) is which agents a tenant configured; THIS table is the
+/// platform's own record of which named agents are approved to run, which
+/// model they bind to, and which MCP servers / RAG indexes they may touch.
+model AiAgentRegistration {
+  id           String   @id @default(cuid())
+  agentKey     String   @unique @map("agent_key")
+  name         String
+  description  String?
+  modelId      String?  @map("model_id")
+  providerId   String?  @map("provider_id")
+  mcpServerIds Json?    @default("[]")
+  ragIndexIds  Json?    @default("[]")
+  /// ACTIVE | DISABLED
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([providerId])
+  @@map("ai_agent_registrations")
+}
+
+/// An evaluation suite: a named collection of cases. Platform-owned —
+/// evals judge provider/model quality across ALL tenants, so a suite is
+/// not any one tenant's data.
+model AiEvalSuite {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  cases AiEvalCase[]
+  runs  AiEvalRun[]
+
+  @@map("ai_eval_suites")
+}
+
+model AiEvalCase {
+  id        String       @id @default(cuid())
+  suiteId   String       @map("suite_id")
+  name      String
+  prompt    String
+  /// The behaviour the model must exhibit to PASS this case.
+  expected  String       @map("expected")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  suite AiEvalSuite @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+
+  @@index([suiteId])
+  @@map("ai_eval_cases")
+}
+
+/// One run of a suite against one provider+model. results is the
+/// per-case verdict array; pass/fail counts must equal the length of the
+/// suite's case set — a run that "passes" with cases unrecorded is a
+/// check that cannot fail, and is rejected on sight.
+model AiEvalRun {
+  id          String       @id @default(cuid())
+  suiteId     String       @map("suite_id")
+  providerId  String       @map("provider_id")
+  modelId     String       @map("model_id")
+  /// PENDING | RUNNING | PASSED | FAILED | ERROR
+  status      String       @default("PENDING")
+  passedCount Int          @default(0) @map("passed_count")
+  failedCount Int          @default(0) @map("failed_count")
+  /// [{ caseId, caseName, passed, output }]
+  results     Json?        @default("[]")
+  startedAt   DateTime     @default(now()) @map("started_at")
+  completedAt DateTime?    @map("completed_at")
+
+  suite AiEvalSuite @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+
+  @@index([suiteId])
+  @@index([providerId])
+  @@map("ai_eval_runs")
+}
+
+/// A guardrail rule. ruleType + rule describe what to look for in a call;
+/// action is what happens when it matches. BLOCK stops the call before any
+/// provider adapter executes (and is audited); WARN records and passes.
+model AiGuardrailPolicy {
+  id        String   @id @default(cuid())
+  name      String
+  /// KEYWORD | REGEX | PII | TOXICITY
+  ruleType  String   @map("rule_type")
+  /// { patterns?: string[], maxLength?: number, ... } per ruleType
+  rule      Json?    @map("rule")
+  /// BLOCK | WARN
+  action    String   @default("BLOCK")
+  /// high | medium | low
+  severity  String   @default("high")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_guardrail_policies")
+}
+
+/// Every guardrail trigger — both BLOCK and WARN — is recorded here so a
+/// blocked call is provable after the fact, and the block itself is also
+/// written to the control-plane audit spine (ControlPlaneAuditLog) by the
+/// gateway. tenantRef is a data column, not an RLS field: this table is
+/// platform-owned governance history, the same way ControlPlaneAuditLog
+/// records a target tenant without owning tenant data.
+model AiGuardrailEvent {
+  id        String   @id @default(cuid())
+  policyId  String   @map("policy_id")
+  action    String
+  tenantRef String   @map("tenant_ref")
+  /// SHA-256 of the input that triggered the rule — enough to prove which
+  /// call was blocked without storing the prompt itself.
+  inputHash String   @map("input_hash")
+  detail    Json?    @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([policyId])
+  @@index([tenantRef])
+  @@map("ai_guardrail_events")
+}
