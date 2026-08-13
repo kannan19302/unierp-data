@@ -1171,7 +1171,12 @@ model BuilderForm {
   icon        String?
   status      String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
   module      String   @default("Sales")
-  fields      Json     @default("[]") // Array of field definitions [{name, type, label, required, options}]
+  fields      Json     @default("[]") // Array of field definitions [{id, name, type, label, required, options}]
+  /// G10 — ordered steps: [{id, title, order, fieldIds}]. Empty = single page (render `fields` in order).
+  pages       Json     @default("[]")
+  /// G10 — conditional visibility/requirement: [{fieldId, operator, value, action, targetFieldId}].
+  /// operator: equals|notEquals|contains|greaterThan|lessThan|isEmpty. action: show|hide|enable|disable|require.
+  conditions  Json     @default("[]")
   settings    Json     @default("{}") // Form settings: naming, permissions, etc.
   createdBy   String?  @map("created_by")
   createdAt   DateTime @default(now()) @map("created_at")
