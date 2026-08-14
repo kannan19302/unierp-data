@@ -134,19 +134,30 @@ async function main() {
   }
 
   // ── 2. every DB table carrying a tenant column must be protected ─────────────
-  // Catches tables created outside the schema, or schemas renamed away from a
-  // table, that would otherwise be invisible to the schema-derived pass above.
+  // Catches tables created outside the schema (e.g. runtime DDL co_* and ext_* tables,
+  // closing D143), or schemas renamed away from a table, that would otherwise be
+  // invisible to the schema-derived pass above.
+  const runtimeDdlTables = [];
   for (const [table, d] of [...db].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const isRuntimePrefix = table.startsWith("co_") || table.startsWith("ext_");
     const cols = await prisma.$queryRawUnsafe(
       `SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name=$1`,
       table,
     );
     const tenantCol = cols.find((c) => c.column_name === "tenant_id" || c.column_name === "tenantId");
+    
+    if (isRuntimePrefix) {
+      runtimeDdlTables.push(table);
+      if (!tenantCol) {
+        failures.push(`Runtime DDL table "${table}" (D143) is missing required tenant_id column.`);
+      }
+    }
+
     if (!tenantCol) continue;
     const hasPolicy = d.policies?.split(",").includes(`tenant_isolation_${table}`) ?? false;
     if (!d.rls || !d.forced || !hasPolicy) {
       failures.push(
-        `DB table "${table}" has tenant column "${tenantCol.column_name}" but rls=${!!d.rls} forced=${!!d.forced} policy=${hasPolicy ? "present" : "MISSING"}`,
+        `DB table "${table}" has tenant column "${tenantCol.column_name}" but rls=${!!d.rls} forced=${!!d.forced} policy=${hasPolicy ? "present" : "MISSING"}${isRuntimePrefix ? " (runtime DDL table, D143)" : ""}`,
       );
     }
   }
@@ -177,6 +188,7 @@ async function main() {
 
   console.log(`\nRLS verification — schema-derived, per-table`);
   console.log(`  expected tenant tables (from schema): ${expected.size}`);
+  console.log(`  runtime DDL tables checked (D143):    ${runtimeDdlTables.length}`);
   console.log(`  F5 tables confirmed individually:     ${confirmed.length}/${F5.length}${f5Missing ? ` (${f5Missing} NOT covered)` : ""}`);
   console.log(`  failures:                             ${failures.length}`);
 

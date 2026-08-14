@@ -357,11 +357,16 @@
   'video_call_participants',
   'video_call_rooms',
   'warehouse_kpis',
-  'wave_plan_tasks',
+'wave_plan_tasks',
   'wave_plans',
   'work_center_capacities',
   'workflow_definition_steps',
   'workflow_definitions',
   'workflow_executions',
+  'decision_tables',
+  'decision_table_rules',
+  'rule_sets',
+  'rule_definitions',
+  'rule_evaluation_logs',
 ];
 
