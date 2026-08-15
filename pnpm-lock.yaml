@@ -21,6 +21,9 @@ importers:
       '@kannan19302/config':
         specifier: ^1.0.2
         version: 1.0.2
+      '@kannan19302/shared':
+        specifier: ^1.0.5
+        version: 1.0.5
       '@nestjs/common':
         specifier: ^11.1.28
         version: 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -389,6 +392,9 @@ packages:
 
   '@kannan19302/config@1.0.2':
     resolution: {integrity: sha512-mJIQyBTKUduysyrQ1F5KB5+Fd2rjetHllQRDvKEFM3TvSm/7oG0cBsZH4M0Bwa5ifuqWkzJbjotZmYHhfUPeTQ==}
+
+  '@kannan19302/shared@1.0.5':
+    resolution: {integrity: sha512-fR9L6yCFnznsQGfEUmHUNZfKX6FS4vu120JVp7KCQ0EyYnaussxM918IA2x4HC1J0EOOORZHK2PwgbKH65607w==}
 
   '@lukeed/csprng@1.1.0':
     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
@@ -1164,6 +1170,9 @@ packages:
     resolution: {integrity: sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==}
     engines: {node: '>=12'}
 
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
 snapshots:
 
   '@ampproject/remapping@2.3.0':
@@ -1361,6 +1370,10 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@kannan19302/config@1.0.2': {}
+
+  '@kannan19302/shared@1.0.5':
+    dependencies:
+      zod: 3.25.76
 
   '@lukeed/csprng@1.1.0': {}
 
@@ -2137,3 +2150,5 @@ snapshots:
       ansi-styles: 6.2.3
       string-width: 5.1.2
       strip-ansi: 7.2.0
+
+  zod@3.25.76: {}

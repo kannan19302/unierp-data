@@ -1,0 +1,56 @@
+// ─────────────────────────────────────────────────────────────
+// Data Breach models for saas-portal
+// ─────────────────────────────────────────────────────────────
+
+model DataBreach {
+  id                           String    @id @default(cuid())
+  tenantId                     String    @map("tenant_id") @db.VarChar(36)
+  title                        String    @db.VarChar(255)
+  description                  String    @db.Text
+  severity                     String    @db.VarChar(30) // LOW, MEDIUM, HIGH, CRITICAL
+  status                       String    @db.VarChar(30) // DETECTED, ASSESSING, CONTAINED, NOTIFIED, RESOLVED, CLOSED
+  detectedAt                   DateTime  @default(now()) @map("detected_at")
+  assessedAt                   DateTime? @map("assessed_at")
+  containedAt                  DateTime? @map("contained_at")
+  notifiedAt                   DateTime? @map("notified_at")
+  resolvedAt                   DateTime? @map("resolved_at")
+  closedAt                     DateTime? @map("closed_at")
+  dataCategoriesAffected       String[]  @map("data_categories_affected")
+  dataSubjectsAffected         Int       @map("data_subjects_affected")
+  lawfulBasisForProcessing     String    @map("lawful_basis_for_processing") @db.VarChar(255)
+  crossBorderTransfer          Boolean   @map("cross_border_transfer")
+  subProcessorsInvolved        String[]  @map("sub_processors_involved")
+  riskAssessment               String?   @map("risk_assessment") @db.Text
+  mitigationActions            String[]  @map("mitigation_actions")
+  notificationRequired         Boolean   @map("notification_required")
+  supervisoryAuthorityNotified Boolean   @map("supervisory_authority_notified")
+  dataSubjectsNotified         Boolean   @map("data_subjects_notified")
+  dpoNotified                  Boolean   @map("dpo_notified")
+  assignedTo                   String?   @map("assigned_to") @db.VarChar(36)
+  createdBy                    String    @map("created_by") @db.VarChar(36)
+  createdAt                    DateTime  @default(now()) @map("created_at")
+  updatedAt                    DateTime  @updatedAt @map("updated_at")
+
+  timeline                     DataBreachTimeline[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([severity])
+  @@index([detectedAt])
+  @@map("data_breaches")
+}
+
+model DataBreachTimeline {
+  id          String   @id @default(cuid())
+  breachId    String   @map("breach_id") @db.VarChar(30)
+  timestamp   DateTime @default(now())
+  action      String   @db.VarChar(255)
+  details     String   @db.Text
+  performedBy String   @map("performed_by") @db.VarChar(36)
+
+  breach      DataBreach @relation(fields: [breachId], references: [id], onDelete: Cascade)
+
+  @@index([breachId])
+  @@index([timestamp])
+  @@map("data_breach_timeline")
+}
