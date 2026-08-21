@@ -12,8 +12,11 @@ model DeploymentStage {
   errorMessage String?  @map("error_message")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  deployment                 Deployment @relation("DeploymentStages", fields: [deploymentId], references: [id], onDelete: Cascade)
-  environmentsForDeployment Deployment[] @relation("EnvironmentDeployment")
+  deployment Deployment @relation("DeploymentStages", fields: [deploymentId], references: [id], onDelete: Cascade)
+  // P6: `environmentsForDeployment` removed. It was the back-reference for
+  // `Deployment.environmentId -> DeploymentStage`, which was simply the wrong
+  // target — a deployment's environment is an Environment, not one of its own
+  // stages. `Deployment.environmentId` now points at `Environment`.
 
   @@index([tenantId])
   @@index([deploymentId])
@@ -40,6 +43,9 @@ model Environment {
   monitoringEnabled Boolean  @default(true) @map("monitoring_enabled")
   autoDeployEnabled Boolean  @default(false) @map("auto_deploy_enabled")
   metadata         Json     @default("{}")
+  /// P6 — absorbs `BuilderEnvironment.settings` so the two environment models
+  /// can be merged. `BuilderEnvironment` is dropped in P8.
+  settings         Json     @default("{}")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 

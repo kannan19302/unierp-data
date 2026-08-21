@@ -1,0 +1,242 @@
+// Plan phase P1 — the unified id space for the developer platform's
+// project-first reshape. Before this, "Apps" (`BuilderModule`) and "Sites"
+// (`WebSite`) were two disjoint entities with no common parent, so a tenant's
+// developer-platform home page ("apps and sites, side by side, with recents")
+// had nothing to query — it would have needed a hand-merged union of two
+// unrelated tables and nowhere to record which project a user opened last.
+//
+// `DevProject` does not replace `BuilderModule` or `WebSite` — see
+// PLATFORM_ARCHITECTURE and the developer-platform reshape plan for why they
+// stay separate (different permission planes, different tenancy semantics
+// for `BuilderModule`'s eventual marketplace distribution). It is a thin
+// identity row alongside each one, existing only so the home page, the
+// recents rail and (in a later phase) the artifact-ownership registry have
+// one id space to point at instead of a polymorphic (app_id | site_id) pair
+// on every table that needs to reference "whichever project this belongs to".
+
+/// One row per App or Site the tenant has. Exactly one of `appId` / `siteId`
+/// is set — enforced by a hand-written CHECK constraint in this model's
+/// migration (`dev_projects_kind_target_xor`), since Prisma cannot express
+/// a cross-column conditional constraint.
+model DevProject {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  kind        String // APP | SITE
+  name        String
+  slug        String
+  description String?
+  icon        String?
+  color       String?
+  status      String    @default("DRAFT") // DRAFT | ACTIVE | ARCHIVED
+  appId       String?   @unique @map("app_id")
+  siteId      String?   @unique @map("site_id")
+  archivedAt  DateTime? @map("archived_at")
+  createdBy   String?   @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  app  BuilderModule? @relation(fields: [appId], references: [id], onDelete: Cascade)
+  site WebSite?       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  recents        DevProjectRecent[]
+  ownedArtifacts BuilderArtifact[]           @relation("ArtifactOwner")
+  attachments    BuilderArtifactAttachment[]
+  releases       ProjectRelease[]
+
+  @@unique([tenantId, kind, slug])
+  @@index([tenantId, kind, status])
+  @@index([tenantId, updatedAt])
+  @@map("dev_projects")
+}
+
+/// Powers the developer platform home page's "recently opened" rail. One row
+/// per (user, project); `lastOpenedAt` is upserted every time a user enters
+/// a project's workspace.
+model DevProjectRecent {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  projectId    String   @map("project_id")
+  userId       String   @map("user_id")
+  lastOpenedAt DateTime @default(now()) @map("last_opened_at")
+  openCount    Int      @default(1) @map("open_count")
+
+  project DevProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([tenantId, userId, lastOpenedAt(sort: Desc)])
+  @@map("dev_project_recents")
+}
+
+/// Plan phase P3 — the ownership plane for every authored artifact.
+///
+/// One row per artifact, whatever its kind. `ownerProjectId = NULL` means the
+/// artifact lives in the tenant Library and belongs to no App or Site — which
+/// is what finally makes `/library/*` mean "unowned" rather than the
+/// tenant-wide "everything" it showed before this model existed.
+///
+/// `artifactId` is deliberately NOT a foreign key: it points into whichever
+/// of the ~20 concrete artifact tables `artifactType` names, and Prisma has
+/// no polymorphic relation. The cost is that nothing at the DB level stops an
+/// `INSERT INTO builder_forms` without a matching registry row; the
+/// mitigation is that all writes funnel through `ArtifactRegistryService` and
+/// a reconciler reports orphans. That trade is taken knowingly — the
+/// alternative (an `owner_project_id` column on all ~20 tables) means 20
+/// migrations, 20 backfills, and 20 chances to forget one, and still leaves
+/// the home screen and Library browse doing a 20-way union to paginate.
+///
+/// The display fields (name/slug/status/icon/updatedAt) are DENORMALISED from
+/// the concrete row so those screens need no hydration at all in the common
+/// case. They are a cache, never the source of truth.
+model BuilderArtifact {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  artifactType   String    @map("artifact_type")
+  artifactId     String    @map("artifact_id")
+  ownerProjectId String?   @map("owner_project_id")
+  name           String
+  slug           String?
+  status         String    @default("DRAFT")
+  icon           String?
+  createdBy      String?   @map("created_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  owner       DevProject?                 @relation("ArtifactOwner", fields: [ownerProjectId], references: [id], onDelete: SetNull)
+  attachments BuilderArtifactAttachment[]
+
+  @@unique([tenantId, artifactType, artifactId])
+  @@index([tenantId, ownerProjectId, artifactType])
+  @@index([tenantId, artifactType, updatedAt(sort: Desc)])
+  @@map("builder_artifacts")
+}
+
+/// Many-to-many: a Library artifact published INTO one or more projects.
+///
+/// An owned artifact ALSO gets a row here with `isOwner = true`, so
+/// "everything visible inside project X" is a single query rather than a
+/// union of "owned by X" and "attached to X".
+model BuilderArtifactAttachment {
+  id         String    @id @default(cuid())
+  tenantId   String    @map("tenant_id")
+  artifactId String    @map("artifact_id")
+  projectId  String    @map("project_id")
+  isOwner    Boolean   @default(false) @map("is_owner")
+  /// Which release of the SOURCE artifact this attachment pinned. NULL =
+  /// follow head. Reserved for plan phase P9; the column exists from day one
+  /// so pinning does not need a second migration, but nothing writes it yet
+  /// and every attachment today follows head.
+  pinnedReleaseId String? @map("pinned_release_id")
+  attachedBy String?   @map("attached_by")
+  attachedAt DateTime  @default(now()) @map("attached_at")
+  detachedAt DateTime? @map("detached_at")
+
+  artifact BuilderArtifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  project  DevProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([artifactId, projectId])
+  @@index([tenantId, projectId])
+  @@map("builder_artifact_attachments")
+}
+
+/// Plan phase P6 — an immutable snapshot of a DevProject at a version.
+///
+/// Supersedes `AppRelease`, which hung off `BuilderModule` and so could only
+/// ever version an App. A Site publish had nowhere to record what it
+/// published. Because `DevProject` is one id space over both, this single
+/// model versions either.
+///
+/// Deliberately NOT merged with `Release` (core-part-14): that model is the
+/// platform's own CI pipeline — keyed by a free-text `application` string,
+/// carrying an approval workflow and Docker artifacts that no tenant-authored
+/// app has. Conflating "what a tenant authored" with "what we shipped" is the
+/// exact mistake this file's split is meant to avoid; see the doc comments on
+/// both.
+model ProjectRelease {
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  projectId     String    @map("project_id")
+  version       String
+  channel       String    @default("ORGANIZATION")
+  releaseType   String    @default("STANDARD") @map("release_type")
+  changelog     String?   @db.Text
+  /// Frozen content. APP: {components, pages, dataModels, permissions,
+  /// entities, relationships, meta}. SITE: {pages, menus, theme, seo,
+  /// collections}.
+  snapshot      Json      @default("{}")
+  schemaVersion Int       @default(1) @map("schema_version")
+  testScore     Int?      @map("test_score")
+  status        String    @default("DRAFT")
+  publishedBy   String?   @map("published_by")
+  publishedAt   DateTime? @map("published_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  project     DevProject   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deployments Deployment[]
+
+  @@unique([projectId, version])
+  @@index([tenantId, projectId, publishedAt(sort: Desc)])
+  @@index([channel, status])
+  @@map("project_releases")
+}
+
+/// Plan phase P4/P8 — `builder_modules.pages`, promoted out of JSON.
+///
+/// The contract migration drops that column, and `builder_artifacts` is not a
+/// home for it: a module page is not an authored artifact, it is a binding
+/// that says "this app shows form X at slug Y". Storing it as a real row
+/// keeps the exact shape the JSON held, so the legacy `/builder/modules/:id/pages`
+/// routes keep returning what they always did — the point of the split is to
+/// move where the data lives, not to change what callers see.
+model BuilderModulePage {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  moduleId    String   @map("module_id")
+  name        String
+  slug        String
+  /// form | list | dashboard
+  type        String   @default("form")
+  formId      String?  @map("form_id")
+  dashboardId String?  @map("dashboard_id")
+  /// The page-builder widget layout. Kept as Json because that is exactly
+  /// what the module JSON stored; giving it a schema is page-builder work,
+  /// not migration work, and inventing one here would risk rejecting layouts
+  /// that render fine today.
+  layout      Json     @default("[]")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  module BuilderModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, slug])
+  @@index([tenantId, moduleId])
+  @@map("builder_module_pages")
+}
+
+/// Plan phase P4/P8 — `builder_modules.dataModels`, promoted out of JSON.
+///
+/// Deliberately NOT folded into `BuilderDataModel` (core-part-13). That model
+/// is a full custom-object definition with its own `BuilderDataField` and
+/// `BuilderRelationship` tables; this is the module's own lightweight
+/// `{name, fields[], relationships[]}` config. Mapping one onto the other
+/// would either lose the module JSON's inline field definitions or invent
+/// rows in the richer model that nothing asked for. Keeping `fields` and
+/// `relationships` as Json here preserves the shape exactly, which is the
+/// whole requirement: the column moves, the data does not change.
+model BuilderModuleDataModel {
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  moduleId      String   @map("module_id")
+  name          String
+  fields        Json     @default("[]")
+  relationships Json     @default("[]")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  module BuilderModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, moduleId])
+  @@map("builder_module_data_models")
+}

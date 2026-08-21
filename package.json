@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "build": "node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc",
+    "build": "node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc && node scripts/copy-prisma-clients.mjs",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate --schema prisma/schema && prisma generate --schema prisma/idp-schema.prisma",
     "db:migrate": "prisma migrate dev --schema prisma/schema && prisma migrate dev --schema prisma/idp-schema.prisma",

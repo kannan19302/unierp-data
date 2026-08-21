@@ -29,28 +29,6 @@ model WebhookDeliveryLog {
   @@map("webhook_delivery_logs")
 }
 
-model WebPage {
-  id         String   @id @default(cuid())
-  tenantId   String   @map("tenant_id")
-  name       String
-  slug       String
-  status     String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
-  sections   Json     @default("[]") // Array of page sections [{id, type, content, settings}]
-  metaTitle  String?  @map("meta_title")
-  metaDesc   String?  @map("meta_desc")
-  ogImage    String?  @map("og_image")
-  visibility String   @default("PUBLIC") // PUBLIC, UNLISTED, PASSWORD_PROTECTED
-  sortOrder  Int      @default(0) @map("sort_order")
-  visits     Int      @default(0)
-  createdBy  String?  @map("created_by")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  @@unique([tenantId, slug])
-  @@index([tenantId])
-  @@map("web_pages")
-}
-
 model WebAsset {
   id         String   @id @default(cuid())
   tenantId   String   @map("tenant_id")
@@ -228,6 +206,8 @@ model WebSite {
   domains  WebDomain[]
   pages    WebSitePage[]
   chatbots WebChatbot[]
+  /// P1 — the DevProject identity row for this site.
+  devProject DevProject?
 
   @@unique([tenantId, slug])
   @@index([tenantId])

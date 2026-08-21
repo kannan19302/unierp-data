@@ -1241,9 +1241,6 @@ model BuilderModule {
   entities      Json    @default("[]") // Array of entity schemas [{name, fields, relationships}]
   relationships Json    @default("[]") // Cross-entity relationships [{from, to, type}]
   permissions   Json    @default("{}") // Module-level RBAC configuration
-  pages         Json    @default("[]") // [{id, name, slug, type:'form'|'list'|'dashboard', formId?, dashboardId?}]
-  components    Json    @default("[]") // [{id, type:'form'|'workflow'|'dashboard'|'automation', refId, name}]
-  dataModels    Json    @default("[]") // [{id, name, fields:[{name,type,required}], relationships:[]}]
   testResults   Json    @default("{}") // {lastRunAt, score, totalTests, passed, failed, errors:[], history:[]}
 
   // ─── App Store listing metadata ───
@@ -1259,33 +1256,18 @@ model BuilderModule {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  releases AppRelease[]
+  // P8: `releases AppRelease[]` removed — superseded by ProjectRelease,
+  // reachable via `devProject.releases`.
+  /// P1 — the DevProject identity row for this app.
+  devProject DevProject?
+  /// P4/P8 — `pages` and `dataModels` promoted out of JSON columns.
+  modulePages      BuilderModulePage[]
+  moduleDataModels BuilderModuleDataModel[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
   @@index([scope, status])
   @@map("builder_modules")
-}
-
-model AppRelease {
-  id          String   @id @default(cuid())
-  tenantId    String   @map("tenant_id")
-  moduleId    String   @map("module_id")
-  version     String // semver, e.g. "1.2.0"
-  channel     String   @default("ORGANIZATION") // ORGANIZATION, GLOBAL
-  changelog   String?  @db.Text
-  snapshot    Json     @default("{}") // frozen {components, pages, dataModels, permissions, entities, relationships, meta}
-  testScore   Int?     @map("test_score")
-  status      String   @default("PUBLISHED") // PUBLISHED, ROLLED_BACK
-  publishedBy String?  @map("published_by")
-  publishedAt DateTime @default(now()) @map("published_at")
-
-  module BuilderModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-
-  @@unique([moduleId, version])
-  @@index([tenantId])
-  @@index([channel, status])
-  @@map("app_releases")
 }
 
 model AutomationRule {

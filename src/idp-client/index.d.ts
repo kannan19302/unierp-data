@@ -83,6 +83,79 @@ export type PushSubscription = $Result.DefaultSelection<Prisma.$PushSubscription
  * 
  */
 export type MfaPushChallenge = $Result.DefaultSelection<Prisma.$MfaPushChallengePayload>
+/**
+ * Model OAuthClient
+ * A registered relying party: one of the ten first-party platforms, a native
+ * client (mobile/desktop), or a third-party marketplace/developer application.
+ */
+export type OAuthClient = $Result.DefaultSelection<Prisma.$OAuthClientPayload>
+/**
+ * Model AuthorizationCode
+ * A single-use authorization code. Stored as a hash: a leaked database backup
+ * must not yield usable codes.
+ */
+export type AuthorizationCode = $Result.DefaultSelection<Prisma.$AuthorizationCodePayload>
+/**
+ * Model RefreshGrant
+ * A refresh token, stored as a hash and rotated on every use.
+ */
+export type RefreshGrant = $Result.DefaultSelection<Prisma.$RefreshGrantPayload>
+/**
+ * Model ClientConsent
+ * A user's standing consent for a third-party client's scopes. First-party
+ * platform clients never create rows here.
+ */
+export type ClientConsent = $Result.DefaultSelection<Prisma.$ClientConsentPayload>
+/**
+ * Model OidcSigningKey
+ * RS256 signing keys, published through /oidc/jwks.json.
+ * 
+ * Asymmetric signing is the point: only the IdP holds a private key, so no
+ * other service — and nobody reading the repository — can mint a token. The
+ * private key is encrypted at rest with the platform encryption key.
+ */
+export type OidcSigningKey = $Result.DefaultSelection<Prisma.$OidcSigningKeyPayload>
+/**
+ * Model LoginAttemptCounter
+ * Per-IP login throttling. Per-ACCOUNT lockout already exists on User
+ * (failedLoginAttempts / lockedUntil); this is the complementary bound that
+ * stops one attacker spraying many accounts from a single origin.
+ */
+export type LoginAttemptCounter = $Result.DefaultSelection<Prisma.$LoginAttemptCounterPayload>
+/**
+ * Model Platform
+ * One of the ten platforms. `audience: INTERNAL` (currently only P2) requires
+ * control-plane authority regardless of any grant below; `PUBLIC` platforms
+ * are reachable subject to entitlement.
+ */
+export type Platform = $Result.DefaultSelection<Prisma.$PlatformPayload>
+/**
+ * Model PlatformGrant
+ * Grants access to a platform. Checked at /oidc/authorize; any matching row
+ * admits. subjectId means a role name (ROLE), a SaaSPlan.id (PLAN), or a
+ * User.id (USER, always tenant-scoped — a user grant with no tenant would not
+ * know which tenant's token to issue).
+ */
+export type PlatformGrant = $Result.DefaultSelection<Prisma.$PlatformGrantPayload>
+/**
+ * Model AgentDefinition
+ * A tenant's registry of AI agents that may ever be exchanged a token for.
+ * `allowedPermissions` is a CEILING, checked against the CHECK constraint that
+ * bans system.* and platform.* namespaces and the "*" wildcard outright,
+ * enforced twice — once here, once in AgentDelegationService — because a
+ * delegated agent obtaining control-plane authority is not a bug to catch
+ * later, it is the one outcome this whole design exists to make impossible.
+ */
+export type AgentDefinition = $Result.DefaultSelection<Prisma.$AgentDefinitionPayload>
+/**
+ * Model AgentDelegation
+ * One token-exchange grant. `effectivePermissions` is allowedPermissions ∩ the
+ * delegating user's permissions AT THAT MOMENT — recorded rather than derived,
+ * because both sides of that intersection change over time and the audit
+ * trail must answer "what could this agent do when it acted", not "what could
+ * it do now".
+ */
+export type AgentDelegation = $Result.DefaultSelection<Prisma.$AgentDelegationPayload>
 
 /**
  * Enums
@@ -1297,6 +1370,106 @@ export class PrismaClient<
     * ```
     */
   get mfaPushChallenge(): Prisma.MfaPushChallengeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.oAuthClient`: Exposes CRUD operations for the **OAuthClient** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more OAuthClients
+    * const oAuthClients = await prisma.oAuthClient.findMany()
+    * ```
+    */
+  get oAuthClient(): Prisma.OAuthClientDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.authorizationCode`: Exposes CRUD operations for the **AuthorizationCode** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AuthorizationCodes
+    * const authorizationCodes = await prisma.authorizationCode.findMany()
+    * ```
+    */
+  get authorizationCode(): Prisma.AuthorizationCodeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.refreshGrant`: Exposes CRUD operations for the **RefreshGrant** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RefreshGrants
+    * const refreshGrants = await prisma.refreshGrant.findMany()
+    * ```
+    */
+  get refreshGrant(): Prisma.RefreshGrantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.clientConsent`: Exposes CRUD operations for the **ClientConsent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ClientConsents
+    * const clientConsents = await prisma.clientConsent.findMany()
+    * ```
+    */
+  get clientConsent(): Prisma.ClientConsentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.oidcSigningKey`: Exposes CRUD operations for the **OidcSigningKey** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more OidcSigningKeys
+    * const oidcSigningKeys = await prisma.oidcSigningKey.findMany()
+    * ```
+    */
+  get oidcSigningKey(): Prisma.OidcSigningKeyDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.loginAttemptCounter`: Exposes CRUD operations for the **LoginAttemptCounter** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LoginAttemptCounters
+    * const loginAttemptCounters = await prisma.loginAttemptCounter.findMany()
+    * ```
+    */
+  get loginAttemptCounter(): Prisma.LoginAttemptCounterDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.platform`: Exposes CRUD operations for the **Platform** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Platforms
+    * const platforms = await prisma.platform.findMany()
+    * ```
+    */
+  get platform(): Prisma.PlatformDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.platformGrant`: Exposes CRUD operations for the **PlatformGrant** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PlatformGrants
+    * const platformGrants = await prisma.platformGrant.findMany()
+    * ```
+    */
+  get platformGrant(): Prisma.PlatformGrantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.agentDefinition`: Exposes CRUD operations for the **AgentDefinition** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AgentDefinitions
+    * const agentDefinitions = await prisma.agentDefinition.findMany()
+    * ```
+    */
+  get agentDefinition(): Prisma.AgentDefinitionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.agentDelegation`: Exposes CRUD operations for the **AgentDelegation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AgentDelegations
+    * const agentDelegations = await prisma.agentDelegation.findMany()
+    * ```
+    */
+  get agentDelegation(): Prisma.AgentDelegationDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1751,7 +1924,17 @@ export namespace Prisma {
     PasswordResetToken: 'PasswordResetToken',
     EmailVerificationToken: 'EmailVerificationToken',
     PushSubscription: 'PushSubscription',
-    MfaPushChallenge: 'MfaPushChallenge'
+    MfaPushChallenge: 'MfaPushChallenge',
+    OAuthClient: 'OAuthClient',
+    AuthorizationCode: 'AuthorizationCode',
+    RefreshGrant: 'RefreshGrant',
+    ClientConsent: 'ClientConsent',
+    OidcSigningKey: 'OidcSigningKey',
+    LoginAttemptCounter: 'LoginAttemptCounter',
+    Platform: 'Platform',
+    PlatformGrant: 'PlatformGrant',
+    AgentDefinition: 'AgentDefinition',
+    AgentDelegation: 'AgentDelegation'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1770,7 +1953,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "userProfile" | "userIdentity" | "role" | "userRole" | "apiKey" | "authApiToken" | "userSession" | "userGroup" | "userGroupMember" | "passwordResetToken" | "emailVerificationToken" | "pushSubscription" | "mfaPushChallenge"
+      modelProps: "user" | "userProfile" | "userIdentity" | "role" | "userRole" | "apiKey" | "authApiToken" | "userSession" | "userGroup" | "userGroupMember" | "passwordResetToken" | "emailVerificationToken" | "pushSubscription" | "mfaPushChallenge" | "oAuthClient" | "authorizationCode" | "refreshGrant" | "clientConsent" | "oidcSigningKey" | "loginAttemptCounter" | "platform" | "platformGrant" | "agentDefinition" | "agentDelegation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2810,6 +2993,746 @@ export namespace Prisma {
           }
         }
       }
+      OAuthClient: {
+        payload: Prisma.$OAuthClientPayload<ExtArgs>
+        fields: Prisma.OAuthClientFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.OAuthClientFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.OAuthClientFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>
+          }
+          findFirst: {
+            args: Prisma.OAuthClientFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.OAuthClientFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>
+          }
+          findMany: {
+            args: Prisma.OAuthClientFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>[]
+          }
+          create: {
+            args: Prisma.OAuthClientCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>
+          }
+          createMany: {
+            args: Prisma.OAuthClientCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.OAuthClientCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>[]
+          }
+          delete: {
+            args: Prisma.OAuthClientDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>
+          }
+          update: {
+            args: Prisma.OAuthClientUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>
+          }
+          deleteMany: {
+            args: Prisma.OAuthClientDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.OAuthClientUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.OAuthClientUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>[]
+          }
+          upsert: {
+            args: Prisma.OAuthClientUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OAuthClientPayload>
+          }
+          aggregate: {
+            args: Prisma.OAuthClientAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOAuthClient>
+          }
+          groupBy: {
+            args: Prisma.OAuthClientGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OAuthClientGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.OAuthClientCountArgs<ExtArgs>
+            result: $Utils.Optional<OAuthClientCountAggregateOutputType> | number
+          }
+        }
+      }
+      AuthorizationCode: {
+        payload: Prisma.$AuthorizationCodePayload<ExtArgs>
+        fields: Prisma.AuthorizationCodeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AuthorizationCodeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AuthorizationCodeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>
+          }
+          findFirst: {
+            args: Prisma.AuthorizationCodeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AuthorizationCodeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>
+          }
+          findMany: {
+            args: Prisma.AuthorizationCodeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>[]
+          }
+          create: {
+            args: Prisma.AuthorizationCodeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>
+          }
+          createMany: {
+            args: Prisma.AuthorizationCodeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AuthorizationCodeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>[]
+          }
+          delete: {
+            args: Prisma.AuthorizationCodeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>
+          }
+          update: {
+            args: Prisma.AuthorizationCodeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>
+          }
+          deleteMany: {
+            args: Prisma.AuthorizationCodeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AuthorizationCodeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AuthorizationCodeUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>[]
+          }
+          upsert: {
+            args: Prisma.AuthorizationCodeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuthorizationCodePayload>
+          }
+          aggregate: {
+            args: Prisma.AuthorizationCodeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAuthorizationCode>
+          }
+          groupBy: {
+            args: Prisma.AuthorizationCodeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AuthorizationCodeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AuthorizationCodeCountArgs<ExtArgs>
+            result: $Utils.Optional<AuthorizationCodeCountAggregateOutputType> | number
+          }
+        }
+      }
+      RefreshGrant: {
+        payload: Prisma.$RefreshGrantPayload<ExtArgs>
+        fields: Prisma.RefreshGrantFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RefreshGrantFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RefreshGrantFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>
+          }
+          findFirst: {
+            args: Prisma.RefreshGrantFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RefreshGrantFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>
+          }
+          findMany: {
+            args: Prisma.RefreshGrantFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>[]
+          }
+          create: {
+            args: Prisma.RefreshGrantCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>
+          }
+          createMany: {
+            args: Prisma.RefreshGrantCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RefreshGrantCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>[]
+          }
+          delete: {
+            args: Prisma.RefreshGrantDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>
+          }
+          update: {
+            args: Prisma.RefreshGrantUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>
+          }
+          deleteMany: {
+            args: Prisma.RefreshGrantDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RefreshGrantUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.RefreshGrantUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>[]
+          }
+          upsert: {
+            args: Prisma.RefreshGrantUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RefreshGrantPayload>
+          }
+          aggregate: {
+            args: Prisma.RefreshGrantAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRefreshGrant>
+          }
+          groupBy: {
+            args: Prisma.RefreshGrantGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RefreshGrantGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RefreshGrantCountArgs<ExtArgs>
+            result: $Utils.Optional<RefreshGrantCountAggregateOutputType> | number
+          }
+        }
+      }
+      ClientConsent: {
+        payload: Prisma.$ClientConsentPayload<ExtArgs>
+        fields: Prisma.ClientConsentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ClientConsentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ClientConsentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>
+          }
+          findFirst: {
+            args: Prisma.ClientConsentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ClientConsentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>
+          }
+          findMany: {
+            args: Prisma.ClientConsentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>[]
+          }
+          create: {
+            args: Prisma.ClientConsentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>
+          }
+          createMany: {
+            args: Prisma.ClientConsentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ClientConsentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>[]
+          }
+          delete: {
+            args: Prisma.ClientConsentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>
+          }
+          update: {
+            args: Prisma.ClientConsentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>
+          }
+          deleteMany: {
+            args: Prisma.ClientConsentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ClientConsentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ClientConsentUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>[]
+          }
+          upsert: {
+            args: Prisma.ClientConsentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ClientConsentPayload>
+          }
+          aggregate: {
+            args: Prisma.ClientConsentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateClientConsent>
+          }
+          groupBy: {
+            args: Prisma.ClientConsentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ClientConsentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ClientConsentCountArgs<ExtArgs>
+            result: $Utils.Optional<ClientConsentCountAggregateOutputType> | number
+          }
+        }
+      }
+      OidcSigningKey: {
+        payload: Prisma.$OidcSigningKeyPayload<ExtArgs>
+        fields: Prisma.OidcSigningKeyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.OidcSigningKeyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.OidcSigningKeyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>
+          }
+          findFirst: {
+            args: Prisma.OidcSigningKeyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.OidcSigningKeyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>
+          }
+          findMany: {
+            args: Prisma.OidcSigningKeyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>[]
+          }
+          create: {
+            args: Prisma.OidcSigningKeyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>
+          }
+          createMany: {
+            args: Prisma.OidcSigningKeyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.OidcSigningKeyCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>[]
+          }
+          delete: {
+            args: Prisma.OidcSigningKeyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>
+          }
+          update: {
+            args: Prisma.OidcSigningKeyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>
+          }
+          deleteMany: {
+            args: Prisma.OidcSigningKeyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.OidcSigningKeyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.OidcSigningKeyUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>[]
+          }
+          upsert: {
+            args: Prisma.OidcSigningKeyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcSigningKeyPayload>
+          }
+          aggregate: {
+            args: Prisma.OidcSigningKeyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOidcSigningKey>
+          }
+          groupBy: {
+            args: Prisma.OidcSigningKeyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OidcSigningKeyGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.OidcSigningKeyCountArgs<ExtArgs>
+            result: $Utils.Optional<OidcSigningKeyCountAggregateOutputType> | number
+          }
+        }
+      }
+      LoginAttemptCounter: {
+        payload: Prisma.$LoginAttemptCounterPayload<ExtArgs>
+        fields: Prisma.LoginAttemptCounterFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LoginAttemptCounterFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LoginAttemptCounterFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>
+          }
+          findFirst: {
+            args: Prisma.LoginAttemptCounterFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LoginAttemptCounterFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>
+          }
+          findMany: {
+            args: Prisma.LoginAttemptCounterFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>[]
+          }
+          create: {
+            args: Prisma.LoginAttemptCounterCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>
+          }
+          createMany: {
+            args: Prisma.LoginAttemptCounterCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LoginAttemptCounterCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>[]
+          }
+          delete: {
+            args: Prisma.LoginAttemptCounterDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>
+          }
+          update: {
+            args: Prisma.LoginAttemptCounterUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>
+          }
+          deleteMany: {
+            args: Prisma.LoginAttemptCounterDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LoginAttemptCounterUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LoginAttemptCounterUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>[]
+          }
+          upsert: {
+            args: Prisma.LoginAttemptCounterUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LoginAttemptCounterPayload>
+          }
+          aggregate: {
+            args: Prisma.LoginAttemptCounterAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLoginAttemptCounter>
+          }
+          groupBy: {
+            args: Prisma.LoginAttemptCounterGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LoginAttemptCounterGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LoginAttemptCounterCountArgs<ExtArgs>
+            result: $Utils.Optional<LoginAttemptCounterCountAggregateOutputType> | number
+          }
+        }
+      }
+      Platform: {
+        payload: Prisma.$PlatformPayload<ExtArgs>
+        fields: Prisma.PlatformFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlatformFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlatformFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>
+          }
+          findFirst: {
+            args: Prisma.PlatformFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlatformFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>
+          }
+          findMany: {
+            args: Prisma.PlatformFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>[]
+          }
+          create: {
+            args: Prisma.PlatformCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>
+          }
+          createMany: {
+            args: Prisma.PlatformCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlatformCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>[]
+          }
+          delete: {
+            args: Prisma.PlatformDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>
+          }
+          update: {
+            args: Prisma.PlatformUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlatformDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlatformUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PlatformUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>[]
+          }
+          upsert: {
+            args: Prisma.PlatformUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformPayload>
+          }
+          aggregate: {
+            args: Prisma.PlatformAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlatform>
+          }
+          groupBy: {
+            args: Prisma.PlatformGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlatformGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlatformCountArgs<ExtArgs>
+            result: $Utils.Optional<PlatformCountAggregateOutputType> | number
+          }
+        }
+      }
+      PlatformGrant: {
+        payload: Prisma.$PlatformGrantPayload<ExtArgs>
+        fields: Prisma.PlatformGrantFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlatformGrantFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlatformGrantFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>
+          }
+          findFirst: {
+            args: Prisma.PlatformGrantFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlatformGrantFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>
+          }
+          findMany: {
+            args: Prisma.PlatformGrantFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>[]
+          }
+          create: {
+            args: Prisma.PlatformGrantCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>
+          }
+          createMany: {
+            args: Prisma.PlatformGrantCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlatformGrantCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>[]
+          }
+          delete: {
+            args: Prisma.PlatformGrantDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>
+          }
+          update: {
+            args: Prisma.PlatformGrantUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlatformGrantDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlatformGrantUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PlatformGrantUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>[]
+          }
+          upsert: {
+            args: Prisma.PlatformGrantUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlatformGrantPayload>
+          }
+          aggregate: {
+            args: Prisma.PlatformGrantAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlatformGrant>
+          }
+          groupBy: {
+            args: Prisma.PlatformGrantGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlatformGrantGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlatformGrantCountArgs<ExtArgs>
+            result: $Utils.Optional<PlatformGrantCountAggregateOutputType> | number
+          }
+        }
+      }
+      AgentDefinition: {
+        payload: Prisma.$AgentDefinitionPayload<ExtArgs>
+        fields: Prisma.AgentDefinitionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AgentDefinitionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AgentDefinitionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>
+          }
+          findFirst: {
+            args: Prisma.AgentDefinitionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AgentDefinitionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>
+          }
+          findMany: {
+            args: Prisma.AgentDefinitionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>[]
+          }
+          create: {
+            args: Prisma.AgentDefinitionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>
+          }
+          createMany: {
+            args: Prisma.AgentDefinitionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AgentDefinitionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>[]
+          }
+          delete: {
+            args: Prisma.AgentDefinitionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>
+          }
+          update: {
+            args: Prisma.AgentDefinitionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>
+          }
+          deleteMany: {
+            args: Prisma.AgentDefinitionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AgentDefinitionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AgentDefinitionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>[]
+          }
+          upsert: {
+            args: Prisma.AgentDefinitionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDefinitionPayload>
+          }
+          aggregate: {
+            args: Prisma.AgentDefinitionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAgentDefinition>
+          }
+          groupBy: {
+            args: Prisma.AgentDefinitionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AgentDefinitionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AgentDefinitionCountArgs<ExtArgs>
+            result: $Utils.Optional<AgentDefinitionCountAggregateOutputType> | number
+          }
+        }
+      }
+      AgentDelegation: {
+        payload: Prisma.$AgentDelegationPayload<ExtArgs>
+        fields: Prisma.AgentDelegationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AgentDelegationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AgentDelegationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>
+          }
+          findFirst: {
+            args: Prisma.AgentDelegationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AgentDelegationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>
+          }
+          findMany: {
+            args: Prisma.AgentDelegationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>[]
+          }
+          create: {
+            args: Prisma.AgentDelegationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>
+          }
+          createMany: {
+            args: Prisma.AgentDelegationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AgentDelegationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>[]
+          }
+          delete: {
+            args: Prisma.AgentDelegationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>
+          }
+          update: {
+            args: Prisma.AgentDelegationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>
+          }
+          deleteMany: {
+            args: Prisma.AgentDelegationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AgentDelegationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AgentDelegationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>[]
+          }
+          upsert: {
+            args: Prisma.AgentDelegationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDelegationPayload>
+          }
+          aggregate: {
+            args: Prisma.AgentDelegationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAgentDelegation>
+          }
+          groupBy: {
+            args: Prisma.AgentDelegationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AgentDelegationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AgentDelegationCountArgs<ExtArgs>
+            result: $Utils.Optional<AgentDelegationCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2920,6 +3843,16 @@ export namespace Prisma {
     emailVerificationToken?: EmailVerificationTokenOmit
     pushSubscription?: PushSubscriptionOmit
     mfaPushChallenge?: MfaPushChallengeOmit
+    oAuthClient?: OAuthClientOmit
+    authorizationCode?: AuthorizationCodeOmit
+    refreshGrant?: RefreshGrantOmit
+    clientConsent?: ClientConsentOmit
+    oidcSigningKey?: OidcSigningKeyOmit
+    loginAttemptCounter?: LoginAttemptCounterOmit
+    platform?: PlatformOmit
+    platformGrant?: PlatformGrantOmit
+    agentDefinition?: AgentDefinitionOmit
+    agentDelegation?: AgentDelegationOmit
   }
 
   /* Types for Logging */
@@ -3130,6 +4063,117 @@ export namespace Prisma {
    */
   export type UserGroupCountOutputTypeCountMembersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UserGroupMemberWhereInput
+  }
+
+
+  /**
+   * Count Type OAuthClientCountOutputType
+   */
+
+  export type OAuthClientCountOutputType = {
+    authorizationCodes: number
+    refreshGrants: number
+    consents: number
+  }
+
+  export type OAuthClientCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    authorizationCodes?: boolean | OAuthClientCountOutputTypeCountAuthorizationCodesArgs
+    refreshGrants?: boolean | OAuthClientCountOutputTypeCountRefreshGrantsArgs
+    consents?: boolean | OAuthClientCountOutputTypeCountConsentsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * OAuthClientCountOutputType without action
+   */
+  export type OAuthClientCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClientCountOutputType
+     */
+    select?: OAuthClientCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * OAuthClientCountOutputType without action
+   */
+  export type OAuthClientCountOutputTypeCountAuthorizationCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AuthorizationCodeWhereInput
+  }
+
+  /**
+   * OAuthClientCountOutputType without action
+   */
+  export type OAuthClientCountOutputTypeCountRefreshGrantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RefreshGrantWhereInput
+  }
+
+  /**
+   * OAuthClientCountOutputType without action
+   */
+  export type OAuthClientCountOutputTypeCountConsentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ClientConsentWhereInput
+  }
+
+
+  /**
+   * Count Type PlatformCountOutputType
+   */
+
+  export type PlatformCountOutputType = {
+    grants: number
+  }
+
+  export type PlatformCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    grants?: boolean | PlatformCountOutputTypeCountGrantsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PlatformCountOutputType without action
+   */
+  export type PlatformCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformCountOutputType
+     */
+    select?: PlatformCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PlatformCountOutputType without action
+   */
+  export type PlatformCountOutputTypeCountGrantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlatformGrantWhereInput
+  }
+
+
+  /**
+   * Count Type AgentDefinitionCountOutputType
+   */
+
+  export type AgentDefinitionCountOutputType = {
+    delegations: number
+  }
+
+  export type AgentDefinitionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    delegations?: boolean | AgentDefinitionCountOutputTypeCountDelegationsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * AgentDefinitionCountOutputType without action
+   */
+  export type AgentDefinitionCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinitionCountOutputType
+     */
+    select?: AgentDefinitionCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * AgentDefinitionCountOutputType without action
+   */
+  export type AgentDefinitionCountOutputTypeCountDelegationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentDelegationWhereInput
   }
 
 
@@ -18757,6 +19801,11182 @@ export namespace Prisma {
 
 
   /**
+   * Model OAuthClient
+   */
+
+  export type AggregateOAuthClient = {
+    _count: OAuthClientCountAggregateOutputType | null
+    _min: OAuthClientMinAggregateOutputType | null
+    _max: OAuthClientMaxAggregateOutputType | null
+  }
+
+  export type OAuthClientMinAggregateOutputType = {
+    id: string | null
+    clientId: string | null
+    name: string | null
+    clientSecretHash: string | null
+    clientType: string | null
+    platformCode: string | null
+    isFirstParty: boolean | null
+    ownerTenantId: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OAuthClientMaxAggregateOutputType = {
+    id: string | null
+    clientId: string | null
+    name: string | null
+    clientSecretHash: string | null
+    clientType: string | null
+    platformCode: string | null
+    isFirstParty: boolean | null
+    ownerTenantId: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OAuthClientCountAggregateOutputType = {
+    id: number
+    clientId: number
+    name: number
+    clientSecretHash: number
+    clientType: number
+    platformCode: number
+    isFirstParty: number
+    ownerTenantId: number
+    redirectUris: number
+    postLogoutRedirectUris: number
+    grantTypes: number
+    allowedScopes: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type OAuthClientMinAggregateInputType = {
+    id?: true
+    clientId?: true
+    name?: true
+    clientSecretHash?: true
+    clientType?: true
+    platformCode?: true
+    isFirstParty?: true
+    ownerTenantId?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OAuthClientMaxAggregateInputType = {
+    id?: true
+    clientId?: true
+    name?: true
+    clientSecretHash?: true
+    clientType?: true
+    platformCode?: true
+    isFirstParty?: true
+    ownerTenantId?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OAuthClientCountAggregateInputType = {
+    id?: true
+    clientId?: true
+    name?: true
+    clientSecretHash?: true
+    clientType?: true
+    platformCode?: true
+    isFirstParty?: true
+    ownerTenantId?: true
+    redirectUris?: true
+    postLogoutRedirectUris?: true
+    grantTypes?: true
+    allowedScopes?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type OAuthClientAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OAuthClient to aggregate.
+     */
+    where?: OAuthClientWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OAuthClients to fetch.
+     */
+    orderBy?: OAuthClientOrderByWithRelationInput | OAuthClientOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: OAuthClientWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OAuthClients from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OAuthClients.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned OAuthClients
+    **/
+    _count?: true | OAuthClientCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OAuthClientMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OAuthClientMaxAggregateInputType
+  }
+
+  export type GetOAuthClientAggregateType<T extends OAuthClientAggregateArgs> = {
+        [P in keyof T & keyof AggregateOAuthClient]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOAuthClient[P]>
+      : GetScalarType<T[P], AggregateOAuthClient[P]>
+  }
+
+
+
+
+  export type OAuthClientGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OAuthClientWhereInput
+    orderBy?: OAuthClientOrderByWithAggregationInput | OAuthClientOrderByWithAggregationInput[]
+    by: OAuthClientScalarFieldEnum[] | OAuthClientScalarFieldEnum
+    having?: OAuthClientScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OAuthClientCountAggregateInputType | true
+    _min?: OAuthClientMinAggregateInputType
+    _max?: OAuthClientMaxAggregateInputType
+  }
+
+  export type OAuthClientGroupByOutputType = {
+    id: string
+    clientId: string
+    name: string
+    clientSecretHash: string | null
+    clientType: string
+    platformCode: string | null
+    isFirstParty: boolean
+    ownerTenantId: string | null
+    redirectUris: string[]
+    postLogoutRedirectUris: string[]
+    grantTypes: string[]
+    allowedScopes: string[]
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    _count: OAuthClientCountAggregateOutputType | null
+    _min: OAuthClientMinAggregateOutputType | null
+    _max: OAuthClientMaxAggregateOutputType | null
+  }
+
+  type GetOAuthClientGroupByPayload<T extends OAuthClientGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OAuthClientGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OAuthClientGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OAuthClientGroupByOutputType[P]>
+            : GetScalarType<T[P], OAuthClientGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type OAuthClientSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clientId?: boolean
+    name?: boolean
+    clientSecretHash?: boolean
+    clientType?: boolean
+    platformCode?: boolean
+    isFirstParty?: boolean
+    ownerTenantId?: boolean
+    redirectUris?: boolean
+    postLogoutRedirectUris?: boolean
+    grantTypes?: boolean
+    allowedScopes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    authorizationCodes?: boolean | OAuthClient$authorizationCodesArgs<ExtArgs>
+    refreshGrants?: boolean | OAuthClient$refreshGrantsArgs<ExtArgs>
+    consents?: boolean | OAuthClient$consentsArgs<ExtArgs>
+    _count?: boolean | OAuthClientCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["oAuthClient"]>
+
+  export type OAuthClientSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clientId?: boolean
+    name?: boolean
+    clientSecretHash?: boolean
+    clientType?: boolean
+    platformCode?: boolean
+    isFirstParty?: boolean
+    ownerTenantId?: boolean
+    redirectUris?: boolean
+    postLogoutRedirectUris?: boolean
+    grantTypes?: boolean
+    allowedScopes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["oAuthClient"]>
+
+  export type OAuthClientSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clientId?: boolean
+    name?: boolean
+    clientSecretHash?: boolean
+    clientType?: boolean
+    platformCode?: boolean
+    isFirstParty?: boolean
+    ownerTenantId?: boolean
+    redirectUris?: boolean
+    postLogoutRedirectUris?: boolean
+    grantTypes?: boolean
+    allowedScopes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["oAuthClient"]>
+
+  export type OAuthClientSelectScalar = {
+    id?: boolean
+    clientId?: boolean
+    name?: boolean
+    clientSecretHash?: boolean
+    clientType?: boolean
+    platformCode?: boolean
+    isFirstParty?: boolean
+    ownerTenantId?: boolean
+    redirectUris?: boolean
+    postLogoutRedirectUris?: boolean
+    grantTypes?: boolean
+    allowedScopes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type OAuthClientOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clientId" | "name" | "clientSecretHash" | "clientType" | "platformCode" | "isFirstParty" | "ownerTenantId" | "redirectUris" | "postLogoutRedirectUris" | "grantTypes" | "allowedScopes" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["oAuthClient"]>
+  export type OAuthClientInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    authorizationCodes?: boolean | OAuthClient$authorizationCodesArgs<ExtArgs>
+    refreshGrants?: boolean | OAuthClient$refreshGrantsArgs<ExtArgs>
+    consents?: boolean | OAuthClient$consentsArgs<ExtArgs>
+    _count?: boolean | OAuthClientCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type OAuthClientIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type OAuthClientIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $OAuthClientPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "OAuthClient"
+    objects: {
+      authorizationCodes: Prisma.$AuthorizationCodePayload<ExtArgs>[]
+      refreshGrants: Prisma.$RefreshGrantPayload<ExtArgs>[]
+      consents: Prisma.$ClientConsentPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      clientId: string
+      name: string
+      /**
+       * Null for PUBLIC clients. Native and browser clients cannot keep a secret,
+       * so they are public and rely on PKCE instead.
+       */
+      clientSecretHash: string | null
+      /**
+       * CONFIDENTIAL | PUBLIC
+       */
+      clientType: string
+      /**
+       * First-party platform binding (P1..P10). Null for third-party apps.
+       * /authorize consults PlatformGrant for this code before issuing a code, so
+       * a tenant user cannot obtain a token for the internal control plane even by
+       * crafting the request by hand.
+       */
+      platformCode: string | null
+      /**
+       * First-party clients are pre-consented; third-party clients must show the
+       * consent screen before any scope is granted.
+       */
+      isFirstParty: boolean
+      /**
+       * Owning tenant for tenant-private developer apps. Null for platform and
+       * publicly listed marketplace clients.
+       */
+      ownerTenantId: string | null
+      redirectUris: string[]
+      postLogoutRedirectUris: string[]
+      /**
+       * authorization_code | refresh_token | client_credentials | token-exchange
+       */
+      grantTypes: string[]
+      /**
+       * Upper bound on what this client may ever request. Effective authority is
+       * still scopes ∩ user permissions ∩ tenant entitlements.
+       */
+      allowedScopes: string[]
+      /**
+       * ACTIVE | SUSPENDED | REVOKED
+       */
+      status: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["oAuthClient"]>
+    composites: {}
+  }
+
+  type OAuthClientGetPayload<S extends boolean | null | undefined | OAuthClientDefaultArgs> = $Result.GetResult<Prisma.$OAuthClientPayload, S>
+
+  type OAuthClientCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<OAuthClientFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OAuthClientCountAggregateInputType | true
+    }
+
+  export interface OAuthClientDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['OAuthClient'], meta: { name: 'OAuthClient' } }
+    /**
+     * Find zero or one OAuthClient that matches the filter.
+     * @param {OAuthClientFindUniqueArgs} args - Arguments to find a OAuthClient
+     * @example
+     * // Get one OAuthClient
+     * const oAuthClient = await prisma.oAuthClient.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends OAuthClientFindUniqueArgs>(args: SelectSubset<T, OAuthClientFindUniqueArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one OAuthClient that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {OAuthClientFindUniqueOrThrowArgs} args - Arguments to find a OAuthClient
+     * @example
+     * // Get one OAuthClient
+     * const oAuthClient = await prisma.oAuthClient.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends OAuthClientFindUniqueOrThrowArgs>(args: SelectSubset<T, OAuthClientFindUniqueOrThrowArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OAuthClient that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OAuthClientFindFirstArgs} args - Arguments to find a OAuthClient
+     * @example
+     * // Get one OAuthClient
+     * const oAuthClient = await prisma.oAuthClient.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends OAuthClientFindFirstArgs>(args?: SelectSubset<T, OAuthClientFindFirstArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OAuthClient that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OAuthClientFindFirstOrThrowArgs} args - Arguments to find a OAuthClient
+     * @example
+     * // Get one OAuthClient
+     * const oAuthClient = await prisma.oAuthClient.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends OAuthClientFindFirstOrThrowArgs>(args?: SelectSubset<T, OAuthClientFindFirstOrThrowArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more OAuthClients that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OAuthClientFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all OAuthClients
+     * const oAuthClients = await prisma.oAuthClient.findMany()
+     * 
+     * // Get first 10 OAuthClients
+     * const oAuthClients = await prisma.oAuthClient.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const oAuthClientWithIdOnly = await prisma.oAuthClient.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends OAuthClientFindManyArgs>(args?: SelectSubset<T, OAuthClientFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a OAuthClient.
+     * @param {OAuthClientCreateArgs} args - Arguments to create a OAuthClient.
+     * @example
+     * // Create one OAuthClient
+     * const OAuthClient = await prisma.oAuthClient.create({
+     *   data: {
+     *     // ... data to create a OAuthClient
+     *   }
+     * })
+     * 
+     */
+    create<T extends OAuthClientCreateArgs>(args: SelectSubset<T, OAuthClientCreateArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many OAuthClients.
+     * @param {OAuthClientCreateManyArgs} args - Arguments to create many OAuthClients.
+     * @example
+     * // Create many OAuthClients
+     * const oAuthClient = await prisma.oAuthClient.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends OAuthClientCreateManyArgs>(args?: SelectSubset<T, OAuthClientCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many OAuthClients and returns the data saved in the database.
+     * @param {OAuthClientCreateManyAndReturnArgs} args - Arguments to create many OAuthClients.
+     * @example
+     * // Create many OAuthClients
+     * const oAuthClient = await prisma.oAuthClient.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many OAuthClients and only return the `id`
+     * const oAuthClientWithIdOnly = await prisma.oAuthClient.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends OAuthClientCreateManyAndReturnArgs>(args?: SelectSubset<T, OAuthClientCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a OAuthClient.
+     * @param {OAuthClientDeleteArgs} args - Arguments to delete one OAuthClient.
+     * @example
+     * // Delete one OAuthClient
+     * const OAuthClient = await prisma.oAuthClient.delete({
+     *   where: {
+     *     // ... filter to delete one OAuthClient
+     *   }
+     * })
+     * 
+     */
+    delete<T extends OAuthClientDeleteArgs>(args: SelectSubset<T, OAuthClientDeleteArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one OAuthClient.
+     * @param {OAuthClientUpdateArgs} args - Arguments to update one OAuthClient.
+     * @example
+     * // Update one OAuthClient
+     * const oAuthClient = await prisma.oAuthClient.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends OAuthClientUpdateArgs>(args: SelectSubset<T, OAuthClientUpdateArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more OAuthClients.
+     * @param {OAuthClientDeleteManyArgs} args - Arguments to filter OAuthClients to delete.
+     * @example
+     * // Delete a few OAuthClients
+     * const { count } = await prisma.oAuthClient.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends OAuthClientDeleteManyArgs>(args?: SelectSubset<T, OAuthClientDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OAuthClients.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OAuthClientUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many OAuthClients
+     * const oAuthClient = await prisma.oAuthClient.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends OAuthClientUpdateManyArgs>(args: SelectSubset<T, OAuthClientUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OAuthClients and returns the data updated in the database.
+     * @param {OAuthClientUpdateManyAndReturnArgs} args - Arguments to update many OAuthClients.
+     * @example
+     * // Update many OAuthClients
+     * const oAuthClient = await prisma.oAuthClient.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more OAuthClients and only return the `id`
+     * const oAuthClientWithIdOnly = await prisma.oAuthClient.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends OAuthClientUpdateManyAndReturnArgs>(args: SelectSubset<T, OAuthClientUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one OAuthClient.
+     * @param {OAuthClientUpsertArgs} args - Arguments to update or create a OAuthClient.
+     * @example
+     * // Update or create a OAuthClient
+     * const oAuthClient = await prisma.oAuthClient.upsert({
+     *   create: {
+     *     // ... data to create a OAuthClient
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the OAuthClient we want to update
+     *   }
+     * })
+     */
+    upsert<T extends OAuthClientUpsertArgs>(args: SelectSubset<T, OAuthClientUpsertArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of OAuthClients.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OAuthClientCountArgs} args - Arguments to filter OAuthClients to count.
+     * @example
+     * // Count the number of OAuthClients
+     * const count = await prisma.oAuthClient.count({
+     *   where: {
+     *     // ... the filter for the OAuthClients we want to count
+     *   }
+     * })
+    **/
+    count<T extends OAuthClientCountArgs>(
+      args?: Subset<T, OAuthClientCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OAuthClientCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a OAuthClient.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OAuthClientAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OAuthClientAggregateArgs>(args: Subset<T, OAuthClientAggregateArgs>): Prisma.PrismaPromise<GetOAuthClientAggregateType<T>>
+
+    /**
+     * Group by OAuthClient.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OAuthClientGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends OAuthClientGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: OAuthClientGroupByArgs['orderBy'] }
+        : { orderBy?: OAuthClientGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, OAuthClientGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOAuthClientGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the OAuthClient model
+   */
+  readonly fields: OAuthClientFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for OAuthClient.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__OAuthClientClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    authorizationCodes<T extends OAuthClient$authorizationCodesArgs<ExtArgs> = {}>(args?: Subset<T, OAuthClient$authorizationCodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    refreshGrants<T extends OAuthClient$refreshGrantsArgs<ExtArgs> = {}>(args?: Subset<T, OAuthClient$refreshGrantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    consents<T extends OAuthClient$consentsArgs<ExtArgs> = {}>(args?: Subset<T, OAuthClient$consentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the OAuthClient model
+   */
+  interface OAuthClientFieldRefs {
+    readonly id: FieldRef<"OAuthClient", 'String'>
+    readonly clientId: FieldRef<"OAuthClient", 'String'>
+    readonly name: FieldRef<"OAuthClient", 'String'>
+    readonly clientSecretHash: FieldRef<"OAuthClient", 'String'>
+    readonly clientType: FieldRef<"OAuthClient", 'String'>
+    readonly platformCode: FieldRef<"OAuthClient", 'String'>
+    readonly isFirstParty: FieldRef<"OAuthClient", 'Boolean'>
+    readonly ownerTenantId: FieldRef<"OAuthClient", 'String'>
+    readonly redirectUris: FieldRef<"OAuthClient", 'String[]'>
+    readonly postLogoutRedirectUris: FieldRef<"OAuthClient", 'String[]'>
+    readonly grantTypes: FieldRef<"OAuthClient", 'String[]'>
+    readonly allowedScopes: FieldRef<"OAuthClient", 'String[]'>
+    readonly status: FieldRef<"OAuthClient", 'String'>
+    readonly createdAt: FieldRef<"OAuthClient", 'DateTime'>
+    readonly updatedAt: FieldRef<"OAuthClient", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * OAuthClient findUnique
+   */
+  export type OAuthClientFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * Filter, which OAuthClient to fetch.
+     */
+    where: OAuthClientWhereUniqueInput
+  }
+
+  /**
+   * OAuthClient findUniqueOrThrow
+   */
+  export type OAuthClientFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * Filter, which OAuthClient to fetch.
+     */
+    where: OAuthClientWhereUniqueInput
+  }
+
+  /**
+   * OAuthClient findFirst
+   */
+  export type OAuthClientFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * Filter, which OAuthClient to fetch.
+     */
+    where?: OAuthClientWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OAuthClients to fetch.
+     */
+    orderBy?: OAuthClientOrderByWithRelationInput | OAuthClientOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OAuthClients.
+     */
+    cursor?: OAuthClientWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OAuthClients from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OAuthClients.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OAuthClients.
+     */
+    distinct?: OAuthClientScalarFieldEnum | OAuthClientScalarFieldEnum[]
+  }
+
+  /**
+   * OAuthClient findFirstOrThrow
+   */
+  export type OAuthClientFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * Filter, which OAuthClient to fetch.
+     */
+    where?: OAuthClientWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OAuthClients to fetch.
+     */
+    orderBy?: OAuthClientOrderByWithRelationInput | OAuthClientOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OAuthClients.
+     */
+    cursor?: OAuthClientWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OAuthClients from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OAuthClients.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OAuthClients.
+     */
+    distinct?: OAuthClientScalarFieldEnum | OAuthClientScalarFieldEnum[]
+  }
+
+  /**
+   * OAuthClient findMany
+   */
+  export type OAuthClientFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * Filter, which OAuthClients to fetch.
+     */
+    where?: OAuthClientWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OAuthClients to fetch.
+     */
+    orderBy?: OAuthClientOrderByWithRelationInput | OAuthClientOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing OAuthClients.
+     */
+    cursor?: OAuthClientWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OAuthClients from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OAuthClients.
+     */
+    skip?: number
+    distinct?: OAuthClientScalarFieldEnum | OAuthClientScalarFieldEnum[]
+  }
+
+  /**
+   * OAuthClient create
+   */
+  export type OAuthClientCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * The data needed to create a OAuthClient.
+     */
+    data: XOR<OAuthClientCreateInput, OAuthClientUncheckedCreateInput>
+  }
+
+  /**
+   * OAuthClient createMany
+   */
+  export type OAuthClientCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many OAuthClients.
+     */
+    data: OAuthClientCreateManyInput | OAuthClientCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * OAuthClient createManyAndReturn
+   */
+  export type OAuthClientCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * The data used to create many OAuthClients.
+     */
+    data: OAuthClientCreateManyInput | OAuthClientCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * OAuthClient update
+   */
+  export type OAuthClientUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * The data needed to update a OAuthClient.
+     */
+    data: XOR<OAuthClientUpdateInput, OAuthClientUncheckedUpdateInput>
+    /**
+     * Choose, which OAuthClient to update.
+     */
+    where: OAuthClientWhereUniqueInput
+  }
+
+  /**
+   * OAuthClient updateMany
+   */
+  export type OAuthClientUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update OAuthClients.
+     */
+    data: XOR<OAuthClientUpdateManyMutationInput, OAuthClientUncheckedUpdateManyInput>
+    /**
+     * Filter which OAuthClients to update
+     */
+    where?: OAuthClientWhereInput
+    /**
+     * Limit how many OAuthClients to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OAuthClient updateManyAndReturn
+   */
+  export type OAuthClientUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * The data used to update OAuthClients.
+     */
+    data: XOR<OAuthClientUpdateManyMutationInput, OAuthClientUncheckedUpdateManyInput>
+    /**
+     * Filter which OAuthClients to update
+     */
+    where?: OAuthClientWhereInput
+    /**
+     * Limit how many OAuthClients to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OAuthClient upsert
+   */
+  export type OAuthClientUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * The filter to search for the OAuthClient to update in case it exists.
+     */
+    where: OAuthClientWhereUniqueInput
+    /**
+     * In case the OAuthClient found by the `where` argument doesn't exist, create a new OAuthClient with this data.
+     */
+    create: XOR<OAuthClientCreateInput, OAuthClientUncheckedCreateInput>
+    /**
+     * In case the OAuthClient was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<OAuthClientUpdateInput, OAuthClientUncheckedUpdateInput>
+  }
+
+  /**
+   * OAuthClient delete
+   */
+  export type OAuthClientDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+    /**
+     * Filter which OAuthClient to delete.
+     */
+    where: OAuthClientWhereUniqueInput
+  }
+
+  /**
+   * OAuthClient deleteMany
+   */
+  export type OAuthClientDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OAuthClients to delete
+     */
+    where?: OAuthClientWhereInput
+    /**
+     * Limit how many OAuthClients to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * OAuthClient.authorizationCodes
+   */
+  export type OAuthClient$authorizationCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    where?: AuthorizationCodeWhereInput
+    orderBy?: AuthorizationCodeOrderByWithRelationInput | AuthorizationCodeOrderByWithRelationInput[]
+    cursor?: AuthorizationCodeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AuthorizationCodeScalarFieldEnum | AuthorizationCodeScalarFieldEnum[]
+  }
+
+  /**
+   * OAuthClient.refreshGrants
+   */
+  export type OAuthClient$refreshGrantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    where?: RefreshGrantWhereInput
+    orderBy?: RefreshGrantOrderByWithRelationInput | RefreshGrantOrderByWithRelationInput[]
+    cursor?: RefreshGrantWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: RefreshGrantScalarFieldEnum | RefreshGrantScalarFieldEnum[]
+  }
+
+  /**
+   * OAuthClient.consents
+   */
+  export type OAuthClient$consentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    where?: ClientConsentWhereInput
+    orderBy?: ClientConsentOrderByWithRelationInput | ClientConsentOrderByWithRelationInput[]
+    cursor?: ClientConsentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ClientConsentScalarFieldEnum | ClientConsentScalarFieldEnum[]
+  }
+
+  /**
+   * OAuthClient without action
+   */
+  export type OAuthClientDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OAuthClient
+     */
+    select?: OAuthClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OAuthClient
+     */
+    omit?: OAuthClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OAuthClientInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AuthorizationCode
+   */
+
+  export type AggregateAuthorizationCode = {
+    _count: AuthorizationCodeCountAggregateOutputType | null
+    _min: AuthorizationCodeMinAggregateOutputType | null
+    _max: AuthorizationCodeMaxAggregateOutputType | null
+  }
+
+  export type AuthorizationCodeMinAggregateOutputType = {
+    id: string | null
+    codeHash: string | null
+    clientId: string | null
+    userId: string | null
+    tenantId: string | null
+    sid: string | null
+    redirectUri: string | null
+    nonce: string | null
+    codeChallenge: string | null
+    codeChallengeMethod: string | null
+    expiresAt: Date | null
+    consumedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type AuthorizationCodeMaxAggregateOutputType = {
+    id: string | null
+    codeHash: string | null
+    clientId: string | null
+    userId: string | null
+    tenantId: string | null
+    sid: string | null
+    redirectUri: string | null
+    nonce: string | null
+    codeChallenge: string | null
+    codeChallengeMethod: string | null
+    expiresAt: Date | null
+    consumedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type AuthorizationCodeCountAggregateOutputType = {
+    id: number
+    codeHash: number
+    clientId: number
+    userId: number
+    tenantId: number
+    sid: number
+    redirectUri: number
+    scopes: number
+    nonce: number
+    codeChallenge: number
+    codeChallengeMethod: number
+    expiresAt: number
+    consumedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AuthorizationCodeMinAggregateInputType = {
+    id?: true
+    codeHash?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    sid?: true
+    redirectUri?: true
+    nonce?: true
+    codeChallenge?: true
+    codeChallengeMethod?: true
+    expiresAt?: true
+    consumedAt?: true
+    createdAt?: true
+  }
+
+  export type AuthorizationCodeMaxAggregateInputType = {
+    id?: true
+    codeHash?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    sid?: true
+    redirectUri?: true
+    nonce?: true
+    codeChallenge?: true
+    codeChallengeMethod?: true
+    expiresAt?: true
+    consumedAt?: true
+    createdAt?: true
+  }
+
+  export type AuthorizationCodeCountAggregateInputType = {
+    id?: true
+    codeHash?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    sid?: true
+    redirectUri?: true
+    scopes?: true
+    nonce?: true
+    codeChallenge?: true
+    codeChallengeMethod?: true
+    expiresAt?: true
+    consumedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AuthorizationCodeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AuthorizationCode to aggregate.
+     */
+    where?: AuthorizationCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AuthorizationCodes to fetch.
+     */
+    orderBy?: AuthorizationCodeOrderByWithRelationInput | AuthorizationCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AuthorizationCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AuthorizationCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AuthorizationCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AuthorizationCodes
+    **/
+    _count?: true | AuthorizationCodeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AuthorizationCodeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AuthorizationCodeMaxAggregateInputType
+  }
+
+  export type GetAuthorizationCodeAggregateType<T extends AuthorizationCodeAggregateArgs> = {
+        [P in keyof T & keyof AggregateAuthorizationCode]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAuthorizationCode[P]>
+      : GetScalarType<T[P], AggregateAuthorizationCode[P]>
+  }
+
+
+
+
+  export type AuthorizationCodeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AuthorizationCodeWhereInput
+    orderBy?: AuthorizationCodeOrderByWithAggregationInput | AuthorizationCodeOrderByWithAggregationInput[]
+    by: AuthorizationCodeScalarFieldEnum[] | AuthorizationCodeScalarFieldEnum
+    having?: AuthorizationCodeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AuthorizationCodeCountAggregateInputType | true
+    _min?: AuthorizationCodeMinAggregateInputType
+    _max?: AuthorizationCodeMaxAggregateInputType
+  }
+
+  export type AuthorizationCodeGroupByOutputType = {
+    id: string
+    codeHash: string
+    clientId: string
+    userId: string
+    tenantId: string
+    sid: string
+    redirectUri: string
+    scopes: string[]
+    nonce: string | null
+    codeChallenge: string
+    codeChallengeMethod: string
+    expiresAt: Date
+    consumedAt: Date | null
+    createdAt: Date
+    _count: AuthorizationCodeCountAggregateOutputType | null
+    _min: AuthorizationCodeMinAggregateOutputType | null
+    _max: AuthorizationCodeMaxAggregateOutputType | null
+  }
+
+  type GetAuthorizationCodeGroupByPayload<T extends AuthorizationCodeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AuthorizationCodeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AuthorizationCodeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AuthorizationCodeGroupByOutputType[P]>
+            : GetScalarType<T[P], AuthorizationCodeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AuthorizationCodeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    codeHash?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    sid?: boolean
+    redirectUri?: boolean
+    scopes?: boolean
+    nonce?: boolean
+    codeChallenge?: boolean
+    codeChallengeMethod?: boolean
+    expiresAt?: boolean
+    consumedAt?: boolean
+    createdAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["authorizationCode"]>
+
+  export type AuthorizationCodeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    codeHash?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    sid?: boolean
+    redirectUri?: boolean
+    scopes?: boolean
+    nonce?: boolean
+    codeChallenge?: boolean
+    codeChallengeMethod?: boolean
+    expiresAt?: boolean
+    consumedAt?: boolean
+    createdAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["authorizationCode"]>
+
+  export type AuthorizationCodeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    codeHash?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    sid?: boolean
+    redirectUri?: boolean
+    scopes?: boolean
+    nonce?: boolean
+    codeChallenge?: boolean
+    codeChallengeMethod?: boolean
+    expiresAt?: boolean
+    consumedAt?: boolean
+    createdAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["authorizationCode"]>
+
+  export type AuthorizationCodeSelectScalar = {
+    id?: boolean
+    codeHash?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    sid?: boolean
+    redirectUri?: boolean
+    scopes?: boolean
+    nonce?: boolean
+    codeChallenge?: boolean
+    codeChallengeMethod?: boolean
+    expiresAt?: boolean
+    consumedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type AuthorizationCodeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "codeHash" | "clientId" | "userId" | "tenantId" | "sid" | "redirectUri" | "scopes" | "nonce" | "codeChallenge" | "codeChallengeMethod" | "expiresAt" | "consumedAt" | "createdAt", ExtArgs["result"]["authorizationCode"]>
+  export type AuthorizationCodeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+  export type AuthorizationCodeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+  export type AuthorizationCodeIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+
+  export type $AuthorizationCodePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AuthorizationCode"
+    objects: {
+      client: Prisma.$OAuthClientPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      codeHash: string
+      clientId: string
+      userId: string
+      tenantId: string
+      /**
+       * Session this code was issued against; the resulting tokens inherit it, so
+       * revoking the session revokes everything derived from it.
+       */
+      sid: string
+      redirectUri: string
+      scopes: string[]
+      nonce: string | null
+      /**
+       * PKCE is mandatory. S256 only — `plain` is not accepted.
+       */
+      codeChallenge: string
+      codeChallengeMethod: string
+      expiresAt: Date
+      /**
+       * Set on first exchange. A second presentation is replay: it fails AND
+       * revokes every token already derived from this code.
+       */
+      consumedAt: Date | null
+      createdAt: Date
+    }, ExtArgs["result"]["authorizationCode"]>
+    composites: {}
+  }
+
+  type AuthorizationCodeGetPayload<S extends boolean | null | undefined | AuthorizationCodeDefaultArgs> = $Result.GetResult<Prisma.$AuthorizationCodePayload, S>
+
+  type AuthorizationCodeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AuthorizationCodeFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AuthorizationCodeCountAggregateInputType | true
+    }
+
+  export interface AuthorizationCodeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AuthorizationCode'], meta: { name: 'AuthorizationCode' } }
+    /**
+     * Find zero or one AuthorizationCode that matches the filter.
+     * @param {AuthorizationCodeFindUniqueArgs} args - Arguments to find a AuthorizationCode
+     * @example
+     * // Get one AuthorizationCode
+     * const authorizationCode = await prisma.authorizationCode.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AuthorizationCodeFindUniqueArgs>(args: SelectSubset<T, AuthorizationCodeFindUniqueArgs<ExtArgs>>): Prisma__AuthorizationCodeClient<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AuthorizationCode that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AuthorizationCodeFindUniqueOrThrowArgs} args - Arguments to find a AuthorizationCode
+     * @example
+     * // Get one AuthorizationCode
+     * const authorizationCode = await prisma.authorizationCode.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AuthorizationCodeFindUniqueOrThrowArgs>(args: SelectSubset<T, AuthorizationCodeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AuthorizationCodeClient<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AuthorizationCode that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuthorizationCodeFindFirstArgs} args - Arguments to find a AuthorizationCode
+     * @example
+     * // Get one AuthorizationCode
+     * const authorizationCode = await prisma.authorizationCode.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AuthorizationCodeFindFirstArgs>(args?: SelectSubset<T, AuthorizationCodeFindFirstArgs<ExtArgs>>): Prisma__AuthorizationCodeClient<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AuthorizationCode that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuthorizationCodeFindFirstOrThrowArgs} args - Arguments to find a AuthorizationCode
+     * @example
+     * // Get one AuthorizationCode
+     * const authorizationCode = await prisma.authorizationCode.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AuthorizationCodeFindFirstOrThrowArgs>(args?: SelectSubset<T, AuthorizationCodeFindFirstOrThrowArgs<ExtArgs>>): Prisma__AuthorizationCodeClient<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AuthorizationCodes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuthorizationCodeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AuthorizationCodes
+     * const authorizationCodes = await prisma.authorizationCode.findMany()
+     * 
+     * // Get first 10 AuthorizationCodes
+     * const authorizationCodes = await prisma.authorizationCode.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const authorizationCodeWithIdOnly = await prisma.authorizationCode.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AuthorizationCodeFindManyArgs>(args?: SelectSubset<T, AuthorizationCodeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AuthorizationCode.
+     * @param {AuthorizationCodeCreateArgs} args - Arguments to create a AuthorizationCode.
+     * @example
+     * // Create one AuthorizationCode
+     * const AuthorizationCode = await prisma.authorizationCode.create({
+     *   data: {
+     *     // ... data to create a AuthorizationCode
+     *   }
+     * })
+     * 
+     */
+    create<T extends AuthorizationCodeCreateArgs>(args: SelectSubset<T, AuthorizationCodeCreateArgs<ExtArgs>>): Prisma__AuthorizationCodeClient<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AuthorizationCodes.
+     * @param {AuthorizationCodeCreateManyArgs} args - Arguments to create many AuthorizationCodes.
+     * @example
+     * // Create many AuthorizationCodes
+     * const authorizationCode = await prisma.authorizationCode.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AuthorizationCodeCreateManyArgs>(args?: SelectSubset<T, AuthorizationCodeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AuthorizationCodes and returns the data saved in the database.
+     * @param {AuthorizationCodeCreateManyAndReturnArgs} args - Arguments to create many AuthorizationCodes.
+     * @example
+     * // Create many AuthorizationCodes
+     * const authorizationCode = await prisma.authorizationCode.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AuthorizationCodes and only return the `id`
+     * const authorizationCodeWithIdOnly = await prisma.authorizationCode.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AuthorizationCodeCreateManyAndReturnArgs>(args?: SelectSubset<T, AuthorizationCodeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AuthorizationCode.
+     * @param {AuthorizationCodeDeleteArgs} args - Arguments to delete one AuthorizationCode.
+     * @example
+     * // Delete one AuthorizationCode
+     * const AuthorizationCode = await prisma.authorizationCode.delete({
+     *   where: {
+     *     // ... filter to delete one AuthorizationCode
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AuthorizationCodeDeleteArgs>(args: SelectSubset<T, AuthorizationCodeDeleteArgs<ExtArgs>>): Prisma__AuthorizationCodeClient<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AuthorizationCode.
+     * @param {AuthorizationCodeUpdateArgs} args - Arguments to update one AuthorizationCode.
+     * @example
+     * // Update one AuthorizationCode
+     * const authorizationCode = await prisma.authorizationCode.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AuthorizationCodeUpdateArgs>(args: SelectSubset<T, AuthorizationCodeUpdateArgs<ExtArgs>>): Prisma__AuthorizationCodeClient<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AuthorizationCodes.
+     * @param {AuthorizationCodeDeleteManyArgs} args - Arguments to filter AuthorizationCodes to delete.
+     * @example
+     * // Delete a few AuthorizationCodes
+     * const { count } = await prisma.authorizationCode.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AuthorizationCodeDeleteManyArgs>(args?: SelectSubset<T, AuthorizationCodeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AuthorizationCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuthorizationCodeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AuthorizationCodes
+     * const authorizationCode = await prisma.authorizationCode.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AuthorizationCodeUpdateManyArgs>(args: SelectSubset<T, AuthorizationCodeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AuthorizationCodes and returns the data updated in the database.
+     * @param {AuthorizationCodeUpdateManyAndReturnArgs} args - Arguments to update many AuthorizationCodes.
+     * @example
+     * // Update many AuthorizationCodes
+     * const authorizationCode = await prisma.authorizationCode.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AuthorizationCodes and only return the `id`
+     * const authorizationCodeWithIdOnly = await prisma.authorizationCode.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AuthorizationCodeUpdateManyAndReturnArgs>(args: SelectSubset<T, AuthorizationCodeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AuthorizationCode.
+     * @param {AuthorizationCodeUpsertArgs} args - Arguments to update or create a AuthorizationCode.
+     * @example
+     * // Update or create a AuthorizationCode
+     * const authorizationCode = await prisma.authorizationCode.upsert({
+     *   create: {
+     *     // ... data to create a AuthorizationCode
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AuthorizationCode we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AuthorizationCodeUpsertArgs>(args: SelectSubset<T, AuthorizationCodeUpsertArgs<ExtArgs>>): Prisma__AuthorizationCodeClient<$Result.GetResult<Prisma.$AuthorizationCodePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AuthorizationCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuthorizationCodeCountArgs} args - Arguments to filter AuthorizationCodes to count.
+     * @example
+     * // Count the number of AuthorizationCodes
+     * const count = await prisma.authorizationCode.count({
+     *   where: {
+     *     // ... the filter for the AuthorizationCodes we want to count
+     *   }
+     * })
+    **/
+    count<T extends AuthorizationCodeCountArgs>(
+      args?: Subset<T, AuthorizationCodeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AuthorizationCodeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AuthorizationCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuthorizationCodeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AuthorizationCodeAggregateArgs>(args: Subset<T, AuthorizationCodeAggregateArgs>): Prisma.PrismaPromise<GetAuthorizationCodeAggregateType<T>>
+
+    /**
+     * Group by AuthorizationCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuthorizationCodeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AuthorizationCodeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AuthorizationCodeGroupByArgs['orderBy'] }
+        : { orderBy?: AuthorizationCodeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AuthorizationCodeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAuthorizationCodeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AuthorizationCode model
+   */
+  readonly fields: AuthorizationCodeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AuthorizationCode.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AuthorizationCodeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    client<T extends OAuthClientDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OAuthClientDefaultArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AuthorizationCode model
+   */
+  interface AuthorizationCodeFieldRefs {
+    readonly id: FieldRef<"AuthorizationCode", 'String'>
+    readonly codeHash: FieldRef<"AuthorizationCode", 'String'>
+    readonly clientId: FieldRef<"AuthorizationCode", 'String'>
+    readonly userId: FieldRef<"AuthorizationCode", 'String'>
+    readonly tenantId: FieldRef<"AuthorizationCode", 'String'>
+    readonly sid: FieldRef<"AuthorizationCode", 'String'>
+    readonly redirectUri: FieldRef<"AuthorizationCode", 'String'>
+    readonly scopes: FieldRef<"AuthorizationCode", 'String[]'>
+    readonly nonce: FieldRef<"AuthorizationCode", 'String'>
+    readonly codeChallenge: FieldRef<"AuthorizationCode", 'String'>
+    readonly codeChallengeMethod: FieldRef<"AuthorizationCode", 'String'>
+    readonly expiresAt: FieldRef<"AuthorizationCode", 'DateTime'>
+    readonly consumedAt: FieldRef<"AuthorizationCode", 'DateTime'>
+    readonly createdAt: FieldRef<"AuthorizationCode", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AuthorizationCode findUnique
+   */
+  export type AuthorizationCodeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which AuthorizationCode to fetch.
+     */
+    where: AuthorizationCodeWhereUniqueInput
+  }
+
+  /**
+   * AuthorizationCode findUniqueOrThrow
+   */
+  export type AuthorizationCodeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which AuthorizationCode to fetch.
+     */
+    where: AuthorizationCodeWhereUniqueInput
+  }
+
+  /**
+   * AuthorizationCode findFirst
+   */
+  export type AuthorizationCodeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which AuthorizationCode to fetch.
+     */
+    where?: AuthorizationCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AuthorizationCodes to fetch.
+     */
+    orderBy?: AuthorizationCodeOrderByWithRelationInput | AuthorizationCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AuthorizationCodes.
+     */
+    cursor?: AuthorizationCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AuthorizationCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AuthorizationCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AuthorizationCodes.
+     */
+    distinct?: AuthorizationCodeScalarFieldEnum | AuthorizationCodeScalarFieldEnum[]
+  }
+
+  /**
+   * AuthorizationCode findFirstOrThrow
+   */
+  export type AuthorizationCodeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which AuthorizationCode to fetch.
+     */
+    where?: AuthorizationCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AuthorizationCodes to fetch.
+     */
+    orderBy?: AuthorizationCodeOrderByWithRelationInput | AuthorizationCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AuthorizationCodes.
+     */
+    cursor?: AuthorizationCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AuthorizationCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AuthorizationCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AuthorizationCodes.
+     */
+    distinct?: AuthorizationCodeScalarFieldEnum | AuthorizationCodeScalarFieldEnum[]
+  }
+
+  /**
+   * AuthorizationCode findMany
+   */
+  export type AuthorizationCodeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which AuthorizationCodes to fetch.
+     */
+    where?: AuthorizationCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AuthorizationCodes to fetch.
+     */
+    orderBy?: AuthorizationCodeOrderByWithRelationInput | AuthorizationCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AuthorizationCodes.
+     */
+    cursor?: AuthorizationCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AuthorizationCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AuthorizationCodes.
+     */
+    skip?: number
+    distinct?: AuthorizationCodeScalarFieldEnum | AuthorizationCodeScalarFieldEnum[]
+  }
+
+  /**
+   * AuthorizationCode create
+   */
+  export type AuthorizationCodeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AuthorizationCode.
+     */
+    data: XOR<AuthorizationCodeCreateInput, AuthorizationCodeUncheckedCreateInput>
+  }
+
+  /**
+   * AuthorizationCode createMany
+   */
+  export type AuthorizationCodeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AuthorizationCodes.
+     */
+    data: AuthorizationCodeCreateManyInput | AuthorizationCodeCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AuthorizationCode createManyAndReturn
+   */
+  export type AuthorizationCodeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * The data used to create many AuthorizationCodes.
+     */
+    data: AuthorizationCodeCreateManyInput | AuthorizationCodeCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AuthorizationCode update
+   */
+  export type AuthorizationCodeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AuthorizationCode.
+     */
+    data: XOR<AuthorizationCodeUpdateInput, AuthorizationCodeUncheckedUpdateInput>
+    /**
+     * Choose, which AuthorizationCode to update.
+     */
+    where: AuthorizationCodeWhereUniqueInput
+  }
+
+  /**
+   * AuthorizationCode updateMany
+   */
+  export type AuthorizationCodeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AuthorizationCodes.
+     */
+    data: XOR<AuthorizationCodeUpdateManyMutationInput, AuthorizationCodeUncheckedUpdateManyInput>
+    /**
+     * Filter which AuthorizationCodes to update
+     */
+    where?: AuthorizationCodeWhereInput
+    /**
+     * Limit how many AuthorizationCodes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AuthorizationCode updateManyAndReturn
+   */
+  export type AuthorizationCodeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * The data used to update AuthorizationCodes.
+     */
+    data: XOR<AuthorizationCodeUpdateManyMutationInput, AuthorizationCodeUncheckedUpdateManyInput>
+    /**
+     * Filter which AuthorizationCodes to update
+     */
+    where?: AuthorizationCodeWhereInput
+    /**
+     * Limit how many AuthorizationCodes to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AuthorizationCode upsert
+   */
+  export type AuthorizationCodeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AuthorizationCode to update in case it exists.
+     */
+    where: AuthorizationCodeWhereUniqueInput
+    /**
+     * In case the AuthorizationCode found by the `where` argument doesn't exist, create a new AuthorizationCode with this data.
+     */
+    create: XOR<AuthorizationCodeCreateInput, AuthorizationCodeUncheckedCreateInput>
+    /**
+     * In case the AuthorizationCode was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AuthorizationCodeUpdateInput, AuthorizationCodeUncheckedUpdateInput>
+  }
+
+  /**
+   * AuthorizationCode delete
+   */
+  export type AuthorizationCodeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+    /**
+     * Filter which AuthorizationCode to delete.
+     */
+    where: AuthorizationCodeWhereUniqueInput
+  }
+
+  /**
+   * AuthorizationCode deleteMany
+   */
+  export type AuthorizationCodeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AuthorizationCodes to delete
+     */
+    where?: AuthorizationCodeWhereInput
+    /**
+     * Limit how many AuthorizationCodes to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AuthorizationCode without action
+   */
+  export type AuthorizationCodeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuthorizationCode
+     */
+    select?: AuthorizationCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuthorizationCode
+     */
+    omit?: AuthorizationCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuthorizationCodeInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model RefreshGrant
+   */
+
+  export type AggregateRefreshGrant = {
+    _count: RefreshGrantCountAggregateOutputType | null
+    _min: RefreshGrantMinAggregateOutputType | null
+    _max: RefreshGrantMaxAggregateOutputType | null
+  }
+
+  export type RefreshGrantMinAggregateOutputType = {
+    id: string | null
+    tokenHash: string | null
+    clientId: string | null
+    userId: string | null
+    tenantId: string | null
+    sid: string | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    rotatedFromId: string | null
+    createdAt: Date | null
+  }
+
+  export type RefreshGrantMaxAggregateOutputType = {
+    id: string | null
+    tokenHash: string | null
+    clientId: string | null
+    userId: string | null
+    tenantId: string | null
+    sid: string | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    rotatedFromId: string | null
+    createdAt: Date | null
+  }
+
+  export type RefreshGrantCountAggregateOutputType = {
+    id: number
+    tokenHash: number
+    clientId: number
+    userId: number
+    tenantId: number
+    sid: number
+    scopes: number
+    expiresAt: number
+    revokedAt: number
+    rotatedFromId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type RefreshGrantMinAggregateInputType = {
+    id?: true
+    tokenHash?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    sid?: true
+    expiresAt?: true
+    revokedAt?: true
+    rotatedFromId?: true
+    createdAt?: true
+  }
+
+  export type RefreshGrantMaxAggregateInputType = {
+    id?: true
+    tokenHash?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    sid?: true
+    expiresAt?: true
+    revokedAt?: true
+    rotatedFromId?: true
+    createdAt?: true
+  }
+
+  export type RefreshGrantCountAggregateInputType = {
+    id?: true
+    tokenHash?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    sid?: true
+    scopes?: true
+    expiresAt?: true
+    revokedAt?: true
+    rotatedFromId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type RefreshGrantAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RefreshGrant to aggregate.
+     */
+    where?: RefreshGrantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RefreshGrants to fetch.
+     */
+    orderBy?: RefreshGrantOrderByWithRelationInput | RefreshGrantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RefreshGrantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RefreshGrants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RefreshGrants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned RefreshGrants
+    **/
+    _count?: true | RefreshGrantCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RefreshGrantMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RefreshGrantMaxAggregateInputType
+  }
+
+  export type GetRefreshGrantAggregateType<T extends RefreshGrantAggregateArgs> = {
+        [P in keyof T & keyof AggregateRefreshGrant]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRefreshGrant[P]>
+      : GetScalarType<T[P], AggregateRefreshGrant[P]>
+  }
+
+
+
+
+  export type RefreshGrantGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RefreshGrantWhereInput
+    orderBy?: RefreshGrantOrderByWithAggregationInput | RefreshGrantOrderByWithAggregationInput[]
+    by: RefreshGrantScalarFieldEnum[] | RefreshGrantScalarFieldEnum
+    having?: RefreshGrantScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RefreshGrantCountAggregateInputType | true
+    _min?: RefreshGrantMinAggregateInputType
+    _max?: RefreshGrantMaxAggregateInputType
+  }
+
+  export type RefreshGrantGroupByOutputType = {
+    id: string
+    tokenHash: string
+    clientId: string
+    userId: string
+    tenantId: string
+    sid: string
+    scopes: string[]
+    expiresAt: Date
+    revokedAt: Date | null
+    rotatedFromId: string | null
+    createdAt: Date
+    _count: RefreshGrantCountAggregateOutputType | null
+    _min: RefreshGrantMinAggregateOutputType | null
+    _max: RefreshGrantMaxAggregateOutputType | null
+  }
+
+  type GetRefreshGrantGroupByPayload<T extends RefreshGrantGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RefreshGrantGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RefreshGrantGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RefreshGrantGroupByOutputType[P]>
+            : GetScalarType<T[P], RefreshGrantGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RefreshGrantSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tokenHash?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    sid?: boolean
+    scopes?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    rotatedFromId?: boolean
+    createdAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["refreshGrant"]>
+
+  export type RefreshGrantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tokenHash?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    sid?: boolean
+    scopes?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    rotatedFromId?: boolean
+    createdAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["refreshGrant"]>
+
+  export type RefreshGrantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tokenHash?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    sid?: boolean
+    scopes?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    rotatedFromId?: boolean
+    createdAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["refreshGrant"]>
+
+  export type RefreshGrantSelectScalar = {
+    id?: boolean
+    tokenHash?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    sid?: boolean
+    scopes?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    rotatedFromId?: boolean
+    createdAt?: boolean
+  }
+
+  export type RefreshGrantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tokenHash" | "clientId" | "userId" | "tenantId" | "sid" | "scopes" | "expiresAt" | "revokedAt" | "rotatedFromId" | "createdAt", ExtArgs["result"]["refreshGrant"]>
+  export type RefreshGrantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+  export type RefreshGrantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+  export type RefreshGrantIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+
+  export type $RefreshGrantPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "RefreshGrant"
+    objects: {
+      client: Prisma.$OAuthClientPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      tokenHash: string
+      clientId: string
+      userId: string
+      tenantId: string
+      sid: string
+      scopes: string[]
+      expiresAt: Date
+      revokedAt: Date | null
+      /**
+       * Rotation chain. If a already-rotated token is presented again it has been
+       * stolen, and the whole chain is revoked rather than just this row.
+       */
+      rotatedFromId: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["refreshGrant"]>
+    composites: {}
+  }
+
+  type RefreshGrantGetPayload<S extends boolean | null | undefined | RefreshGrantDefaultArgs> = $Result.GetResult<Prisma.$RefreshGrantPayload, S>
+
+  type RefreshGrantCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<RefreshGrantFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: RefreshGrantCountAggregateInputType | true
+    }
+
+  export interface RefreshGrantDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['RefreshGrant'], meta: { name: 'RefreshGrant' } }
+    /**
+     * Find zero or one RefreshGrant that matches the filter.
+     * @param {RefreshGrantFindUniqueArgs} args - Arguments to find a RefreshGrant
+     * @example
+     * // Get one RefreshGrant
+     * const refreshGrant = await prisma.refreshGrant.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RefreshGrantFindUniqueArgs>(args: SelectSubset<T, RefreshGrantFindUniqueArgs<ExtArgs>>): Prisma__RefreshGrantClient<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one RefreshGrant that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {RefreshGrantFindUniqueOrThrowArgs} args - Arguments to find a RefreshGrant
+     * @example
+     * // Get one RefreshGrant
+     * const refreshGrant = await prisma.refreshGrant.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RefreshGrantFindUniqueOrThrowArgs>(args: SelectSubset<T, RefreshGrantFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RefreshGrantClient<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first RefreshGrant that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RefreshGrantFindFirstArgs} args - Arguments to find a RefreshGrant
+     * @example
+     * // Get one RefreshGrant
+     * const refreshGrant = await prisma.refreshGrant.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RefreshGrantFindFirstArgs>(args?: SelectSubset<T, RefreshGrantFindFirstArgs<ExtArgs>>): Prisma__RefreshGrantClient<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first RefreshGrant that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RefreshGrantFindFirstOrThrowArgs} args - Arguments to find a RefreshGrant
+     * @example
+     * // Get one RefreshGrant
+     * const refreshGrant = await prisma.refreshGrant.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RefreshGrantFindFirstOrThrowArgs>(args?: SelectSubset<T, RefreshGrantFindFirstOrThrowArgs<ExtArgs>>): Prisma__RefreshGrantClient<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more RefreshGrants that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RefreshGrantFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all RefreshGrants
+     * const refreshGrants = await prisma.refreshGrant.findMany()
+     * 
+     * // Get first 10 RefreshGrants
+     * const refreshGrants = await prisma.refreshGrant.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const refreshGrantWithIdOnly = await prisma.refreshGrant.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RefreshGrantFindManyArgs>(args?: SelectSubset<T, RefreshGrantFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a RefreshGrant.
+     * @param {RefreshGrantCreateArgs} args - Arguments to create a RefreshGrant.
+     * @example
+     * // Create one RefreshGrant
+     * const RefreshGrant = await prisma.refreshGrant.create({
+     *   data: {
+     *     // ... data to create a RefreshGrant
+     *   }
+     * })
+     * 
+     */
+    create<T extends RefreshGrantCreateArgs>(args: SelectSubset<T, RefreshGrantCreateArgs<ExtArgs>>): Prisma__RefreshGrantClient<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many RefreshGrants.
+     * @param {RefreshGrantCreateManyArgs} args - Arguments to create many RefreshGrants.
+     * @example
+     * // Create many RefreshGrants
+     * const refreshGrant = await prisma.refreshGrant.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RefreshGrantCreateManyArgs>(args?: SelectSubset<T, RefreshGrantCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many RefreshGrants and returns the data saved in the database.
+     * @param {RefreshGrantCreateManyAndReturnArgs} args - Arguments to create many RefreshGrants.
+     * @example
+     * // Create many RefreshGrants
+     * const refreshGrant = await prisma.refreshGrant.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many RefreshGrants and only return the `id`
+     * const refreshGrantWithIdOnly = await prisma.refreshGrant.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RefreshGrantCreateManyAndReturnArgs>(args?: SelectSubset<T, RefreshGrantCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a RefreshGrant.
+     * @param {RefreshGrantDeleteArgs} args - Arguments to delete one RefreshGrant.
+     * @example
+     * // Delete one RefreshGrant
+     * const RefreshGrant = await prisma.refreshGrant.delete({
+     *   where: {
+     *     // ... filter to delete one RefreshGrant
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RefreshGrantDeleteArgs>(args: SelectSubset<T, RefreshGrantDeleteArgs<ExtArgs>>): Prisma__RefreshGrantClient<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one RefreshGrant.
+     * @param {RefreshGrantUpdateArgs} args - Arguments to update one RefreshGrant.
+     * @example
+     * // Update one RefreshGrant
+     * const refreshGrant = await prisma.refreshGrant.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RefreshGrantUpdateArgs>(args: SelectSubset<T, RefreshGrantUpdateArgs<ExtArgs>>): Prisma__RefreshGrantClient<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more RefreshGrants.
+     * @param {RefreshGrantDeleteManyArgs} args - Arguments to filter RefreshGrants to delete.
+     * @example
+     * // Delete a few RefreshGrants
+     * const { count } = await prisma.refreshGrant.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RefreshGrantDeleteManyArgs>(args?: SelectSubset<T, RefreshGrantDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RefreshGrants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RefreshGrantUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many RefreshGrants
+     * const refreshGrant = await prisma.refreshGrant.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RefreshGrantUpdateManyArgs>(args: SelectSubset<T, RefreshGrantUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RefreshGrants and returns the data updated in the database.
+     * @param {RefreshGrantUpdateManyAndReturnArgs} args - Arguments to update many RefreshGrants.
+     * @example
+     * // Update many RefreshGrants
+     * const refreshGrant = await prisma.refreshGrant.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more RefreshGrants and only return the `id`
+     * const refreshGrantWithIdOnly = await prisma.refreshGrant.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends RefreshGrantUpdateManyAndReturnArgs>(args: SelectSubset<T, RefreshGrantUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one RefreshGrant.
+     * @param {RefreshGrantUpsertArgs} args - Arguments to update or create a RefreshGrant.
+     * @example
+     * // Update or create a RefreshGrant
+     * const refreshGrant = await prisma.refreshGrant.upsert({
+     *   create: {
+     *     // ... data to create a RefreshGrant
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the RefreshGrant we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RefreshGrantUpsertArgs>(args: SelectSubset<T, RefreshGrantUpsertArgs<ExtArgs>>): Prisma__RefreshGrantClient<$Result.GetResult<Prisma.$RefreshGrantPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of RefreshGrants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RefreshGrantCountArgs} args - Arguments to filter RefreshGrants to count.
+     * @example
+     * // Count the number of RefreshGrants
+     * const count = await prisma.refreshGrant.count({
+     *   where: {
+     *     // ... the filter for the RefreshGrants we want to count
+     *   }
+     * })
+    **/
+    count<T extends RefreshGrantCountArgs>(
+      args?: Subset<T, RefreshGrantCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RefreshGrantCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a RefreshGrant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RefreshGrantAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RefreshGrantAggregateArgs>(args: Subset<T, RefreshGrantAggregateArgs>): Prisma.PrismaPromise<GetRefreshGrantAggregateType<T>>
+
+    /**
+     * Group by RefreshGrant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RefreshGrantGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RefreshGrantGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RefreshGrantGroupByArgs['orderBy'] }
+        : { orderBy?: RefreshGrantGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RefreshGrantGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRefreshGrantGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the RefreshGrant model
+   */
+  readonly fields: RefreshGrantFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for RefreshGrant.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RefreshGrantClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    client<T extends OAuthClientDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OAuthClientDefaultArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the RefreshGrant model
+   */
+  interface RefreshGrantFieldRefs {
+    readonly id: FieldRef<"RefreshGrant", 'String'>
+    readonly tokenHash: FieldRef<"RefreshGrant", 'String'>
+    readonly clientId: FieldRef<"RefreshGrant", 'String'>
+    readonly userId: FieldRef<"RefreshGrant", 'String'>
+    readonly tenantId: FieldRef<"RefreshGrant", 'String'>
+    readonly sid: FieldRef<"RefreshGrant", 'String'>
+    readonly scopes: FieldRef<"RefreshGrant", 'String[]'>
+    readonly expiresAt: FieldRef<"RefreshGrant", 'DateTime'>
+    readonly revokedAt: FieldRef<"RefreshGrant", 'DateTime'>
+    readonly rotatedFromId: FieldRef<"RefreshGrant", 'String'>
+    readonly createdAt: FieldRef<"RefreshGrant", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * RefreshGrant findUnique
+   */
+  export type RefreshGrantFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which RefreshGrant to fetch.
+     */
+    where: RefreshGrantWhereUniqueInput
+  }
+
+  /**
+   * RefreshGrant findUniqueOrThrow
+   */
+  export type RefreshGrantFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which RefreshGrant to fetch.
+     */
+    where: RefreshGrantWhereUniqueInput
+  }
+
+  /**
+   * RefreshGrant findFirst
+   */
+  export type RefreshGrantFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which RefreshGrant to fetch.
+     */
+    where?: RefreshGrantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RefreshGrants to fetch.
+     */
+    orderBy?: RefreshGrantOrderByWithRelationInput | RefreshGrantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RefreshGrants.
+     */
+    cursor?: RefreshGrantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RefreshGrants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RefreshGrants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RefreshGrants.
+     */
+    distinct?: RefreshGrantScalarFieldEnum | RefreshGrantScalarFieldEnum[]
+  }
+
+  /**
+   * RefreshGrant findFirstOrThrow
+   */
+  export type RefreshGrantFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which RefreshGrant to fetch.
+     */
+    where?: RefreshGrantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RefreshGrants to fetch.
+     */
+    orderBy?: RefreshGrantOrderByWithRelationInput | RefreshGrantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RefreshGrants.
+     */
+    cursor?: RefreshGrantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RefreshGrants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RefreshGrants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RefreshGrants.
+     */
+    distinct?: RefreshGrantScalarFieldEnum | RefreshGrantScalarFieldEnum[]
+  }
+
+  /**
+   * RefreshGrant findMany
+   */
+  export type RefreshGrantFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which RefreshGrants to fetch.
+     */
+    where?: RefreshGrantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RefreshGrants to fetch.
+     */
+    orderBy?: RefreshGrantOrderByWithRelationInput | RefreshGrantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing RefreshGrants.
+     */
+    cursor?: RefreshGrantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RefreshGrants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RefreshGrants.
+     */
+    skip?: number
+    distinct?: RefreshGrantScalarFieldEnum | RefreshGrantScalarFieldEnum[]
+  }
+
+  /**
+   * RefreshGrant create
+   */
+  export type RefreshGrantCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * The data needed to create a RefreshGrant.
+     */
+    data: XOR<RefreshGrantCreateInput, RefreshGrantUncheckedCreateInput>
+  }
+
+  /**
+   * RefreshGrant createMany
+   */
+  export type RefreshGrantCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many RefreshGrants.
+     */
+    data: RefreshGrantCreateManyInput | RefreshGrantCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * RefreshGrant createManyAndReturn
+   */
+  export type RefreshGrantCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * The data used to create many RefreshGrants.
+     */
+    data: RefreshGrantCreateManyInput | RefreshGrantCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * RefreshGrant update
+   */
+  export type RefreshGrantUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * The data needed to update a RefreshGrant.
+     */
+    data: XOR<RefreshGrantUpdateInput, RefreshGrantUncheckedUpdateInput>
+    /**
+     * Choose, which RefreshGrant to update.
+     */
+    where: RefreshGrantWhereUniqueInput
+  }
+
+  /**
+   * RefreshGrant updateMany
+   */
+  export type RefreshGrantUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update RefreshGrants.
+     */
+    data: XOR<RefreshGrantUpdateManyMutationInput, RefreshGrantUncheckedUpdateManyInput>
+    /**
+     * Filter which RefreshGrants to update
+     */
+    where?: RefreshGrantWhereInput
+    /**
+     * Limit how many RefreshGrants to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * RefreshGrant updateManyAndReturn
+   */
+  export type RefreshGrantUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * The data used to update RefreshGrants.
+     */
+    data: XOR<RefreshGrantUpdateManyMutationInput, RefreshGrantUncheckedUpdateManyInput>
+    /**
+     * Filter which RefreshGrants to update
+     */
+    where?: RefreshGrantWhereInput
+    /**
+     * Limit how many RefreshGrants to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * RefreshGrant upsert
+   */
+  export type RefreshGrantUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * The filter to search for the RefreshGrant to update in case it exists.
+     */
+    where: RefreshGrantWhereUniqueInput
+    /**
+     * In case the RefreshGrant found by the `where` argument doesn't exist, create a new RefreshGrant with this data.
+     */
+    create: XOR<RefreshGrantCreateInput, RefreshGrantUncheckedCreateInput>
+    /**
+     * In case the RefreshGrant was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RefreshGrantUpdateInput, RefreshGrantUncheckedUpdateInput>
+  }
+
+  /**
+   * RefreshGrant delete
+   */
+  export type RefreshGrantDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+    /**
+     * Filter which RefreshGrant to delete.
+     */
+    where: RefreshGrantWhereUniqueInput
+  }
+
+  /**
+   * RefreshGrant deleteMany
+   */
+  export type RefreshGrantDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RefreshGrants to delete
+     */
+    where?: RefreshGrantWhereInput
+    /**
+     * Limit how many RefreshGrants to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * RefreshGrant without action
+   */
+  export type RefreshGrantDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RefreshGrant
+     */
+    select?: RefreshGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RefreshGrant
+     */
+    omit?: RefreshGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RefreshGrantInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ClientConsent
+   */
+
+  export type AggregateClientConsent = {
+    _count: ClientConsentCountAggregateOutputType | null
+    _min: ClientConsentMinAggregateOutputType | null
+    _max: ClientConsentMaxAggregateOutputType | null
+  }
+
+  export type ClientConsentMinAggregateOutputType = {
+    id: string | null
+    clientId: string | null
+    userId: string | null
+    tenantId: string | null
+    grantedAt: Date | null
+    revokedAt: Date | null
+  }
+
+  export type ClientConsentMaxAggregateOutputType = {
+    id: string | null
+    clientId: string | null
+    userId: string | null
+    tenantId: string | null
+    grantedAt: Date | null
+    revokedAt: Date | null
+  }
+
+  export type ClientConsentCountAggregateOutputType = {
+    id: number
+    clientId: number
+    userId: number
+    tenantId: number
+    scopes: number
+    grantedAt: number
+    revokedAt: number
+    _all: number
+  }
+
+
+  export type ClientConsentMinAggregateInputType = {
+    id?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    grantedAt?: true
+    revokedAt?: true
+  }
+
+  export type ClientConsentMaxAggregateInputType = {
+    id?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    grantedAt?: true
+    revokedAt?: true
+  }
+
+  export type ClientConsentCountAggregateInputType = {
+    id?: true
+    clientId?: true
+    userId?: true
+    tenantId?: true
+    scopes?: true
+    grantedAt?: true
+    revokedAt?: true
+    _all?: true
+  }
+
+  export type ClientConsentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ClientConsent to aggregate.
+     */
+    where?: ClientConsentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ClientConsents to fetch.
+     */
+    orderBy?: ClientConsentOrderByWithRelationInput | ClientConsentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ClientConsentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ClientConsents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ClientConsents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ClientConsents
+    **/
+    _count?: true | ClientConsentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ClientConsentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ClientConsentMaxAggregateInputType
+  }
+
+  export type GetClientConsentAggregateType<T extends ClientConsentAggregateArgs> = {
+        [P in keyof T & keyof AggregateClientConsent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateClientConsent[P]>
+      : GetScalarType<T[P], AggregateClientConsent[P]>
+  }
+
+
+
+
+  export type ClientConsentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ClientConsentWhereInput
+    orderBy?: ClientConsentOrderByWithAggregationInput | ClientConsentOrderByWithAggregationInput[]
+    by: ClientConsentScalarFieldEnum[] | ClientConsentScalarFieldEnum
+    having?: ClientConsentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ClientConsentCountAggregateInputType | true
+    _min?: ClientConsentMinAggregateInputType
+    _max?: ClientConsentMaxAggregateInputType
+  }
+
+  export type ClientConsentGroupByOutputType = {
+    id: string
+    clientId: string
+    userId: string
+    tenantId: string
+    scopes: string[]
+    grantedAt: Date
+    revokedAt: Date | null
+    _count: ClientConsentCountAggregateOutputType | null
+    _min: ClientConsentMinAggregateOutputType | null
+    _max: ClientConsentMaxAggregateOutputType | null
+  }
+
+  type GetClientConsentGroupByPayload<T extends ClientConsentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ClientConsentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ClientConsentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ClientConsentGroupByOutputType[P]>
+            : GetScalarType<T[P], ClientConsentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ClientConsentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    scopes?: boolean
+    grantedAt?: boolean
+    revokedAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["clientConsent"]>
+
+  export type ClientConsentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    scopes?: boolean
+    grantedAt?: boolean
+    revokedAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["clientConsent"]>
+
+  export type ClientConsentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    scopes?: boolean
+    grantedAt?: boolean
+    revokedAt?: boolean
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["clientConsent"]>
+
+  export type ClientConsentSelectScalar = {
+    id?: boolean
+    clientId?: boolean
+    userId?: boolean
+    tenantId?: boolean
+    scopes?: boolean
+    grantedAt?: boolean
+    revokedAt?: boolean
+  }
+
+  export type ClientConsentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clientId" | "userId" | "tenantId" | "scopes" | "grantedAt" | "revokedAt", ExtArgs["result"]["clientConsent"]>
+  export type ClientConsentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+  export type ClientConsentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+  export type ClientConsentIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    client?: boolean | OAuthClientDefaultArgs<ExtArgs>
+  }
+
+  export type $ClientConsentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ClientConsent"
+    objects: {
+      client: Prisma.$OAuthClientPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      clientId: string
+      userId: string
+      tenantId: string
+      scopes: string[]
+      grantedAt: Date
+      revokedAt: Date | null
+    }, ExtArgs["result"]["clientConsent"]>
+    composites: {}
+  }
+
+  type ClientConsentGetPayload<S extends boolean | null | undefined | ClientConsentDefaultArgs> = $Result.GetResult<Prisma.$ClientConsentPayload, S>
+
+  type ClientConsentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ClientConsentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ClientConsentCountAggregateInputType | true
+    }
+
+  export interface ClientConsentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ClientConsent'], meta: { name: 'ClientConsent' } }
+    /**
+     * Find zero or one ClientConsent that matches the filter.
+     * @param {ClientConsentFindUniqueArgs} args - Arguments to find a ClientConsent
+     * @example
+     * // Get one ClientConsent
+     * const clientConsent = await prisma.clientConsent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ClientConsentFindUniqueArgs>(args: SelectSubset<T, ClientConsentFindUniqueArgs<ExtArgs>>): Prisma__ClientConsentClient<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ClientConsent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ClientConsentFindUniqueOrThrowArgs} args - Arguments to find a ClientConsent
+     * @example
+     * // Get one ClientConsent
+     * const clientConsent = await prisma.clientConsent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ClientConsentFindUniqueOrThrowArgs>(args: SelectSubset<T, ClientConsentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ClientConsentClient<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ClientConsent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClientConsentFindFirstArgs} args - Arguments to find a ClientConsent
+     * @example
+     * // Get one ClientConsent
+     * const clientConsent = await prisma.clientConsent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ClientConsentFindFirstArgs>(args?: SelectSubset<T, ClientConsentFindFirstArgs<ExtArgs>>): Prisma__ClientConsentClient<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ClientConsent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClientConsentFindFirstOrThrowArgs} args - Arguments to find a ClientConsent
+     * @example
+     * // Get one ClientConsent
+     * const clientConsent = await prisma.clientConsent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ClientConsentFindFirstOrThrowArgs>(args?: SelectSubset<T, ClientConsentFindFirstOrThrowArgs<ExtArgs>>): Prisma__ClientConsentClient<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ClientConsents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClientConsentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ClientConsents
+     * const clientConsents = await prisma.clientConsent.findMany()
+     * 
+     * // Get first 10 ClientConsents
+     * const clientConsents = await prisma.clientConsent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const clientConsentWithIdOnly = await prisma.clientConsent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ClientConsentFindManyArgs>(args?: SelectSubset<T, ClientConsentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ClientConsent.
+     * @param {ClientConsentCreateArgs} args - Arguments to create a ClientConsent.
+     * @example
+     * // Create one ClientConsent
+     * const ClientConsent = await prisma.clientConsent.create({
+     *   data: {
+     *     // ... data to create a ClientConsent
+     *   }
+     * })
+     * 
+     */
+    create<T extends ClientConsentCreateArgs>(args: SelectSubset<T, ClientConsentCreateArgs<ExtArgs>>): Prisma__ClientConsentClient<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ClientConsents.
+     * @param {ClientConsentCreateManyArgs} args - Arguments to create many ClientConsents.
+     * @example
+     * // Create many ClientConsents
+     * const clientConsent = await prisma.clientConsent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ClientConsentCreateManyArgs>(args?: SelectSubset<T, ClientConsentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ClientConsents and returns the data saved in the database.
+     * @param {ClientConsentCreateManyAndReturnArgs} args - Arguments to create many ClientConsents.
+     * @example
+     * // Create many ClientConsents
+     * const clientConsent = await prisma.clientConsent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ClientConsents and only return the `id`
+     * const clientConsentWithIdOnly = await prisma.clientConsent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ClientConsentCreateManyAndReturnArgs>(args?: SelectSubset<T, ClientConsentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ClientConsent.
+     * @param {ClientConsentDeleteArgs} args - Arguments to delete one ClientConsent.
+     * @example
+     * // Delete one ClientConsent
+     * const ClientConsent = await prisma.clientConsent.delete({
+     *   where: {
+     *     // ... filter to delete one ClientConsent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ClientConsentDeleteArgs>(args: SelectSubset<T, ClientConsentDeleteArgs<ExtArgs>>): Prisma__ClientConsentClient<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ClientConsent.
+     * @param {ClientConsentUpdateArgs} args - Arguments to update one ClientConsent.
+     * @example
+     * // Update one ClientConsent
+     * const clientConsent = await prisma.clientConsent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ClientConsentUpdateArgs>(args: SelectSubset<T, ClientConsentUpdateArgs<ExtArgs>>): Prisma__ClientConsentClient<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ClientConsents.
+     * @param {ClientConsentDeleteManyArgs} args - Arguments to filter ClientConsents to delete.
+     * @example
+     * // Delete a few ClientConsents
+     * const { count } = await prisma.clientConsent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ClientConsentDeleteManyArgs>(args?: SelectSubset<T, ClientConsentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ClientConsents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClientConsentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ClientConsents
+     * const clientConsent = await prisma.clientConsent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ClientConsentUpdateManyArgs>(args: SelectSubset<T, ClientConsentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ClientConsents and returns the data updated in the database.
+     * @param {ClientConsentUpdateManyAndReturnArgs} args - Arguments to update many ClientConsents.
+     * @example
+     * // Update many ClientConsents
+     * const clientConsent = await prisma.clientConsent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ClientConsents and only return the `id`
+     * const clientConsentWithIdOnly = await prisma.clientConsent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ClientConsentUpdateManyAndReturnArgs>(args: SelectSubset<T, ClientConsentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ClientConsent.
+     * @param {ClientConsentUpsertArgs} args - Arguments to update or create a ClientConsent.
+     * @example
+     * // Update or create a ClientConsent
+     * const clientConsent = await prisma.clientConsent.upsert({
+     *   create: {
+     *     // ... data to create a ClientConsent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ClientConsent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ClientConsentUpsertArgs>(args: SelectSubset<T, ClientConsentUpsertArgs<ExtArgs>>): Prisma__ClientConsentClient<$Result.GetResult<Prisma.$ClientConsentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ClientConsents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClientConsentCountArgs} args - Arguments to filter ClientConsents to count.
+     * @example
+     * // Count the number of ClientConsents
+     * const count = await prisma.clientConsent.count({
+     *   where: {
+     *     // ... the filter for the ClientConsents we want to count
+     *   }
+     * })
+    **/
+    count<T extends ClientConsentCountArgs>(
+      args?: Subset<T, ClientConsentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ClientConsentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ClientConsent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClientConsentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ClientConsentAggregateArgs>(args: Subset<T, ClientConsentAggregateArgs>): Prisma.PrismaPromise<GetClientConsentAggregateType<T>>
+
+    /**
+     * Group by ClientConsent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ClientConsentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ClientConsentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ClientConsentGroupByArgs['orderBy'] }
+        : { orderBy?: ClientConsentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ClientConsentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetClientConsentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ClientConsent model
+   */
+  readonly fields: ClientConsentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ClientConsent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ClientConsentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    client<T extends OAuthClientDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OAuthClientDefaultArgs<ExtArgs>>): Prisma__OAuthClientClient<$Result.GetResult<Prisma.$OAuthClientPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ClientConsent model
+   */
+  interface ClientConsentFieldRefs {
+    readonly id: FieldRef<"ClientConsent", 'String'>
+    readonly clientId: FieldRef<"ClientConsent", 'String'>
+    readonly userId: FieldRef<"ClientConsent", 'String'>
+    readonly tenantId: FieldRef<"ClientConsent", 'String'>
+    readonly scopes: FieldRef<"ClientConsent", 'String[]'>
+    readonly grantedAt: FieldRef<"ClientConsent", 'DateTime'>
+    readonly revokedAt: FieldRef<"ClientConsent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ClientConsent findUnique
+   */
+  export type ClientConsentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * Filter, which ClientConsent to fetch.
+     */
+    where: ClientConsentWhereUniqueInput
+  }
+
+  /**
+   * ClientConsent findUniqueOrThrow
+   */
+  export type ClientConsentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * Filter, which ClientConsent to fetch.
+     */
+    where: ClientConsentWhereUniqueInput
+  }
+
+  /**
+   * ClientConsent findFirst
+   */
+  export type ClientConsentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * Filter, which ClientConsent to fetch.
+     */
+    where?: ClientConsentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ClientConsents to fetch.
+     */
+    orderBy?: ClientConsentOrderByWithRelationInput | ClientConsentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ClientConsents.
+     */
+    cursor?: ClientConsentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ClientConsents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ClientConsents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ClientConsents.
+     */
+    distinct?: ClientConsentScalarFieldEnum | ClientConsentScalarFieldEnum[]
+  }
+
+  /**
+   * ClientConsent findFirstOrThrow
+   */
+  export type ClientConsentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * Filter, which ClientConsent to fetch.
+     */
+    where?: ClientConsentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ClientConsents to fetch.
+     */
+    orderBy?: ClientConsentOrderByWithRelationInput | ClientConsentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ClientConsents.
+     */
+    cursor?: ClientConsentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ClientConsents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ClientConsents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ClientConsents.
+     */
+    distinct?: ClientConsentScalarFieldEnum | ClientConsentScalarFieldEnum[]
+  }
+
+  /**
+   * ClientConsent findMany
+   */
+  export type ClientConsentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * Filter, which ClientConsents to fetch.
+     */
+    where?: ClientConsentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ClientConsents to fetch.
+     */
+    orderBy?: ClientConsentOrderByWithRelationInput | ClientConsentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ClientConsents.
+     */
+    cursor?: ClientConsentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ClientConsents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ClientConsents.
+     */
+    skip?: number
+    distinct?: ClientConsentScalarFieldEnum | ClientConsentScalarFieldEnum[]
+  }
+
+  /**
+   * ClientConsent create
+   */
+  export type ClientConsentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ClientConsent.
+     */
+    data: XOR<ClientConsentCreateInput, ClientConsentUncheckedCreateInput>
+  }
+
+  /**
+   * ClientConsent createMany
+   */
+  export type ClientConsentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ClientConsents.
+     */
+    data: ClientConsentCreateManyInput | ClientConsentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ClientConsent createManyAndReturn
+   */
+  export type ClientConsentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * The data used to create many ClientConsents.
+     */
+    data: ClientConsentCreateManyInput | ClientConsentCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ClientConsent update
+   */
+  export type ClientConsentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ClientConsent.
+     */
+    data: XOR<ClientConsentUpdateInput, ClientConsentUncheckedUpdateInput>
+    /**
+     * Choose, which ClientConsent to update.
+     */
+    where: ClientConsentWhereUniqueInput
+  }
+
+  /**
+   * ClientConsent updateMany
+   */
+  export type ClientConsentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ClientConsents.
+     */
+    data: XOR<ClientConsentUpdateManyMutationInput, ClientConsentUncheckedUpdateManyInput>
+    /**
+     * Filter which ClientConsents to update
+     */
+    where?: ClientConsentWhereInput
+    /**
+     * Limit how many ClientConsents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ClientConsent updateManyAndReturn
+   */
+  export type ClientConsentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * The data used to update ClientConsents.
+     */
+    data: XOR<ClientConsentUpdateManyMutationInput, ClientConsentUncheckedUpdateManyInput>
+    /**
+     * Filter which ClientConsents to update
+     */
+    where?: ClientConsentWhereInput
+    /**
+     * Limit how many ClientConsents to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ClientConsent upsert
+   */
+  export type ClientConsentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ClientConsent to update in case it exists.
+     */
+    where: ClientConsentWhereUniqueInput
+    /**
+     * In case the ClientConsent found by the `where` argument doesn't exist, create a new ClientConsent with this data.
+     */
+    create: XOR<ClientConsentCreateInput, ClientConsentUncheckedCreateInput>
+    /**
+     * In case the ClientConsent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ClientConsentUpdateInput, ClientConsentUncheckedUpdateInput>
+  }
+
+  /**
+   * ClientConsent delete
+   */
+  export type ClientConsentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+    /**
+     * Filter which ClientConsent to delete.
+     */
+    where: ClientConsentWhereUniqueInput
+  }
+
+  /**
+   * ClientConsent deleteMany
+   */
+  export type ClientConsentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ClientConsents to delete
+     */
+    where?: ClientConsentWhereInput
+    /**
+     * Limit how many ClientConsents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ClientConsent without action
+   */
+  export type ClientConsentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ClientConsent
+     */
+    select?: ClientConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ClientConsent
+     */
+    omit?: ClientConsentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientConsentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model OidcSigningKey
+   */
+
+  export type AggregateOidcSigningKey = {
+    _count: OidcSigningKeyCountAggregateOutputType | null
+    _min: OidcSigningKeyMinAggregateOutputType | null
+    _max: OidcSigningKeyMaxAggregateOutputType | null
+  }
+
+  export type OidcSigningKeyMinAggregateOutputType = {
+    id: string | null
+    alg: string | null
+    privateKeyPemEnc: string | null
+    status: string | null
+    createdAt: Date | null
+    retiredAt: Date | null
+  }
+
+  export type OidcSigningKeyMaxAggregateOutputType = {
+    id: string | null
+    alg: string | null
+    privateKeyPemEnc: string | null
+    status: string | null
+    createdAt: Date | null
+    retiredAt: Date | null
+  }
+
+  export type OidcSigningKeyCountAggregateOutputType = {
+    id: number
+    alg: number
+    publicJwk: number
+    privateKeyPemEnc: number
+    status: number
+    createdAt: number
+    retiredAt: number
+    _all: number
+  }
+
+
+  export type OidcSigningKeyMinAggregateInputType = {
+    id?: true
+    alg?: true
+    privateKeyPemEnc?: true
+    status?: true
+    createdAt?: true
+    retiredAt?: true
+  }
+
+  export type OidcSigningKeyMaxAggregateInputType = {
+    id?: true
+    alg?: true
+    privateKeyPemEnc?: true
+    status?: true
+    createdAt?: true
+    retiredAt?: true
+  }
+
+  export type OidcSigningKeyCountAggregateInputType = {
+    id?: true
+    alg?: true
+    publicJwk?: true
+    privateKeyPemEnc?: true
+    status?: true
+    createdAt?: true
+    retiredAt?: true
+    _all?: true
+  }
+
+  export type OidcSigningKeyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OidcSigningKey to aggregate.
+     */
+    where?: OidcSigningKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OidcSigningKeys to fetch.
+     */
+    orderBy?: OidcSigningKeyOrderByWithRelationInput | OidcSigningKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: OidcSigningKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OidcSigningKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OidcSigningKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned OidcSigningKeys
+    **/
+    _count?: true | OidcSigningKeyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OidcSigningKeyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OidcSigningKeyMaxAggregateInputType
+  }
+
+  export type GetOidcSigningKeyAggregateType<T extends OidcSigningKeyAggregateArgs> = {
+        [P in keyof T & keyof AggregateOidcSigningKey]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOidcSigningKey[P]>
+      : GetScalarType<T[P], AggregateOidcSigningKey[P]>
+  }
+
+
+
+
+  export type OidcSigningKeyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OidcSigningKeyWhereInput
+    orderBy?: OidcSigningKeyOrderByWithAggregationInput | OidcSigningKeyOrderByWithAggregationInput[]
+    by: OidcSigningKeyScalarFieldEnum[] | OidcSigningKeyScalarFieldEnum
+    having?: OidcSigningKeyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OidcSigningKeyCountAggregateInputType | true
+    _min?: OidcSigningKeyMinAggregateInputType
+    _max?: OidcSigningKeyMaxAggregateInputType
+  }
+
+  export type OidcSigningKeyGroupByOutputType = {
+    id: string
+    alg: string
+    publicJwk: JsonValue
+    privateKeyPemEnc: string
+    status: string
+    createdAt: Date
+    retiredAt: Date | null
+    _count: OidcSigningKeyCountAggregateOutputType | null
+    _min: OidcSigningKeyMinAggregateOutputType | null
+    _max: OidcSigningKeyMaxAggregateOutputType | null
+  }
+
+  type GetOidcSigningKeyGroupByPayload<T extends OidcSigningKeyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OidcSigningKeyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OidcSigningKeyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OidcSigningKeyGroupByOutputType[P]>
+            : GetScalarType<T[P], OidcSigningKeyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type OidcSigningKeySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    alg?: boolean
+    publicJwk?: boolean
+    privateKeyPemEnc?: boolean
+    status?: boolean
+    createdAt?: boolean
+    retiredAt?: boolean
+  }, ExtArgs["result"]["oidcSigningKey"]>
+
+  export type OidcSigningKeySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    alg?: boolean
+    publicJwk?: boolean
+    privateKeyPemEnc?: boolean
+    status?: boolean
+    createdAt?: boolean
+    retiredAt?: boolean
+  }, ExtArgs["result"]["oidcSigningKey"]>
+
+  export type OidcSigningKeySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    alg?: boolean
+    publicJwk?: boolean
+    privateKeyPemEnc?: boolean
+    status?: boolean
+    createdAt?: boolean
+    retiredAt?: boolean
+  }, ExtArgs["result"]["oidcSigningKey"]>
+
+  export type OidcSigningKeySelectScalar = {
+    id?: boolean
+    alg?: boolean
+    publicJwk?: boolean
+    privateKeyPemEnc?: boolean
+    status?: boolean
+    createdAt?: boolean
+    retiredAt?: boolean
+  }
+
+  export type OidcSigningKeyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "alg" | "publicJwk" | "privateKeyPemEnc" | "status" | "createdAt" | "retiredAt", ExtArgs["result"]["oidcSigningKey"]>
+
+  export type $OidcSigningKeyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "OidcSigningKey"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      /**
+       * The `kid` published in the JWKS and stamped on every token header.
+       */
+      id: string
+      alg: string
+      publicJwk: Prisma.JsonValue
+      privateKeyPemEnc: string
+      /**
+       * CURRENT — signs new tokens. PREVIOUS — still verifies during rotation
+       * overlap. RETIRED — no longer published.
+       */
+      status: string
+      createdAt: Date
+      retiredAt: Date | null
+    }, ExtArgs["result"]["oidcSigningKey"]>
+    composites: {}
+  }
+
+  type OidcSigningKeyGetPayload<S extends boolean | null | undefined | OidcSigningKeyDefaultArgs> = $Result.GetResult<Prisma.$OidcSigningKeyPayload, S>
+
+  type OidcSigningKeyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<OidcSigningKeyFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OidcSigningKeyCountAggregateInputType | true
+    }
+
+  export interface OidcSigningKeyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['OidcSigningKey'], meta: { name: 'OidcSigningKey' } }
+    /**
+     * Find zero or one OidcSigningKey that matches the filter.
+     * @param {OidcSigningKeyFindUniqueArgs} args - Arguments to find a OidcSigningKey
+     * @example
+     * // Get one OidcSigningKey
+     * const oidcSigningKey = await prisma.oidcSigningKey.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends OidcSigningKeyFindUniqueArgs>(args: SelectSubset<T, OidcSigningKeyFindUniqueArgs<ExtArgs>>): Prisma__OidcSigningKeyClient<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one OidcSigningKey that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {OidcSigningKeyFindUniqueOrThrowArgs} args - Arguments to find a OidcSigningKey
+     * @example
+     * // Get one OidcSigningKey
+     * const oidcSigningKey = await prisma.oidcSigningKey.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends OidcSigningKeyFindUniqueOrThrowArgs>(args: SelectSubset<T, OidcSigningKeyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__OidcSigningKeyClient<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OidcSigningKey that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcSigningKeyFindFirstArgs} args - Arguments to find a OidcSigningKey
+     * @example
+     * // Get one OidcSigningKey
+     * const oidcSigningKey = await prisma.oidcSigningKey.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends OidcSigningKeyFindFirstArgs>(args?: SelectSubset<T, OidcSigningKeyFindFirstArgs<ExtArgs>>): Prisma__OidcSigningKeyClient<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OidcSigningKey that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcSigningKeyFindFirstOrThrowArgs} args - Arguments to find a OidcSigningKey
+     * @example
+     * // Get one OidcSigningKey
+     * const oidcSigningKey = await prisma.oidcSigningKey.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends OidcSigningKeyFindFirstOrThrowArgs>(args?: SelectSubset<T, OidcSigningKeyFindFirstOrThrowArgs<ExtArgs>>): Prisma__OidcSigningKeyClient<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more OidcSigningKeys that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcSigningKeyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all OidcSigningKeys
+     * const oidcSigningKeys = await prisma.oidcSigningKey.findMany()
+     * 
+     * // Get first 10 OidcSigningKeys
+     * const oidcSigningKeys = await prisma.oidcSigningKey.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const oidcSigningKeyWithIdOnly = await prisma.oidcSigningKey.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends OidcSigningKeyFindManyArgs>(args?: SelectSubset<T, OidcSigningKeyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a OidcSigningKey.
+     * @param {OidcSigningKeyCreateArgs} args - Arguments to create a OidcSigningKey.
+     * @example
+     * // Create one OidcSigningKey
+     * const OidcSigningKey = await prisma.oidcSigningKey.create({
+     *   data: {
+     *     // ... data to create a OidcSigningKey
+     *   }
+     * })
+     * 
+     */
+    create<T extends OidcSigningKeyCreateArgs>(args: SelectSubset<T, OidcSigningKeyCreateArgs<ExtArgs>>): Prisma__OidcSigningKeyClient<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many OidcSigningKeys.
+     * @param {OidcSigningKeyCreateManyArgs} args - Arguments to create many OidcSigningKeys.
+     * @example
+     * // Create many OidcSigningKeys
+     * const oidcSigningKey = await prisma.oidcSigningKey.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends OidcSigningKeyCreateManyArgs>(args?: SelectSubset<T, OidcSigningKeyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many OidcSigningKeys and returns the data saved in the database.
+     * @param {OidcSigningKeyCreateManyAndReturnArgs} args - Arguments to create many OidcSigningKeys.
+     * @example
+     * // Create many OidcSigningKeys
+     * const oidcSigningKey = await prisma.oidcSigningKey.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many OidcSigningKeys and only return the `id`
+     * const oidcSigningKeyWithIdOnly = await prisma.oidcSigningKey.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends OidcSigningKeyCreateManyAndReturnArgs>(args?: SelectSubset<T, OidcSigningKeyCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a OidcSigningKey.
+     * @param {OidcSigningKeyDeleteArgs} args - Arguments to delete one OidcSigningKey.
+     * @example
+     * // Delete one OidcSigningKey
+     * const OidcSigningKey = await prisma.oidcSigningKey.delete({
+     *   where: {
+     *     // ... filter to delete one OidcSigningKey
+     *   }
+     * })
+     * 
+     */
+    delete<T extends OidcSigningKeyDeleteArgs>(args: SelectSubset<T, OidcSigningKeyDeleteArgs<ExtArgs>>): Prisma__OidcSigningKeyClient<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one OidcSigningKey.
+     * @param {OidcSigningKeyUpdateArgs} args - Arguments to update one OidcSigningKey.
+     * @example
+     * // Update one OidcSigningKey
+     * const oidcSigningKey = await prisma.oidcSigningKey.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends OidcSigningKeyUpdateArgs>(args: SelectSubset<T, OidcSigningKeyUpdateArgs<ExtArgs>>): Prisma__OidcSigningKeyClient<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more OidcSigningKeys.
+     * @param {OidcSigningKeyDeleteManyArgs} args - Arguments to filter OidcSigningKeys to delete.
+     * @example
+     * // Delete a few OidcSigningKeys
+     * const { count } = await prisma.oidcSigningKey.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends OidcSigningKeyDeleteManyArgs>(args?: SelectSubset<T, OidcSigningKeyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OidcSigningKeys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcSigningKeyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many OidcSigningKeys
+     * const oidcSigningKey = await prisma.oidcSigningKey.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends OidcSigningKeyUpdateManyArgs>(args: SelectSubset<T, OidcSigningKeyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OidcSigningKeys and returns the data updated in the database.
+     * @param {OidcSigningKeyUpdateManyAndReturnArgs} args - Arguments to update many OidcSigningKeys.
+     * @example
+     * // Update many OidcSigningKeys
+     * const oidcSigningKey = await prisma.oidcSigningKey.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more OidcSigningKeys and only return the `id`
+     * const oidcSigningKeyWithIdOnly = await prisma.oidcSigningKey.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends OidcSigningKeyUpdateManyAndReturnArgs>(args: SelectSubset<T, OidcSigningKeyUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one OidcSigningKey.
+     * @param {OidcSigningKeyUpsertArgs} args - Arguments to update or create a OidcSigningKey.
+     * @example
+     * // Update or create a OidcSigningKey
+     * const oidcSigningKey = await prisma.oidcSigningKey.upsert({
+     *   create: {
+     *     // ... data to create a OidcSigningKey
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the OidcSigningKey we want to update
+     *   }
+     * })
+     */
+    upsert<T extends OidcSigningKeyUpsertArgs>(args: SelectSubset<T, OidcSigningKeyUpsertArgs<ExtArgs>>): Prisma__OidcSigningKeyClient<$Result.GetResult<Prisma.$OidcSigningKeyPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of OidcSigningKeys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcSigningKeyCountArgs} args - Arguments to filter OidcSigningKeys to count.
+     * @example
+     * // Count the number of OidcSigningKeys
+     * const count = await prisma.oidcSigningKey.count({
+     *   where: {
+     *     // ... the filter for the OidcSigningKeys we want to count
+     *   }
+     * })
+    **/
+    count<T extends OidcSigningKeyCountArgs>(
+      args?: Subset<T, OidcSigningKeyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OidcSigningKeyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a OidcSigningKey.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcSigningKeyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OidcSigningKeyAggregateArgs>(args: Subset<T, OidcSigningKeyAggregateArgs>): Prisma.PrismaPromise<GetOidcSigningKeyAggregateType<T>>
+
+    /**
+     * Group by OidcSigningKey.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcSigningKeyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends OidcSigningKeyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: OidcSigningKeyGroupByArgs['orderBy'] }
+        : { orderBy?: OidcSigningKeyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, OidcSigningKeyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOidcSigningKeyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the OidcSigningKey model
+   */
+  readonly fields: OidcSigningKeyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for OidcSigningKey.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__OidcSigningKeyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the OidcSigningKey model
+   */
+  interface OidcSigningKeyFieldRefs {
+    readonly id: FieldRef<"OidcSigningKey", 'String'>
+    readonly alg: FieldRef<"OidcSigningKey", 'String'>
+    readonly publicJwk: FieldRef<"OidcSigningKey", 'Json'>
+    readonly privateKeyPemEnc: FieldRef<"OidcSigningKey", 'String'>
+    readonly status: FieldRef<"OidcSigningKey", 'String'>
+    readonly createdAt: FieldRef<"OidcSigningKey", 'DateTime'>
+    readonly retiredAt: FieldRef<"OidcSigningKey", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * OidcSigningKey findUnique
+   */
+  export type OidcSigningKeyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which OidcSigningKey to fetch.
+     */
+    where: OidcSigningKeyWhereUniqueInput
+  }
+
+  /**
+   * OidcSigningKey findUniqueOrThrow
+   */
+  export type OidcSigningKeyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which OidcSigningKey to fetch.
+     */
+    where: OidcSigningKeyWhereUniqueInput
+  }
+
+  /**
+   * OidcSigningKey findFirst
+   */
+  export type OidcSigningKeyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which OidcSigningKey to fetch.
+     */
+    where?: OidcSigningKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OidcSigningKeys to fetch.
+     */
+    orderBy?: OidcSigningKeyOrderByWithRelationInput | OidcSigningKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OidcSigningKeys.
+     */
+    cursor?: OidcSigningKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OidcSigningKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OidcSigningKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OidcSigningKeys.
+     */
+    distinct?: OidcSigningKeyScalarFieldEnum | OidcSigningKeyScalarFieldEnum[]
+  }
+
+  /**
+   * OidcSigningKey findFirstOrThrow
+   */
+  export type OidcSigningKeyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which OidcSigningKey to fetch.
+     */
+    where?: OidcSigningKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OidcSigningKeys to fetch.
+     */
+    orderBy?: OidcSigningKeyOrderByWithRelationInput | OidcSigningKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OidcSigningKeys.
+     */
+    cursor?: OidcSigningKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OidcSigningKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OidcSigningKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OidcSigningKeys.
+     */
+    distinct?: OidcSigningKeyScalarFieldEnum | OidcSigningKeyScalarFieldEnum[]
+  }
+
+  /**
+   * OidcSigningKey findMany
+   */
+  export type OidcSigningKeyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which OidcSigningKeys to fetch.
+     */
+    where?: OidcSigningKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OidcSigningKeys to fetch.
+     */
+    orderBy?: OidcSigningKeyOrderByWithRelationInput | OidcSigningKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing OidcSigningKeys.
+     */
+    cursor?: OidcSigningKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OidcSigningKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OidcSigningKeys.
+     */
+    skip?: number
+    distinct?: OidcSigningKeyScalarFieldEnum | OidcSigningKeyScalarFieldEnum[]
+  }
+
+  /**
+   * OidcSigningKey create
+   */
+  export type OidcSigningKeyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * The data needed to create a OidcSigningKey.
+     */
+    data: XOR<OidcSigningKeyCreateInput, OidcSigningKeyUncheckedCreateInput>
+  }
+
+  /**
+   * OidcSigningKey createMany
+   */
+  export type OidcSigningKeyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many OidcSigningKeys.
+     */
+    data: OidcSigningKeyCreateManyInput | OidcSigningKeyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * OidcSigningKey createManyAndReturn
+   */
+  export type OidcSigningKeyCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * The data used to create many OidcSigningKeys.
+     */
+    data: OidcSigningKeyCreateManyInput | OidcSigningKeyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * OidcSigningKey update
+   */
+  export type OidcSigningKeyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * The data needed to update a OidcSigningKey.
+     */
+    data: XOR<OidcSigningKeyUpdateInput, OidcSigningKeyUncheckedUpdateInput>
+    /**
+     * Choose, which OidcSigningKey to update.
+     */
+    where: OidcSigningKeyWhereUniqueInput
+  }
+
+  /**
+   * OidcSigningKey updateMany
+   */
+  export type OidcSigningKeyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update OidcSigningKeys.
+     */
+    data: XOR<OidcSigningKeyUpdateManyMutationInput, OidcSigningKeyUncheckedUpdateManyInput>
+    /**
+     * Filter which OidcSigningKeys to update
+     */
+    where?: OidcSigningKeyWhereInput
+    /**
+     * Limit how many OidcSigningKeys to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OidcSigningKey updateManyAndReturn
+   */
+  export type OidcSigningKeyUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * The data used to update OidcSigningKeys.
+     */
+    data: XOR<OidcSigningKeyUpdateManyMutationInput, OidcSigningKeyUncheckedUpdateManyInput>
+    /**
+     * Filter which OidcSigningKeys to update
+     */
+    where?: OidcSigningKeyWhereInput
+    /**
+     * Limit how many OidcSigningKeys to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OidcSigningKey upsert
+   */
+  export type OidcSigningKeyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * The filter to search for the OidcSigningKey to update in case it exists.
+     */
+    where: OidcSigningKeyWhereUniqueInput
+    /**
+     * In case the OidcSigningKey found by the `where` argument doesn't exist, create a new OidcSigningKey with this data.
+     */
+    create: XOR<OidcSigningKeyCreateInput, OidcSigningKeyUncheckedCreateInput>
+    /**
+     * In case the OidcSigningKey was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<OidcSigningKeyUpdateInput, OidcSigningKeyUncheckedUpdateInput>
+  }
+
+  /**
+   * OidcSigningKey delete
+   */
+  export type OidcSigningKeyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+    /**
+     * Filter which OidcSigningKey to delete.
+     */
+    where: OidcSigningKeyWhereUniqueInput
+  }
+
+  /**
+   * OidcSigningKey deleteMany
+   */
+  export type OidcSigningKeyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OidcSigningKeys to delete
+     */
+    where?: OidcSigningKeyWhereInput
+    /**
+     * Limit how many OidcSigningKeys to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * OidcSigningKey without action
+   */
+  export type OidcSigningKeyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcSigningKey
+     */
+    select?: OidcSigningKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcSigningKey
+     */
+    omit?: OidcSigningKeyOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model LoginAttemptCounter
+   */
+
+  export type AggregateLoginAttemptCounter = {
+    _count: LoginAttemptCounterCountAggregateOutputType | null
+    _avg: LoginAttemptCounterAvgAggregateOutputType | null
+    _sum: LoginAttemptCounterSumAggregateOutputType | null
+    _min: LoginAttemptCounterMinAggregateOutputType | null
+    _max: LoginAttemptCounterMaxAggregateOutputType | null
+  }
+
+  export type LoginAttemptCounterAvgAggregateOutputType = {
+    attempts: number | null
+  }
+
+  export type LoginAttemptCounterSumAggregateOutputType = {
+    attempts: number | null
+  }
+
+  export type LoginAttemptCounterMinAggregateOutputType = {
+    id: string | null
+    ipHash: string | null
+    attempts: number | null
+    lockedUntil: Date | null
+    firstSeenAt: Date | null
+    lastSeenAt: Date | null
+  }
+
+  export type LoginAttemptCounterMaxAggregateOutputType = {
+    id: string | null
+    ipHash: string | null
+    attempts: number | null
+    lockedUntil: Date | null
+    firstSeenAt: Date | null
+    lastSeenAt: Date | null
+  }
+
+  export type LoginAttemptCounterCountAggregateOutputType = {
+    id: number
+    ipHash: number
+    attempts: number
+    lockedUntil: number
+    firstSeenAt: number
+    lastSeenAt: number
+    _all: number
+  }
+
+
+  export type LoginAttemptCounterAvgAggregateInputType = {
+    attempts?: true
+  }
+
+  export type LoginAttemptCounterSumAggregateInputType = {
+    attempts?: true
+  }
+
+  export type LoginAttemptCounterMinAggregateInputType = {
+    id?: true
+    ipHash?: true
+    attempts?: true
+    lockedUntil?: true
+    firstSeenAt?: true
+    lastSeenAt?: true
+  }
+
+  export type LoginAttemptCounterMaxAggregateInputType = {
+    id?: true
+    ipHash?: true
+    attempts?: true
+    lockedUntil?: true
+    firstSeenAt?: true
+    lastSeenAt?: true
+  }
+
+  export type LoginAttemptCounterCountAggregateInputType = {
+    id?: true
+    ipHash?: true
+    attempts?: true
+    lockedUntil?: true
+    firstSeenAt?: true
+    lastSeenAt?: true
+    _all?: true
+  }
+
+  export type LoginAttemptCounterAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LoginAttemptCounter to aggregate.
+     */
+    where?: LoginAttemptCounterWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LoginAttemptCounters to fetch.
+     */
+    orderBy?: LoginAttemptCounterOrderByWithRelationInput | LoginAttemptCounterOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LoginAttemptCounterWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LoginAttemptCounters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LoginAttemptCounters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LoginAttemptCounters
+    **/
+    _count?: true | LoginAttemptCounterCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: LoginAttemptCounterAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: LoginAttemptCounterSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LoginAttemptCounterMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LoginAttemptCounterMaxAggregateInputType
+  }
+
+  export type GetLoginAttemptCounterAggregateType<T extends LoginAttemptCounterAggregateArgs> = {
+        [P in keyof T & keyof AggregateLoginAttemptCounter]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLoginAttemptCounter[P]>
+      : GetScalarType<T[P], AggregateLoginAttemptCounter[P]>
+  }
+
+
+
+
+  export type LoginAttemptCounterGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LoginAttemptCounterWhereInput
+    orderBy?: LoginAttemptCounterOrderByWithAggregationInput | LoginAttemptCounterOrderByWithAggregationInput[]
+    by: LoginAttemptCounterScalarFieldEnum[] | LoginAttemptCounterScalarFieldEnum
+    having?: LoginAttemptCounterScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LoginAttemptCounterCountAggregateInputType | true
+    _avg?: LoginAttemptCounterAvgAggregateInputType
+    _sum?: LoginAttemptCounterSumAggregateInputType
+    _min?: LoginAttemptCounterMinAggregateInputType
+    _max?: LoginAttemptCounterMaxAggregateInputType
+  }
+
+  export type LoginAttemptCounterGroupByOutputType = {
+    id: string
+    ipHash: string
+    attempts: number
+    lockedUntil: Date | null
+    firstSeenAt: Date
+    lastSeenAt: Date
+    _count: LoginAttemptCounterCountAggregateOutputType | null
+    _avg: LoginAttemptCounterAvgAggregateOutputType | null
+    _sum: LoginAttemptCounterSumAggregateOutputType | null
+    _min: LoginAttemptCounterMinAggregateOutputType | null
+    _max: LoginAttemptCounterMaxAggregateOutputType | null
+  }
+
+  type GetLoginAttemptCounterGroupByPayload<T extends LoginAttemptCounterGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LoginAttemptCounterGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LoginAttemptCounterGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LoginAttemptCounterGroupByOutputType[P]>
+            : GetScalarType<T[P], LoginAttemptCounterGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LoginAttemptCounterSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ipHash?: boolean
+    attempts?: boolean
+    lockedUntil?: boolean
+    firstSeenAt?: boolean
+    lastSeenAt?: boolean
+  }, ExtArgs["result"]["loginAttemptCounter"]>
+
+  export type LoginAttemptCounterSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ipHash?: boolean
+    attempts?: boolean
+    lockedUntil?: boolean
+    firstSeenAt?: boolean
+    lastSeenAt?: boolean
+  }, ExtArgs["result"]["loginAttemptCounter"]>
+
+  export type LoginAttemptCounterSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ipHash?: boolean
+    attempts?: boolean
+    lockedUntil?: boolean
+    firstSeenAt?: boolean
+    lastSeenAt?: boolean
+  }, ExtArgs["result"]["loginAttemptCounter"]>
+
+  export type LoginAttemptCounterSelectScalar = {
+    id?: boolean
+    ipHash?: boolean
+    attempts?: boolean
+    lockedUntil?: boolean
+    firstSeenAt?: boolean
+    lastSeenAt?: boolean
+  }
+
+  export type LoginAttemptCounterOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ipHash" | "attempts" | "lockedUntil" | "firstSeenAt" | "lastSeenAt", ExtArgs["result"]["loginAttemptCounter"]>
+
+  export type $LoginAttemptCounterPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LoginAttemptCounter"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * Hashed: raw client IPs are personal data and this table is long-lived.
+       */
+      ipHash: string
+      attempts: number
+      lockedUntil: Date | null
+      firstSeenAt: Date
+      lastSeenAt: Date
+    }, ExtArgs["result"]["loginAttemptCounter"]>
+    composites: {}
+  }
+
+  type LoginAttemptCounterGetPayload<S extends boolean | null | undefined | LoginAttemptCounterDefaultArgs> = $Result.GetResult<Prisma.$LoginAttemptCounterPayload, S>
+
+  type LoginAttemptCounterCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LoginAttemptCounterFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LoginAttemptCounterCountAggregateInputType | true
+    }
+
+  export interface LoginAttemptCounterDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LoginAttemptCounter'], meta: { name: 'LoginAttemptCounter' } }
+    /**
+     * Find zero or one LoginAttemptCounter that matches the filter.
+     * @param {LoginAttemptCounterFindUniqueArgs} args - Arguments to find a LoginAttemptCounter
+     * @example
+     * // Get one LoginAttemptCounter
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LoginAttemptCounterFindUniqueArgs>(args: SelectSubset<T, LoginAttemptCounterFindUniqueArgs<ExtArgs>>): Prisma__LoginAttemptCounterClient<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LoginAttemptCounter that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LoginAttemptCounterFindUniqueOrThrowArgs} args - Arguments to find a LoginAttemptCounter
+     * @example
+     * // Get one LoginAttemptCounter
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LoginAttemptCounterFindUniqueOrThrowArgs>(args: SelectSubset<T, LoginAttemptCounterFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LoginAttemptCounterClient<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LoginAttemptCounter that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LoginAttemptCounterFindFirstArgs} args - Arguments to find a LoginAttemptCounter
+     * @example
+     * // Get one LoginAttemptCounter
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LoginAttemptCounterFindFirstArgs>(args?: SelectSubset<T, LoginAttemptCounterFindFirstArgs<ExtArgs>>): Prisma__LoginAttemptCounterClient<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LoginAttemptCounter that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LoginAttemptCounterFindFirstOrThrowArgs} args - Arguments to find a LoginAttemptCounter
+     * @example
+     * // Get one LoginAttemptCounter
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LoginAttemptCounterFindFirstOrThrowArgs>(args?: SelectSubset<T, LoginAttemptCounterFindFirstOrThrowArgs<ExtArgs>>): Prisma__LoginAttemptCounterClient<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LoginAttemptCounters that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LoginAttemptCounterFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LoginAttemptCounters
+     * const loginAttemptCounters = await prisma.loginAttemptCounter.findMany()
+     * 
+     * // Get first 10 LoginAttemptCounters
+     * const loginAttemptCounters = await prisma.loginAttemptCounter.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const loginAttemptCounterWithIdOnly = await prisma.loginAttemptCounter.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LoginAttemptCounterFindManyArgs>(args?: SelectSubset<T, LoginAttemptCounterFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LoginAttemptCounter.
+     * @param {LoginAttemptCounterCreateArgs} args - Arguments to create a LoginAttemptCounter.
+     * @example
+     * // Create one LoginAttemptCounter
+     * const LoginAttemptCounter = await prisma.loginAttemptCounter.create({
+     *   data: {
+     *     // ... data to create a LoginAttemptCounter
+     *   }
+     * })
+     * 
+     */
+    create<T extends LoginAttemptCounterCreateArgs>(args: SelectSubset<T, LoginAttemptCounterCreateArgs<ExtArgs>>): Prisma__LoginAttemptCounterClient<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LoginAttemptCounters.
+     * @param {LoginAttemptCounterCreateManyArgs} args - Arguments to create many LoginAttemptCounters.
+     * @example
+     * // Create many LoginAttemptCounters
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LoginAttemptCounterCreateManyArgs>(args?: SelectSubset<T, LoginAttemptCounterCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LoginAttemptCounters and returns the data saved in the database.
+     * @param {LoginAttemptCounterCreateManyAndReturnArgs} args - Arguments to create many LoginAttemptCounters.
+     * @example
+     * // Create many LoginAttemptCounters
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LoginAttemptCounters and only return the `id`
+     * const loginAttemptCounterWithIdOnly = await prisma.loginAttemptCounter.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LoginAttemptCounterCreateManyAndReturnArgs>(args?: SelectSubset<T, LoginAttemptCounterCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LoginAttemptCounter.
+     * @param {LoginAttemptCounterDeleteArgs} args - Arguments to delete one LoginAttemptCounter.
+     * @example
+     * // Delete one LoginAttemptCounter
+     * const LoginAttemptCounter = await prisma.loginAttemptCounter.delete({
+     *   where: {
+     *     // ... filter to delete one LoginAttemptCounter
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LoginAttemptCounterDeleteArgs>(args: SelectSubset<T, LoginAttemptCounterDeleteArgs<ExtArgs>>): Prisma__LoginAttemptCounterClient<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LoginAttemptCounter.
+     * @param {LoginAttemptCounterUpdateArgs} args - Arguments to update one LoginAttemptCounter.
+     * @example
+     * // Update one LoginAttemptCounter
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LoginAttemptCounterUpdateArgs>(args: SelectSubset<T, LoginAttemptCounterUpdateArgs<ExtArgs>>): Prisma__LoginAttemptCounterClient<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LoginAttemptCounters.
+     * @param {LoginAttemptCounterDeleteManyArgs} args - Arguments to filter LoginAttemptCounters to delete.
+     * @example
+     * // Delete a few LoginAttemptCounters
+     * const { count } = await prisma.loginAttemptCounter.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LoginAttemptCounterDeleteManyArgs>(args?: SelectSubset<T, LoginAttemptCounterDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LoginAttemptCounters.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LoginAttemptCounterUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LoginAttemptCounters
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LoginAttemptCounterUpdateManyArgs>(args: SelectSubset<T, LoginAttemptCounterUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LoginAttemptCounters and returns the data updated in the database.
+     * @param {LoginAttemptCounterUpdateManyAndReturnArgs} args - Arguments to update many LoginAttemptCounters.
+     * @example
+     * // Update many LoginAttemptCounters
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LoginAttemptCounters and only return the `id`
+     * const loginAttemptCounterWithIdOnly = await prisma.loginAttemptCounter.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LoginAttemptCounterUpdateManyAndReturnArgs>(args: SelectSubset<T, LoginAttemptCounterUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LoginAttemptCounter.
+     * @param {LoginAttemptCounterUpsertArgs} args - Arguments to update or create a LoginAttemptCounter.
+     * @example
+     * // Update or create a LoginAttemptCounter
+     * const loginAttemptCounter = await prisma.loginAttemptCounter.upsert({
+     *   create: {
+     *     // ... data to create a LoginAttemptCounter
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LoginAttemptCounter we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LoginAttemptCounterUpsertArgs>(args: SelectSubset<T, LoginAttemptCounterUpsertArgs<ExtArgs>>): Prisma__LoginAttemptCounterClient<$Result.GetResult<Prisma.$LoginAttemptCounterPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LoginAttemptCounters.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LoginAttemptCounterCountArgs} args - Arguments to filter LoginAttemptCounters to count.
+     * @example
+     * // Count the number of LoginAttemptCounters
+     * const count = await prisma.loginAttemptCounter.count({
+     *   where: {
+     *     // ... the filter for the LoginAttemptCounters we want to count
+     *   }
+     * })
+    **/
+    count<T extends LoginAttemptCounterCountArgs>(
+      args?: Subset<T, LoginAttemptCounterCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LoginAttemptCounterCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LoginAttemptCounter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LoginAttemptCounterAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LoginAttemptCounterAggregateArgs>(args: Subset<T, LoginAttemptCounterAggregateArgs>): Prisma.PrismaPromise<GetLoginAttemptCounterAggregateType<T>>
+
+    /**
+     * Group by LoginAttemptCounter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LoginAttemptCounterGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LoginAttemptCounterGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LoginAttemptCounterGroupByArgs['orderBy'] }
+        : { orderBy?: LoginAttemptCounterGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LoginAttemptCounterGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLoginAttemptCounterGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LoginAttemptCounter model
+   */
+  readonly fields: LoginAttemptCounterFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LoginAttemptCounter.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LoginAttemptCounterClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LoginAttemptCounter model
+   */
+  interface LoginAttemptCounterFieldRefs {
+    readonly id: FieldRef<"LoginAttemptCounter", 'String'>
+    readonly ipHash: FieldRef<"LoginAttemptCounter", 'String'>
+    readonly attempts: FieldRef<"LoginAttemptCounter", 'Int'>
+    readonly lockedUntil: FieldRef<"LoginAttemptCounter", 'DateTime'>
+    readonly firstSeenAt: FieldRef<"LoginAttemptCounter", 'DateTime'>
+    readonly lastSeenAt: FieldRef<"LoginAttemptCounter", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LoginAttemptCounter findUnique
+   */
+  export type LoginAttemptCounterFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * Filter, which LoginAttemptCounter to fetch.
+     */
+    where: LoginAttemptCounterWhereUniqueInput
+  }
+
+  /**
+   * LoginAttemptCounter findUniqueOrThrow
+   */
+  export type LoginAttemptCounterFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * Filter, which LoginAttemptCounter to fetch.
+     */
+    where: LoginAttemptCounterWhereUniqueInput
+  }
+
+  /**
+   * LoginAttemptCounter findFirst
+   */
+  export type LoginAttemptCounterFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * Filter, which LoginAttemptCounter to fetch.
+     */
+    where?: LoginAttemptCounterWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LoginAttemptCounters to fetch.
+     */
+    orderBy?: LoginAttemptCounterOrderByWithRelationInput | LoginAttemptCounterOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LoginAttemptCounters.
+     */
+    cursor?: LoginAttemptCounterWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LoginAttemptCounters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LoginAttemptCounters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LoginAttemptCounters.
+     */
+    distinct?: LoginAttemptCounterScalarFieldEnum | LoginAttemptCounterScalarFieldEnum[]
+  }
+
+  /**
+   * LoginAttemptCounter findFirstOrThrow
+   */
+  export type LoginAttemptCounterFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * Filter, which LoginAttemptCounter to fetch.
+     */
+    where?: LoginAttemptCounterWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LoginAttemptCounters to fetch.
+     */
+    orderBy?: LoginAttemptCounterOrderByWithRelationInput | LoginAttemptCounterOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LoginAttemptCounters.
+     */
+    cursor?: LoginAttemptCounterWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LoginAttemptCounters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LoginAttemptCounters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LoginAttemptCounters.
+     */
+    distinct?: LoginAttemptCounterScalarFieldEnum | LoginAttemptCounterScalarFieldEnum[]
+  }
+
+  /**
+   * LoginAttemptCounter findMany
+   */
+  export type LoginAttemptCounterFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * Filter, which LoginAttemptCounters to fetch.
+     */
+    where?: LoginAttemptCounterWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LoginAttemptCounters to fetch.
+     */
+    orderBy?: LoginAttemptCounterOrderByWithRelationInput | LoginAttemptCounterOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LoginAttemptCounters.
+     */
+    cursor?: LoginAttemptCounterWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LoginAttemptCounters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LoginAttemptCounters.
+     */
+    skip?: number
+    distinct?: LoginAttemptCounterScalarFieldEnum | LoginAttemptCounterScalarFieldEnum[]
+  }
+
+  /**
+   * LoginAttemptCounter create
+   */
+  export type LoginAttemptCounterCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * The data needed to create a LoginAttemptCounter.
+     */
+    data: XOR<LoginAttemptCounterCreateInput, LoginAttemptCounterUncheckedCreateInput>
+  }
+
+  /**
+   * LoginAttemptCounter createMany
+   */
+  export type LoginAttemptCounterCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LoginAttemptCounters.
+     */
+    data: LoginAttemptCounterCreateManyInput | LoginAttemptCounterCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * LoginAttemptCounter createManyAndReturn
+   */
+  export type LoginAttemptCounterCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * The data used to create many LoginAttemptCounters.
+     */
+    data: LoginAttemptCounterCreateManyInput | LoginAttemptCounterCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * LoginAttemptCounter update
+   */
+  export type LoginAttemptCounterUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * The data needed to update a LoginAttemptCounter.
+     */
+    data: XOR<LoginAttemptCounterUpdateInput, LoginAttemptCounterUncheckedUpdateInput>
+    /**
+     * Choose, which LoginAttemptCounter to update.
+     */
+    where: LoginAttemptCounterWhereUniqueInput
+  }
+
+  /**
+   * LoginAttemptCounter updateMany
+   */
+  export type LoginAttemptCounterUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LoginAttemptCounters.
+     */
+    data: XOR<LoginAttemptCounterUpdateManyMutationInput, LoginAttemptCounterUncheckedUpdateManyInput>
+    /**
+     * Filter which LoginAttemptCounters to update
+     */
+    where?: LoginAttemptCounterWhereInput
+    /**
+     * Limit how many LoginAttemptCounters to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LoginAttemptCounter updateManyAndReturn
+   */
+  export type LoginAttemptCounterUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * The data used to update LoginAttemptCounters.
+     */
+    data: XOR<LoginAttemptCounterUpdateManyMutationInput, LoginAttemptCounterUncheckedUpdateManyInput>
+    /**
+     * Filter which LoginAttemptCounters to update
+     */
+    where?: LoginAttemptCounterWhereInput
+    /**
+     * Limit how many LoginAttemptCounters to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LoginAttemptCounter upsert
+   */
+  export type LoginAttemptCounterUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * The filter to search for the LoginAttemptCounter to update in case it exists.
+     */
+    where: LoginAttemptCounterWhereUniqueInput
+    /**
+     * In case the LoginAttemptCounter found by the `where` argument doesn't exist, create a new LoginAttemptCounter with this data.
+     */
+    create: XOR<LoginAttemptCounterCreateInput, LoginAttemptCounterUncheckedCreateInput>
+    /**
+     * In case the LoginAttemptCounter was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LoginAttemptCounterUpdateInput, LoginAttemptCounterUncheckedUpdateInput>
+  }
+
+  /**
+   * LoginAttemptCounter delete
+   */
+  export type LoginAttemptCounterDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+    /**
+     * Filter which LoginAttemptCounter to delete.
+     */
+    where: LoginAttemptCounterWhereUniqueInput
+  }
+
+  /**
+   * LoginAttemptCounter deleteMany
+   */
+  export type LoginAttemptCounterDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LoginAttemptCounters to delete
+     */
+    where?: LoginAttemptCounterWhereInput
+    /**
+     * Limit how many LoginAttemptCounters to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LoginAttemptCounter without action
+   */
+  export type LoginAttemptCounterDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LoginAttemptCounter
+     */
+    select?: LoginAttemptCounterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LoginAttemptCounter
+     */
+    omit?: LoginAttemptCounterOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Platform
+   */
+
+  export type AggregatePlatform = {
+    _count: PlatformCountAggregateOutputType | null
+    _avg: PlatformAvgAggregateOutputType | null
+    _sum: PlatformSumAggregateOutputType | null
+    _min: PlatformMinAggregateOutputType | null
+    _max: PlatformMaxAggregateOutputType | null
+  }
+
+  export type PlatformAvgAggregateOutputType = {
+    port: number | null
+  }
+
+  export type PlatformSumAggregateOutputType = {
+    port: number | null
+  }
+
+  export type PlatformMinAggregateOutputType = {
+    code: string | null
+    name: string | null
+    port: number | null
+    baseUrl: string | null
+    icon: string | null
+    audience: string | null
+    requiresTenant: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PlatformMaxAggregateOutputType = {
+    code: string | null
+    name: string | null
+    port: number | null
+    baseUrl: string | null
+    icon: string | null
+    audience: string | null
+    requiresTenant: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PlatformCountAggregateOutputType = {
+    code: number
+    name: number
+    port: number
+    baseUrl: number
+    icon: number
+    audience: number
+    requiresTenant: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PlatformAvgAggregateInputType = {
+    port?: true
+  }
+
+  export type PlatformSumAggregateInputType = {
+    port?: true
+  }
+
+  export type PlatformMinAggregateInputType = {
+    code?: true
+    name?: true
+    port?: true
+    baseUrl?: true
+    icon?: true
+    audience?: true
+    requiresTenant?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PlatformMaxAggregateInputType = {
+    code?: true
+    name?: true
+    port?: true
+    baseUrl?: true
+    icon?: true
+    audience?: true
+    requiresTenant?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PlatformCountAggregateInputType = {
+    code?: true
+    name?: true
+    port?: true
+    baseUrl?: true
+    icon?: true
+    audience?: true
+    requiresTenant?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PlatformAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Platform to aggregate.
+     */
+    where?: PlatformWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Platforms to fetch.
+     */
+    orderBy?: PlatformOrderByWithRelationInput | PlatformOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlatformWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Platforms from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Platforms.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Platforms
+    **/
+    _count?: true | PlatformCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PlatformAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PlatformSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlatformMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlatformMaxAggregateInputType
+  }
+
+  export type GetPlatformAggregateType<T extends PlatformAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlatform]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlatform[P]>
+      : GetScalarType<T[P], AggregatePlatform[P]>
+  }
+
+
+
+
+  export type PlatformGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlatformWhereInput
+    orderBy?: PlatformOrderByWithAggregationInput | PlatformOrderByWithAggregationInput[]
+    by: PlatformScalarFieldEnum[] | PlatformScalarFieldEnum
+    having?: PlatformScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlatformCountAggregateInputType | true
+    _avg?: PlatformAvgAggregateInputType
+    _sum?: PlatformSumAggregateInputType
+    _min?: PlatformMinAggregateInputType
+    _max?: PlatformMaxAggregateInputType
+  }
+
+  export type PlatformGroupByOutputType = {
+    code: string
+    name: string
+    port: number
+    baseUrl: string
+    icon: string | null
+    audience: string
+    requiresTenant: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: PlatformCountAggregateOutputType | null
+    _avg: PlatformAvgAggregateOutputType | null
+    _sum: PlatformSumAggregateOutputType | null
+    _min: PlatformMinAggregateOutputType | null
+    _max: PlatformMaxAggregateOutputType | null
+  }
+
+  type GetPlatformGroupByPayload<T extends PlatformGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlatformGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlatformGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlatformGroupByOutputType[P]>
+            : GetScalarType<T[P], PlatformGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlatformSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    code?: boolean
+    name?: boolean
+    port?: boolean
+    baseUrl?: boolean
+    icon?: boolean
+    audience?: boolean
+    requiresTenant?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    grants?: boolean | Platform$grantsArgs<ExtArgs>
+    _count?: boolean | PlatformCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["platform"]>
+
+  export type PlatformSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    code?: boolean
+    name?: boolean
+    port?: boolean
+    baseUrl?: boolean
+    icon?: boolean
+    audience?: boolean
+    requiresTenant?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["platform"]>
+
+  export type PlatformSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    code?: boolean
+    name?: boolean
+    port?: boolean
+    baseUrl?: boolean
+    icon?: boolean
+    audience?: boolean
+    requiresTenant?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["platform"]>
+
+  export type PlatformSelectScalar = {
+    code?: boolean
+    name?: boolean
+    port?: boolean
+    baseUrl?: boolean
+    icon?: boolean
+    audience?: boolean
+    requiresTenant?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type PlatformOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"code" | "name" | "port" | "baseUrl" | "icon" | "audience" | "requiresTenant" | "createdAt" | "updatedAt", ExtArgs["result"]["platform"]>
+  export type PlatformInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    grants?: boolean | Platform$grantsArgs<ExtArgs>
+    _count?: boolean | PlatformCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type PlatformIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type PlatformIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $PlatformPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Platform"
+    objects: {
+      grants: Prisma.$PlatformGrantPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      code: string
+      name: string
+      port: number
+      baseUrl: string
+      icon: string | null
+      audience: string
+      requiresTenant: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["platform"]>
+    composites: {}
+  }
+
+  type PlatformGetPayload<S extends boolean | null | undefined | PlatformDefaultArgs> = $Result.GetResult<Prisma.$PlatformPayload, S>
+
+  type PlatformCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PlatformFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PlatformCountAggregateInputType | true
+    }
+
+  export interface PlatformDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Platform'], meta: { name: 'Platform' } }
+    /**
+     * Find zero or one Platform that matches the filter.
+     * @param {PlatformFindUniqueArgs} args - Arguments to find a Platform
+     * @example
+     * // Get one Platform
+     * const platform = await prisma.platform.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlatformFindUniqueArgs>(args: SelectSubset<T, PlatformFindUniqueArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Platform that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PlatformFindUniqueOrThrowArgs} args - Arguments to find a Platform
+     * @example
+     * // Get one Platform
+     * const platform = await prisma.platform.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlatformFindUniqueOrThrowArgs>(args: SelectSubset<T, PlatformFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Platform that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformFindFirstArgs} args - Arguments to find a Platform
+     * @example
+     * // Get one Platform
+     * const platform = await prisma.platform.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlatformFindFirstArgs>(args?: SelectSubset<T, PlatformFindFirstArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Platform that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformFindFirstOrThrowArgs} args - Arguments to find a Platform
+     * @example
+     * // Get one Platform
+     * const platform = await prisma.platform.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlatformFindFirstOrThrowArgs>(args?: SelectSubset<T, PlatformFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Platforms that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Platforms
+     * const platforms = await prisma.platform.findMany()
+     * 
+     * // Get first 10 Platforms
+     * const platforms = await prisma.platform.findMany({ take: 10 })
+     * 
+     * // Only select the `code`
+     * const platformWithCodeOnly = await prisma.platform.findMany({ select: { code: true } })
+     * 
+     */
+    findMany<T extends PlatformFindManyArgs>(args?: SelectSubset<T, PlatformFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Platform.
+     * @param {PlatformCreateArgs} args - Arguments to create a Platform.
+     * @example
+     * // Create one Platform
+     * const Platform = await prisma.platform.create({
+     *   data: {
+     *     // ... data to create a Platform
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlatformCreateArgs>(args: SelectSubset<T, PlatformCreateArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Platforms.
+     * @param {PlatformCreateManyArgs} args - Arguments to create many Platforms.
+     * @example
+     * // Create many Platforms
+     * const platform = await prisma.platform.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlatformCreateManyArgs>(args?: SelectSubset<T, PlatformCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Platforms and returns the data saved in the database.
+     * @param {PlatformCreateManyAndReturnArgs} args - Arguments to create many Platforms.
+     * @example
+     * // Create many Platforms
+     * const platform = await prisma.platform.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Platforms and only return the `code`
+     * const platformWithCodeOnly = await prisma.platform.createManyAndReturn({
+     *   select: { code: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlatformCreateManyAndReturnArgs>(args?: SelectSubset<T, PlatformCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Platform.
+     * @param {PlatformDeleteArgs} args - Arguments to delete one Platform.
+     * @example
+     * // Delete one Platform
+     * const Platform = await prisma.platform.delete({
+     *   where: {
+     *     // ... filter to delete one Platform
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlatformDeleteArgs>(args: SelectSubset<T, PlatformDeleteArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Platform.
+     * @param {PlatformUpdateArgs} args - Arguments to update one Platform.
+     * @example
+     * // Update one Platform
+     * const platform = await prisma.platform.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlatformUpdateArgs>(args: SelectSubset<T, PlatformUpdateArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Platforms.
+     * @param {PlatformDeleteManyArgs} args - Arguments to filter Platforms to delete.
+     * @example
+     * // Delete a few Platforms
+     * const { count } = await prisma.platform.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlatformDeleteManyArgs>(args?: SelectSubset<T, PlatformDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Platforms.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Platforms
+     * const platform = await prisma.platform.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlatformUpdateManyArgs>(args: SelectSubset<T, PlatformUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Platforms and returns the data updated in the database.
+     * @param {PlatformUpdateManyAndReturnArgs} args - Arguments to update many Platforms.
+     * @example
+     * // Update many Platforms
+     * const platform = await prisma.platform.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Platforms and only return the `code`
+     * const platformWithCodeOnly = await prisma.platform.updateManyAndReturn({
+     *   select: { code: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PlatformUpdateManyAndReturnArgs>(args: SelectSubset<T, PlatformUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Platform.
+     * @param {PlatformUpsertArgs} args - Arguments to update or create a Platform.
+     * @example
+     * // Update or create a Platform
+     * const platform = await prisma.platform.upsert({
+     *   create: {
+     *     // ... data to create a Platform
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Platform we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlatformUpsertArgs>(args: SelectSubset<T, PlatformUpsertArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Platforms.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformCountArgs} args - Arguments to filter Platforms to count.
+     * @example
+     * // Count the number of Platforms
+     * const count = await prisma.platform.count({
+     *   where: {
+     *     // ... the filter for the Platforms we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlatformCountArgs>(
+      args?: Subset<T, PlatformCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlatformCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Platform.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlatformAggregateArgs>(args: Subset<T, PlatformAggregateArgs>): Prisma.PrismaPromise<GetPlatformAggregateType<T>>
+
+    /**
+     * Group by Platform.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlatformGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlatformGroupByArgs['orderBy'] }
+        : { orderBy?: PlatformGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlatformGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlatformGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Platform model
+   */
+  readonly fields: PlatformFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Platform.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlatformClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    grants<T extends Platform$grantsArgs<ExtArgs> = {}>(args?: Subset<T, Platform$grantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Platform model
+   */
+  interface PlatformFieldRefs {
+    readonly code: FieldRef<"Platform", 'String'>
+    readonly name: FieldRef<"Platform", 'String'>
+    readonly port: FieldRef<"Platform", 'Int'>
+    readonly baseUrl: FieldRef<"Platform", 'String'>
+    readonly icon: FieldRef<"Platform", 'String'>
+    readonly audience: FieldRef<"Platform", 'String'>
+    readonly requiresTenant: FieldRef<"Platform", 'Boolean'>
+    readonly createdAt: FieldRef<"Platform", 'DateTime'>
+    readonly updatedAt: FieldRef<"Platform", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Platform findUnique
+   */
+  export type PlatformFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * Filter, which Platform to fetch.
+     */
+    where: PlatformWhereUniqueInput
+  }
+
+  /**
+   * Platform findUniqueOrThrow
+   */
+  export type PlatformFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * Filter, which Platform to fetch.
+     */
+    where: PlatformWhereUniqueInput
+  }
+
+  /**
+   * Platform findFirst
+   */
+  export type PlatformFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * Filter, which Platform to fetch.
+     */
+    where?: PlatformWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Platforms to fetch.
+     */
+    orderBy?: PlatformOrderByWithRelationInput | PlatformOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Platforms.
+     */
+    cursor?: PlatformWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Platforms from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Platforms.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Platforms.
+     */
+    distinct?: PlatformScalarFieldEnum | PlatformScalarFieldEnum[]
+  }
+
+  /**
+   * Platform findFirstOrThrow
+   */
+  export type PlatformFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * Filter, which Platform to fetch.
+     */
+    where?: PlatformWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Platforms to fetch.
+     */
+    orderBy?: PlatformOrderByWithRelationInput | PlatformOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Platforms.
+     */
+    cursor?: PlatformWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Platforms from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Platforms.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Platforms.
+     */
+    distinct?: PlatformScalarFieldEnum | PlatformScalarFieldEnum[]
+  }
+
+  /**
+   * Platform findMany
+   */
+  export type PlatformFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * Filter, which Platforms to fetch.
+     */
+    where?: PlatformWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Platforms to fetch.
+     */
+    orderBy?: PlatformOrderByWithRelationInput | PlatformOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Platforms.
+     */
+    cursor?: PlatformWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Platforms from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Platforms.
+     */
+    skip?: number
+    distinct?: PlatformScalarFieldEnum | PlatformScalarFieldEnum[]
+  }
+
+  /**
+   * Platform create
+   */
+  export type PlatformCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Platform.
+     */
+    data: XOR<PlatformCreateInput, PlatformUncheckedCreateInput>
+  }
+
+  /**
+   * Platform createMany
+   */
+  export type PlatformCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Platforms.
+     */
+    data: PlatformCreateManyInput | PlatformCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Platform createManyAndReturn
+   */
+  export type PlatformCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * The data used to create many Platforms.
+     */
+    data: PlatformCreateManyInput | PlatformCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Platform update
+   */
+  export type PlatformUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Platform.
+     */
+    data: XOR<PlatformUpdateInput, PlatformUncheckedUpdateInput>
+    /**
+     * Choose, which Platform to update.
+     */
+    where: PlatformWhereUniqueInput
+  }
+
+  /**
+   * Platform updateMany
+   */
+  export type PlatformUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Platforms.
+     */
+    data: XOR<PlatformUpdateManyMutationInput, PlatformUncheckedUpdateManyInput>
+    /**
+     * Filter which Platforms to update
+     */
+    where?: PlatformWhereInput
+    /**
+     * Limit how many Platforms to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Platform updateManyAndReturn
+   */
+  export type PlatformUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * The data used to update Platforms.
+     */
+    data: XOR<PlatformUpdateManyMutationInput, PlatformUncheckedUpdateManyInput>
+    /**
+     * Filter which Platforms to update
+     */
+    where?: PlatformWhereInput
+    /**
+     * Limit how many Platforms to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Platform upsert
+   */
+  export type PlatformUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Platform to update in case it exists.
+     */
+    where: PlatformWhereUniqueInput
+    /**
+     * In case the Platform found by the `where` argument doesn't exist, create a new Platform with this data.
+     */
+    create: XOR<PlatformCreateInput, PlatformUncheckedCreateInput>
+    /**
+     * In case the Platform was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlatformUpdateInput, PlatformUncheckedUpdateInput>
+  }
+
+  /**
+   * Platform delete
+   */
+  export type PlatformDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
+     * Filter which Platform to delete.
+     */
+    where: PlatformWhereUniqueInput
+  }
+
+  /**
+   * Platform deleteMany
+   */
+  export type PlatformDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Platforms to delete
+     */
+    where?: PlatformWhereInput
+    /**
+     * Limit how many Platforms to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Platform.grants
+   */
+  export type Platform$grantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    where?: PlatformGrantWhereInput
+    orderBy?: PlatformGrantOrderByWithRelationInput | PlatformGrantOrderByWithRelationInput[]
+    cursor?: PlatformGrantWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlatformGrantScalarFieldEnum | PlatformGrantScalarFieldEnum[]
+  }
+
+  /**
+   * Platform without action
+   */
+  export type PlatformDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PlatformGrant
+   */
+
+  export type AggregatePlatformGrant = {
+    _count: PlatformGrantCountAggregateOutputType | null
+    _min: PlatformGrantMinAggregateOutputType | null
+    _max: PlatformGrantMaxAggregateOutputType | null
+  }
+
+  export type PlatformGrantMinAggregateOutputType = {
+    id: string | null
+    subjectType: string | null
+    subjectId: string | null
+    platformCode: string | null
+    tenantId: string | null
+    createdAt: Date | null
+  }
+
+  export type PlatformGrantMaxAggregateOutputType = {
+    id: string | null
+    subjectType: string | null
+    subjectId: string | null
+    platformCode: string | null
+    tenantId: string | null
+    createdAt: Date | null
+  }
+
+  export type PlatformGrantCountAggregateOutputType = {
+    id: number
+    subjectType: number
+    subjectId: number
+    platformCode: number
+    tenantId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type PlatformGrantMinAggregateInputType = {
+    id?: true
+    subjectType?: true
+    subjectId?: true
+    platformCode?: true
+    tenantId?: true
+    createdAt?: true
+  }
+
+  export type PlatformGrantMaxAggregateInputType = {
+    id?: true
+    subjectType?: true
+    subjectId?: true
+    platformCode?: true
+    tenantId?: true
+    createdAt?: true
+  }
+
+  export type PlatformGrantCountAggregateInputType = {
+    id?: true
+    subjectType?: true
+    subjectId?: true
+    platformCode?: true
+    tenantId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type PlatformGrantAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlatformGrant to aggregate.
+     */
+    where?: PlatformGrantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlatformGrants to fetch.
+     */
+    orderBy?: PlatformGrantOrderByWithRelationInput | PlatformGrantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlatformGrantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlatformGrants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlatformGrants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PlatformGrants
+    **/
+    _count?: true | PlatformGrantCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlatformGrantMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlatformGrantMaxAggregateInputType
+  }
+
+  export type GetPlatformGrantAggregateType<T extends PlatformGrantAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlatformGrant]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlatformGrant[P]>
+      : GetScalarType<T[P], AggregatePlatformGrant[P]>
+  }
+
+
+
+
+  export type PlatformGrantGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlatformGrantWhereInput
+    orderBy?: PlatformGrantOrderByWithAggregationInput | PlatformGrantOrderByWithAggregationInput[]
+    by: PlatformGrantScalarFieldEnum[] | PlatformGrantScalarFieldEnum
+    having?: PlatformGrantScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlatformGrantCountAggregateInputType | true
+    _min?: PlatformGrantMinAggregateInputType
+    _max?: PlatformGrantMaxAggregateInputType
+  }
+
+  export type PlatformGrantGroupByOutputType = {
+    id: string
+    subjectType: string
+    subjectId: string
+    platformCode: string
+    tenantId: string | null
+    createdAt: Date
+    _count: PlatformGrantCountAggregateOutputType | null
+    _min: PlatformGrantMinAggregateOutputType | null
+    _max: PlatformGrantMaxAggregateOutputType | null
+  }
+
+  type GetPlatformGrantGroupByPayload<T extends PlatformGrantGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlatformGrantGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlatformGrantGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlatformGrantGroupByOutputType[P]>
+            : GetScalarType<T[P], PlatformGrantGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlatformGrantSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    subjectType?: boolean
+    subjectId?: boolean
+    platformCode?: boolean
+    tenantId?: boolean
+    createdAt?: boolean
+    platform?: boolean | PlatformDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["platformGrant"]>
+
+  export type PlatformGrantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    subjectType?: boolean
+    subjectId?: boolean
+    platformCode?: boolean
+    tenantId?: boolean
+    createdAt?: boolean
+    platform?: boolean | PlatformDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["platformGrant"]>
+
+  export type PlatformGrantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    subjectType?: boolean
+    subjectId?: boolean
+    platformCode?: boolean
+    tenantId?: boolean
+    createdAt?: boolean
+    platform?: boolean | PlatformDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["platformGrant"]>
+
+  export type PlatformGrantSelectScalar = {
+    id?: boolean
+    subjectType?: boolean
+    subjectId?: boolean
+    platformCode?: boolean
+    tenantId?: boolean
+    createdAt?: boolean
+  }
+
+  export type PlatformGrantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "subjectType" | "subjectId" | "platformCode" | "tenantId" | "createdAt", ExtArgs["result"]["platformGrant"]>
+  export type PlatformGrantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    platform?: boolean | PlatformDefaultArgs<ExtArgs>
+  }
+  export type PlatformGrantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    platform?: boolean | PlatformDefaultArgs<ExtArgs>
+  }
+  export type PlatformGrantIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    platform?: boolean | PlatformDefaultArgs<ExtArgs>
+  }
+
+  export type $PlatformGrantPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PlatformGrant"
+    objects: {
+      platform: Prisma.$PlatformPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      subjectType: string
+      subjectId: string
+      platformCode: string
+      tenantId: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["platformGrant"]>
+    composites: {}
+  }
+
+  type PlatformGrantGetPayload<S extends boolean | null | undefined | PlatformGrantDefaultArgs> = $Result.GetResult<Prisma.$PlatformGrantPayload, S>
+
+  type PlatformGrantCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PlatformGrantFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PlatformGrantCountAggregateInputType | true
+    }
+
+  export interface PlatformGrantDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PlatformGrant'], meta: { name: 'PlatformGrant' } }
+    /**
+     * Find zero or one PlatformGrant that matches the filter.
+     * @param {PlatformGrantFindUniqueArgs} args - Arguments to find a PlatformGrant
+     * @example
+     * // Get one PlatformGrant
+     * const platformGrant = await prisma.platformGrant.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlatformGrantFindUniqueArgs>(args: SelectSubset<T, PlatformGrantFindUniqueArgs<ExtArgs>>): Prisma__PlatformGrantClient<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PlatformGrant that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PlatformGrantFindUniqueOrThrowArgs} args - Arguments to find a PlatformGrant
+     * @example
+     * // Get one PlatformGrant
+     * const platformGrant = await prisma.platformGrant.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlatformGrantFindUniqueOrThrowArgs>(args: SelectSubset<T, PlatformGrantFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlatformGrantClient<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PlatformGrant that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformGrantFindFirstArgs} args - Arguments to find a PlatformGrant
+     * @example
+     * // Get one PlatformGrant
+     * const platformGrant = await prisma.platformGrant.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlatformGrantFindFirstArgs>(args?: SelectSubset<T, PlatformGrantFindFirstArgs<ExtArgs>>): Prisma__PlatformGrantClient<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PlatformGrant that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformGrantFindFirstOrThrowArgs} args - Arguments to find a PlatformGrant
+     * @example
+     * // Get one PlatformGrant
+     * const platformGrant = await prisma.platformGrant.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlatformGrantFindFirstOrThrowArgs>(args?: SelectSubset<T, PlatformGrantFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlatformGrantClient<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PlatformGrants that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformGrantFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PlatformGrants
+     * const platformGrants = await prisma.platformGrant.findMany()
+     * 
+     * // Get first 10 PlatformGrants
+     * const platformGrants = await prisma.platformGrant.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const platformGrantWithIdOnly = await prisma.platformGrant.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlatformGrantFindManyArgs>(args?: SelectSubset<T, PlatformGrantFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PlatformGrant.
+     * @param {PlatformGrantCreateArgs} args - Arguments to create a PlatformGrant.
+     * @example
+     * // Create one PlatformGrant
+     * const PlatformGrant = await prisma.platformGrant.create({
+     *   data: {
+     *     // ... data to create a PlatformGrant
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlatformGrantCreateArgs>(args: SelectSubset<T, PlatformGrantCreateArgs<ExtArgs>>): Prisma__PlatformGrantClient<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PlatformGrants.
+     * @param {PlatformGrantCreateManyArgs} args - Arguments to create many PlatformGrants.
+     * @example
+     * // Create many PlatformGrants
+     * const platformGrant = await prisma.platformGrant.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlatformGrantCreateManyArgs>(args?: SelectSubset<T, PlatformGrantCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PlatformGrants and returns the data saved in the database.
+     * @param {PlatformGrantCreateManyAndReturnArgs} args - Arguments to create many PlatformGrants.
+     * @example
+     * // Create many PlatformGrants
+     * const platformGrant = await prisma.platformGrant.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PlatformGrants and only return the `id`
+     * const platformGrantWithIdOnly = await prisma.platformGrant.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlatformGrantCreateManyAndReturnArgs>(args?: SelectSubset<T, PlatformGrantCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a PlatformGrant.
+     * @param {PlatformGrantDeleteArgs} args - Arguments to delete one PlatformGrant.
+     * @example
+     * // Delete one PlatformGrant
+     * const PlatformGrant = await prisma.platformGrant.delete({
+     *   where: {
+     *     // ... filter to delete one PlatformGrant
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlatformGrantDeleteArgs>(args: SelectSubset<T, PlatformGrantDeleteArgs<ExtArgs>>): Prisma__PlatformGrantClient<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PlatformGrant.
+     * @param {PlatformGrantUpdateArgs} args - Arguments to update one PlatformGrant.
+     * @example
+     * // Update one PlatformGrant
+     * const platformGrant = await prisma.platformGrant.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlatformGrantUpdateArgs>(args: SelectSubset<T, PlatformGrantUpdateArgs<ExtArgs>>): Prisma__PlatformGrantClient<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PlatformGrants.
+     * @param {PlatformGrantDeleteManyArgs} args - Arguments to filter PlatformGrants to delete.
+     * @example
+     * // Delete a few PlatformGrants
+     * const { count } = await prisma.platformGrant.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlatformGrantDeleteManyArgs>(args?: SelectSubset<T, PlatformGrantDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlatformGrants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformGrantUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PlatformGrants
+     * const platformGrant = await prisma.platformGrant.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlatformGrantUpdateManyArgs>(args: SelectSubset<T, PlatformGrantUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlatformGrants and returns the data updated in the database.
+     * @param {PlatformGrantUpdateManyAndReturnArgs} args - Arguments to update many PlatformGrants.
+     * @example
+     * // Update many PlatformGrants
+     * const platformGrant = await prisma.platformGrant.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PlatformGrants and only return the `id`
+     * const platformGrantWithIdOnly = await prisma.platformGrant.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PlatformGrantUpdateManyAndReturnArgs>(args: SelectSubset<T, PlatformGrantUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one PlatformGrant.
+     * @param {PlatformGrantUpsertArgs} args - Arguments to update or create a PlatformGrant.
+     * @example
+     * // Update or create a PlatformGrant
+     * const platformGrant = await prisma.platformGrant.upsert({
+     *   create: {
+     *     // ... data to create a PlatformGrant
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PlatformGrant we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlatformGrantUpsertArgs>(args: SelectSubset<T, PlatformGrantUpsertArgs<ExtArgs>>): Prisma__PlatformGrantClient<$Result.GetResult<Prisma.$PlatformGrantPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PlatformGrants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformGrantCountArgs} args - Arguments to filter PlatformGrants to count.
+     * @example
+     * // Count the number of PlatformGrants
+     * const count = await prisma.platformGrant.count({
+     *   where: {
+     *     // ... the filter for the PlatformGrants we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlatformGrantCountArgs>(
+      args?: Subset<T, PlatformGrantCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlatformGrantCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PlatformGrant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformGrantAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlatformGrantAggregateArgs>(args: Subset<T, PlatformGrantAggregateArgs>): Prisma.PrismaPromise<GetPlatformGrantAggregateType<T>>
+
+    /**
+     * Group by PlatformGrant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlatformGrantGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlatformGrantGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlatformGrantGroupByArgs['orderBy'] }
+        : { orderBy?: PlatformGrantGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlatformGrantGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlatformGrantGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PlatformGrant model
+   */
+  readonly fields: PlatformGrantFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PlatformGrant.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlatformGrantClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    platform<T extends PlatformDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlatformDefaultArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PlatformGrant model
+   */
+  interface PlatformGrantFieldRefs {
+    readonly id: FieldRef<"PlatformGrant", 'String'>
+    readonly subjectType: FieldRef<"PlatformGrant", 'String'>
+    readonly subjectId: FieldRef<"PlatformGrant", 'String'>
+    readonly platformCode: FieldRef<"PlatformGrant", 'String'>
+    readonly tenantId: FieldRef<"PlatformGrant", 'String'>
+    readonly createdAt: FieldRef<"PlatformGrant", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PlatformGrant findUnique
+   */
+  export type PlatformGrantFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which PlatformGrant to fetch.
+     */
+    where: PlatformGrantWhereUniqueInput
+  }
+
+  /**
+   * PlatformGrant findUniqueOrThrow
+   */
+  export type PlatformGrantFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which PlatformGrant to fetch.
+     */
+    where: PlatformGrantWhereUniqueInput
+  }
+
+  /**
+   * PlatformGrant findFirst
+   */
+  export type PlatformGrantFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which PlatformGrant to fetch.
+     */
+    where?: PlatformGrantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlatformGrants to fetch.
+     */
+    orderBy?: PlatformGrantOrderByWithRelationInput | PlatformGrantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlatformGrants.
+     */
+    cursor?: PlatformGrantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlatformGrants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlatformGrants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlatformGrants.
+     */
+    distinct?: PlatformGrantScalarFieldEnum | PlatformGrantScalarFieldEnum[]
+  }
+
+  /**
+   * PlatformGrant findFirstOrThrow
+   */
+  export type PlatformGrantFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which PlatformGrant to fetch.
+     */
+    where?: PlatformGrantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlatformGrants to fetch.
+     */
+    orderBy?: PlatformGrantOrderByWithRelationInput | PlatformGrantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlatformGrants.
+     */
+    cursor?: PlatformGrantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlatformGrants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlatformGrants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlatformGrants.
+     */
+    distinct?: PlatformGrantScalarFieldEnum | PlatformGrantScalarFieldEnum[]
+  }
+
+  /**
+   * PlatformGrant findMany
+   */
+  export type PlatformGrantFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * Filter, which PlatformGrants to fetch.
+     */
+    where?: PlatformGrantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlatformGrants to fetch.
+     */
+    orderBy?: PlatformGrantOrderByWithRelationInput | PlatformGrantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PlatformGrants.
+     */
+    cursor?: PlatformGrantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlatformGrants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlatformGrants.
+     */
+    skip?: number
+    distinct?: PlatformGrantScalarFieldEnum | PlatformGrantScalarFieldEnum[]
+  }
+
+  /**
+   * PlatformGrant create
+   */
+  export type PlatformGrantCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PlatformGrant.
+     */
+    data: XOR<PlatformGrantCreateInput, PlatformGrantUncheckedCreateInput>
+  }
+
+  /**
+   * PlatformGrant createMany
+   */
+  export type PlatformGrantCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PlatformGrants.
+     */
+    data: PlatformGrantCreateManyInput | PlatformGrantCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PlatformGrant createManyAndReturn
+   */
+  export type PlatformGrantCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * The data used to create many PlatformGrants.
+     */
+    data: PlatformGrantCreateManyInput | PlatformGrantCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PlatformGrant update
+   */
+  export type PlatformGrantUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PlatformGrant.
+     */
+    data: XOR<PlatformGrantUpdateInput, PlatformGrantUncheckedUpdateInput>
+    /**
+     * Choose, which PlatformGrant to update.
+     */
+    where: PlatformGrantWhereUniqueInput
+  }
+
+  /**
+   * PlatformGrant updateMany
+   */
+  export type PlatformGrantUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PlatformGrants.
+     */
+    data: XOR<PlatformGrantUpdateManyMutationInput, PlatformGrantUncheckedUpdateManyInput>
+    /**
+     * Filter which PlatformGrants to update
+     */
+    where?: PlatformGrantWhereInput
+    /**
+     * Limit how many PlatformGrants to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PlatformGrant updateManyAndReturn
+   */
+  export type PlatformGrantUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * The data used to update PlatformGrants.
+     */
+    data: XOR<PlatformGrantUpdateManyMutationInput, PlatformGrantUncheckedUpdateManyInput>
+    /**
+     * Filter which PlatformGrants to update
+     */
+    where?: PlatformGrantWhereInput
+    /**
+     * Limit how many PlatformGrants to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PlatformGrant upsert
+   */
+  export type PlatformGrantUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PlatformGrant to update in case it exists.
+     */
+    where: PlatformGrantWhereUniqueInput
+    /**
+     * In case the PlatformGrant found by the `where` argument doesn't exist, create a new PlatformGrant with this data.
+     */
+    create: XOR<PlatformGrantCreateInput, PlatformGrantUncheckedCreateInput>
+    /**
+     * In case the PlatformGrant was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlatformGrantUpdateInput, PlatformGrantUncheckedUpdateInput>
+  }
+
+  /**
+   * PlatformGrant delete
+   */
+  export type PlatformGrantDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+    /**
+     * Filter which PlatformGrant to delete.
+     */
+    where: PlatformGrantWhereUniqueInput
+  }
+
+  /**
+   * PlatformGrant deleteMany
+   */
+  export type PlatformGrantDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlatformGrants to delete
+     */
+    where?: PlatformGrantWhereInput
+    /**
+     * Limit how many PlatformGrants to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PlatformGrant without action
+   */
+  export type PlatformGrantDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformGrant
+     */
+    select?: PlatformGrantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlatformGrant
+     */
+    omit?: PlatformGrantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformGrantInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AgentDefinition
+   */
+
+  export type AggregateAgentDefinition = {
+    _count: AgentDefinitionCountAggregateOutputType | null
+    _min: AgentDefinitionMinAggregateOutputType | null
+    _max: AgentDefinitionMaxAggregateOutputType | null
+  }
+
+  export type AgentDefinitionMinAggregateOutputType = {
+    id: string | null
+    tenantId: string | null
+    name: string | null
+    description: string | null
+    requiresConfirmationAbove: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AgentDefinitionMaxAggregateOutputType = {
+    id: string | null
+    tenantId: string | null
+    name: string | null
+    description: string | null
+    requiresConfirmationAbove: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AgentDefinitionCountAggregateOutputType = {
+    id: number
+    tenantId: number
+    name: number
+    description: number
+    allowedPermissions: number
+    requiresConfirmationAbove: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AgentDefinitionMinAggregateInputType = {
+    id?: true
+    tenantId?: true
+    name?: true
+    description?: true
+    requiresConfirmationAbove?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AgentDefinitionMaxAggregateInputType = {
+    id?: true
+    tenantId?: true
+    name?: true
+    description?: true
+    requiresConfirmationAbove?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AgentDefinitionCountAggregateInputType = {
+    id?: true
+    tenantId?: true
+    name?: true
+    description?: true
+    allowedPermissions?: true
+    requiresConfirmationAbove?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AgentDefinitionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentDefinition to aggregate.
+     */
+    where?: AgentDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDefinitions to fetch.
+     */
+    orderBy?: AgentDefinitionOrderByWithRelationInput | AgentDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AgentDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AgentDefinitions
+    **/
+    _count?: true | AgentDefinitionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AgentDefinitionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AgentDefinitionMaxAggregateInputType
+  }
+
+  export type GetAgentDefinitionAggregateType<T extends AgentDefinitionAggregateArgs> = {
+        [P in keyof T & keyof AggregateAgentDefinition]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAgentDefinition[P]>
+      : GetScalarType<T[P], AggregateAgentDefinition[P]>
+  }
+
+
+
+
+  export type AgentDefinitionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentDefinitionWhereInput
+    orderBy?: AgentDefinitionOrderByWithAggregationInput | AgentDefinitionOrderByWithAggregationInput[]
+    by: AgentDefinitionScalarFieldEnum[] | AgentDefinitionScalarFieldEnum
+    having?: AgentDefinitionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AgentDefinitionCountAggregateInputType | true
+    _min?: AgentDefinitionMinAggregateInputType
+    _max?: AgentDefinitionMaxAggregateInputType
+  }
+
+  export type AgentDefinitionGroupByOutputType = {
+    id: string
+    tenantId: string
+    name: string
+    description: string | null
+    allowedPermissions: string[]
+    requiresConfirmationAbove: string | null
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    _count: AgentDefinitionCountAggregateOutputType | null
+    _min: AgentDefinitionMinAggregateOutputType | null
+    _max: AgentDefinitionMaxAggregateOutputType | null
+  }
+
+  type GetAgentDefinitionGroupByPayload<T extends AgentDefinitionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AgentDefinitionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AgentDefinitionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AgentDefinitionGroupByOutputType[P]>
+            : GetScalarType<T[P], AgentDefinitionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AgentDefinitionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tenantId?: boolean
+    name?: boolean
+    description?: boolean
+    allowedPermissions?: boolean
+    requiresConfirmationAbove?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    delegations?: boolean | AgentDefinition$delegationsArgs<ExtArgs>
+    _count?: boolean | AgentDefinitionCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["agentDefinition"]>
+
+  export type AgentDefinitionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tenantId?: boolean
+    name?: boolean
+    description?: boolean
+    allowedPermissions?: boolean
+    requiresConfirmationAbove?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["agentDefinition"]>
+
+  export type AgentDefinitionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tenantId?: boolean
+    name?: boolean
+    description?: boolean
+    allowedPermissions?: boolean
+    requiresConfirmationAbove?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["agentDefinition"]>
+
+  export type AgentDefinitionSelectScalar = {
+    id?: boolean
+    tenantId?: boolean
+    name?: boolean
+    description?: boolean
+    allowedPermissions?: boolean
+    requiresConfirmationAbove?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type AgentDefinitionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "name" | "description" | "allowedPermissions" | "requiresConfirmationAbove" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["agentDefinition"]>
+  export type AgentDefinitionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    delegations?: boolean | AgentDefinition$delegationsArgs<ExtArgs>
+    _count?: boolean | AgentDefinitionCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type AgentDefinitionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type AgentDefinitionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $AgentDefinitionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AgentDefinition"
+    objects: {
+      delegations: Prisma.$AgentDelegationPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      tenantId: string
+      name: string
+      description: string | null
+      allowedPermissions: string[]
+      requiresConfirmationAbove: string | null
+      status: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["agentDefinition"]>
+    composites: {}
+  }
+
+  type AgentDefinitionGetPayload<S extends boolean | null | undefined | AgentDefinitionDefaultArgs> = $Result.GetResult<Prisma.$AgentDefinitionPayload, S>
+
+  type AgentDefinitionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AgentDefinitionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AgentDefinitionCountAggregateInputType | true
+    }
+
+  export interface AgentDefinitionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AgentDefinition'], meta: { name: 'AgentDefinition' } }
+    /**
+     * Find zero or one AgentDefinition that matches the filter.
+     * @param {AgentDefinitionFindUniqueArgs} args - Arguments to find a AgentDefinition
+     * @example
+     * // Get one AgentDefinition
+     * const agentDefinition = await prisma.agentDefinition.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AgentDefinitionFindUniqueArgs>(args: SelectSubset<T, AgentDefinitionFindUniqueArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AgentDefinition that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AgentDefinitionFindUniqueOrThrowArgs} args - Arguments to find a AgentDefinition
+     * @example
+     * // Get one AgentDefinition
+     * const agentDefinition = await prisma.agentDefinition.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AgentDefinitionFindUniqueOrThrowArgs>(args: SelectSubset<T, AgentDefinitionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentDefinition that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDefinitionFindFirstArgs} args - Arguments to find a AgentDefinition
+     * @example
+     * // Get one AgentDefinition
+     * const agentDefinition = await prisma.agentDefinition.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AgentDefinitionFindFirstArgs>(args?: SelectSubset<T, AgentDefinitionFindFirstArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentDefinition that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDefinitionFindFirstOrThrowArgs} args - Arguments to find a AgentDefinition
+     * @example
+     * // Get one AgentDefinition
+     * const agentDefinition = await prisma.agentDefinition.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AgentDefinitionFindFirstOrThrowArgs>(args?: SelectSubset<T, AgentDefinitionFindFirstOrThrowArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AgentDefinitions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDefinitionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AgentDefinitions
+     * const agentDefinitions = await prisma.agentDefinition.findMany()
+     * 
+     * // Get first 10 AgentDefinitions
+     * const agentDefinitions = await prisma.agentDefinition.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const agentDefinitionWithIdOnly = await prisma.agentDefinition.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AgentDefinitionFindManyArgs>(args?: SelectSubset<T, AgentDefinitionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AgentDefinition.
+     * @param {AgentDefinitionCreateArgs} args - Arguments to create a AgentDefinition.
+     * @example
+     * // Create one AgentDefinition
+     * const AgentDefinition = await prisma.agentDefinition.create({
+     *   data: {
+     *     // ... data to create a AgentDefinition
+     *   }
+     * })
+     * 
+     */
+    create<T extends AgentDefinitionCreateArgs>(args: SelectSubset<T, AgentDefinitionCreateArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AgentDefinitions.
+     * @param {AgentDefinitionCreateManyArgs} args - Arguments to create many AgentDefinitions.
+     * @example
+     * // Create many AgentDefinitions
+     * const agentDefinition = await prisma.agentDefinition.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AgentDefinitionCreateManyArgs>(args?: SelectSubset<T, AgentDefinitionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AgentDefinitions and returns the data saved in the database.
+     * @param {AgentDefinitionCreateManyAndReturnArgs} args - Arguments to create many AgentDefinitions.
+     * @example
+     * // Create many AgentDefinitions
+     * const agentDefinition = await prisma.agentDefinition.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AgentDefinitions and only return the `id`
+     * const agentDefinitionWithIdOnly = await prisma.agentDefinition.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AgentDefinitionCreateManyAndReturnArgs>(args?: SelectSubset<T, AgentDefinitionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AgentDefinition.
+     * @param {AgentDefinitionDeleteArgs} args - Arguments to delete one AgentDefinition.
+     * @example
+     * // Delete one AgentDefinition
+     * const AgentDefinition = await prisma.agentDefinition.delete({
+     *   where: {
+     *     // ... filter to delete one AgentDefinition
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AgentDefinitionDeleteArgs>(args: SelectSubset<T, AgentDefinitionDeleteArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AgentDefinition.
+     * @param {AgentDefinitionUpdateArgs} args - Arguments to update one AgentDefinition.
+     * @example
+     * // Update one AgentDefinition
+     * const agentDefinition = await prisma.agentDefinition.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AgentDefinitionUpdateArgs>(args: SelectSubset<T, AgentDefinitionUpdateArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AgentDefinitions.
+     * @param {AgentDefinitionDeleteManyArgs} args - Arguments to filter AgentDefinitions to delete.
+     * @example
+     * // Delete a few AgentDefinitions
+     * const { count } = await prisma.agentDefinition.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AgentDefinitionDeleteManyArgs>(args?: SelectSubset<T, AgentDefinitionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentDefinitions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDefinitionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AgentDefinitions
+     * const agentDefinition = await prisma.agentDefinition.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AgentDefinitionUpdateManyArgs>(args: SelectSubset<T, AgentDefinitionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentDefinitions and returns the data updated in the database.
+     * @param {AgentDefinitionUpdateManyAndReturnArgs} args - Arguments to update many AgentDefinitions.
+     * @example
+     * // Update many AgentDefinitions
+     * const agentDefinition = await prisma.agentDefinition.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AgentDefinitions and only return the `id`
+     * const agentDefinitionWithIdOnly = await prisma.agentDefinition.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AgentDefinitionUpdateManyAndReturnArgs>(args: SelectSubset<T, AgentDefinitionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AgentDefinition.
+     * @param {AgentDefinitionUpsertArgs} args - Arguments to update or create a AgentDefinition.
+     * @example
+     * // Update or create a AgentDefinition
+     * const agentDefinition = await prisma.agentDefinition.upsert({
+     *   create: {
+     *     // ... data to create a AgentDefinition
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AgentDefinition we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AgentDefinitionUpsertArgs>(args: SelectSubset<T, AgentDefinitionUpsertArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AgentDefinitions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDefinitionCountArgs} args - Arguments to filter AgentDefinitions to count.
+     * @example
+     * // Count the number of AgentDefinitions
+     * const count = await prisma.agentDefinition.count({
+     *   where: {
+     *     // ... the filter for the AgentDefinitions we want to count
+     *   }
+     * })
+    **/
+    count<T extends AgentDefinitionCountArgs>(
+      args?: Subset<T, AgentDefinitionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AgentDefinitionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AgentDefinition.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDefinitionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AgentDefinitionAggregateArgs>(args: Subset<T, AgentDefinitionAggregateArgs>): Prisma.PrismaPromise<GetAgentDefinitionAggregateType<T>>
+
+    /**
+     * Group by AgentDefinition.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDefinitionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AgentDefinitionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AgentDefinitionGroupByArgs['orderBy'] }
+        : { orderBy?: AgentDefinitionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AgentDefinitionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAgentDefinitionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AgentDefinition model
+   */
+  readonly fields: AgentDefinitionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AgentDefinition.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AgentDefinitionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    delegations<T extends AgentDefinition$delegationsArgs<ExtArgs> = {}>(args?: Subset<T, AgentDefinition$delegationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AgentDefinition model
+   */
+  interface AgentDefinitionFieldRefs {
+    readonly id: FieldRef<"AgentDefinition", 'String'>
+    readonly tenantId: FieldRef<"AgentDefinition", 'String'>
+    readonly name: FieldRef<"AgentDefinition", 'String'>
+    readonly description: FieldRef<"AgentDefinition", 'String'>
+    readonly allowedPermissions: FieldRef<"AgentDefinition", 'String[]'>
+    readonly requiresConfirmationAbove: FieldRef<"AgentDefinition", 'String'>
+    readonly status: FieldRef<"AgentDefinition", 'String'>
+    readonly createdAt: FieldRef<"AgentDefinition", 'DateTime'>
+    readonly updatedAt: FieldRef<"AgentDefinition", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AgentDefinition findUnique
+   */
+  export type AgentDefinitionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDefinition to fetch.
+     */
+    where: AgentDefinitionWhereUniqueInput
+  }
+
+  /**
+   * AgentDefinition findUniqueOrThrow
+   */
+  export type AgentDefinitionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDefinition to fetch.
+     */
+    where: AgentDefinitionWhereUniqueInput
+  }
+
+  /**
+   * AgentDefinition findFirst
+   */
+  export type AgentDefinitionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDefinition to fetch.
+     */
+    where?: AgentDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDefinitions to fetch.
+     */
+    orderBy?: AgentDefinitionOrderByWithRelationInput | AgentDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentDefinitions.
+     */
+    cursor?: AgentDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentDefinitions.
+     */
+    distinct?: AgentDefinitionScalarFieldEnum | AgentDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDefinition findFirstOrThrow
+   */
+  export type AgentDefinitionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDefinition to fetch.
+     */
+    where?: AgentDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDefinitions to fetch.
+     */
+    orderBy?: AgentDefinitionOrderByWithRelationInput | AgentDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentDefinitions.
+     */
+    cursor?: AgentDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentDefinitions.
+     */
+    distinct?: AgentDefinitionScalarFieldEnum | AgentDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDefinition findMany
+   */
+  export type AgentDefinitionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDefinitions to fetch.
+     */
+    where?: AgentDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDefinitions to fetch.
+     */
+    orderBy?: AgentDefinitionOrderByWithRelationInput | AgentDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AgentDefinitions.
+     */
+    cursor?: AgentDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDefinitions.
+     */
+    skip?: number
+    distinct?: AgentDefinitionScalarFieldEnum | AgentDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDefinition create
+   */
+  export type AgentDefinitionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AgentDefinition.
+     */
+    data: XOR<AgentDefinitionCreateInput, AgentDefinitionUncheckedCreateInput>
+  }
+
+  /**
+   * AgentDefinition createMany
+   */
+  export type AgentDefinitionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AgentDefinitions.
+     */
+    data: AgentDefinitionCreateManyInput | AgentDefinitionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AgentDefinition createManyAndReturn
+   */
+  export type AgentDefinitionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * The data used to create many AgentDefinitions.
+     */
+    data: AgentDefinitionCreateManyInput | AgentDefinitionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AgentDefinition update
+   */
+  export type AgentDefinitionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AgentDefinition.
+     */
+    data: XOR<AgentDefinitionUpdateInput, AgentDefinitionUncheckedUpdateInput>
+    /**
+     * Choose, which AgentDefinition to update.
+     */
+    where: AgentDefinitionWhereUniqueInput
+  }
+
+  /**
+   * AgentDefinition updateMany
+   */
+  export type AgentDefinitionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AgentDefinitions.
+     */
+    data: XOR<AgentDefinitionUpdateManyMutationInput, AgentDefinitionUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentDefinitions to update
+     */
+    where?: AgentDefinitionWhereInput
+    /**
+     * Limit how many AgentDefinitions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentDefinition updateManyAndReturn
+   */
+  export type AgentDefinitionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * The data used to update AgentDefinitions.
+     */
+    data: XOR<AgentDefinitionUpdateManyMutationInput, AgentDefinitionUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentDefinitions to update
+     */
+    where?: AgentDefinitionWhereInput
+    /**
+     * Limit how many AgentDefinitions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentDefinition upsert
+   */
+  export type AgentDefinitionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AgentDefinition to update in case it exists.
+     */
+    where: AgentDefinitionWhereUniqueInput
+    /**
+     * In case the AgentDefinition found by the `where` argument doesn't exist, create a new AgentDefinition with this data.
+     */
+    create: XOR<AgentDefinitionCreateInput, AgentDefinitionUncheckedCreateInput>
+    /**
+     * In case the AgentDefinition was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AgentDefinitionUpdateInput, AgentDefinitionUncheckedUpdateInput>
+  }
+
+  /**
+   * AgentDefinition delete
+   */
+  export type AgentDefinitionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter which AgentDefinition to delete.
+     */
+    where: AgentDefinitionWhereUniqueInput
+  }
+
+  /**
+   * AgentDefinition deleteMany
+   */
+  export type AgentDefinitionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentDefinitions to delete
+     */
+    where?: AgentDefinitionWhereInput
+    /**
+     * Limit how many AgentDefinitions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentDefinition.delegations
+   */
+  export type AgentDefinition$delegationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    where?: AgentDelegationWhereInput
+    orderBy?: AgentDelegationOrderByWithRelationInput | AgentDelegationOrderByWithRelationInput[]
+    cursor?: AgentDelegationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AgentDelegationScalarFieldEnum | AgentDelegationScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDefinition without action
+   */
+  export type AgentDefinitionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDefinition
+     */
+    select?: AgentDefinitionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDefinition
+     */
+    omit?: AgentDefinitionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDefinitionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AgentDelegation
+   */
+
+  export type AggregateAgentDelegation = {
+    _count: AgentDelegationCountAggregateOutputType | null
+    _min: AgentDelegationMinAggregateOutputType | null
+    _max: AgentDelegationMaxAggregateOutputType | null
+  }
+
+  export type AgentDelegationMinAggregateOutputType = {
+    id: string | null
+    tenantId: string | null
+    agentId: string | null
+    delegatingUserId: string | null
+    sid: string | null
+    expiresAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type AgentDelegationMaxAggregateOutputType = {
+    id: string | null
+    tenantId: string | null
+    agentId: string | null
+    delegatingUserId: string | null
+    sid: string | null
+    expiresAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type AgentDelegationCountAggregateOutputType = {
+    id: number
+    tenantId: number
+    agentId: number
+    delegatingUserId: number
+    effectivePermissions: number
+    sid: number
+    expiresAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AgentDelegationMinAggregateInputType = {
+    id?: true
+    tenantId?: true
+    agentId?: true
+    delegatingUserId?: true
+    sid?: true
+    expiresAt?: true
+    createdAt?: true
+  }
+
+  export type AgentDelegationMaxAggregateInputType = {
+    id?: true
+    tenantId?: true
+    agentId?: true
+    delegatingUserId?: true
+    sid?: true
+    expiresAt?: true
+    createdAt?: true
+  }
+
+  export type AgentDelegationCountAggregateInputType = {
+    id?: true
+    tenantId?: true
+    agentId?: true
+    delegatingUserId?: true
+    effectivePermissions?: true
+    sid?: true
+    expiresAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AgentDelegationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentDelegation to aggregate.
+     */
+    where?: AgentDelegationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDelegations to fetch.
+     */
+    orderBy?: AgentDelegationOrderByWithRelationInput | AgentDelegationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AgentDelegationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDelegations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDelegations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AgentDelegations
+    **/
+    _count?: true | AgentDelegationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AgentDelegationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AgentDelegationMaxAggregateInputType
+  }
+
+  export type GetAgentDelegationAggregateType<T extends AgentDelegationAggregateArgs> = {
+        [P in keyof T & keyof AggregateAgentDelegation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAgentDelegation[P]>
+      : GetScalarType<T[P], AggregateAgentDelegation[P]>
+  }
+
+
+
+
+  export type AgentDelegationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentDelegationWhereInput
+    orderBy?: AgentDelegationOrderByWithAggregationInput | AgentDelegationOrderByWithAggregationInput[]
+    by: AgentDelegationScalarFieldEnum[] | AgentDelegationScalarFieldEnum
+    having?: AgentDelegationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AgentDelegationCountAggregateInputType | true
+    _min?: AgentDelegationMinAggregateInputType
+    _max?: AgentDelegationMaxAggregateInputType
+  }
+
+  export type AgentDelegationGroupByOutputType = {
+    id: string
+    tenantId: string
+    agentId: string
+    delegatingUserId: string
+    effectivePermissions: string[]
+    sid: string
+    expiresAt: Date
+    createdAt: Date
+    _count: AgentDelegationCountAggregateOutputType | null
+    _min: AgentDelegationMinAggregateOutputType | null
+    _max: AgentDelegationMaxAggregateOutputType | null
+  }
+
+  type GetAgentDelegationGroupByPayload<T extends AgentDelegationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AgentDelegationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AgentDelegationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AgentDelegationGroupByOutputType[P]>
+            : GetScalarType<T[P], AgentDelegationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AgentDelegationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tenantId?: boolean
+    agentId?: boolean
+    delegatingUserId?: boolean
+    effectivePermissions?: boolean
+    sid?: boolean
+    expiresAt?: boolean
+    createdAt?: boolean
+    agent?: boolean | AgentDefinitionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["agentDelegation"]>
+
+  export type AgentDelegationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tenantId?: boolean
+    agentId?: boolean
+    delegatingUserId?: boolean
+    effectivePermissions?: boolean
+    sid?: boolean
+    expiresAt?: boolean
+    createdAt?: boolean
+    agent?: boolean | AgentDefinitionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["agentDelegation"]>
+
+  export type AgentDelegationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tenantId?: boolean
+    agentId?: boolean
+    delegatingUserId?: boolean
+    effectivePermissions?: boolean
+    sid?: boolean
+    expiresAt?: boolean
+    createdAt?: boolean
+    agent?: boolean | AgentDefinitionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["agentDelegation"]>
+
+  export type AgentDelegationSelectScalar = {
+    id?: boolean
+    tenantId?: boolean
+    agentId?: boolean
+    delegatingUserId?: boolean
+    effectivePermissions?: boolean
+    sid?: boolean
+    expiresAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type AgentDelegationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "agentId" | "delegatingUserId" | "effectivePermissions" | "sid" | "expiresAt" | "createdAt", ExtArgs["result"]["agentDelegation"]>
+  export type AgentDelegationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    agent?: boolean | AgentDefinitionDefaultArgs<ExtArgs>
+  }
+  export type AgentDelegationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    agent?: boolean | AgentDefinitionDefaultArgs<ExtArgs>
+  }
+  export type AgentDelegationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    agent?: boolean | AgentDefinitionDefaultArgs<ExtArgs>
+  }
+
+  export type $AgentDelegationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AgentDelegation"
+    objects: {
+      agent: Prisma.$AgentDefinitionPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      tenantId: string
+      agentId: string
+      delegatingUserId: string
+      effectivePermissions: string[]
+      sid: string
+      expiresAt: Date
+      createdAt: Date
+    }, ExtArgs["result"]["agentDelegation"]>
+    composites: {}
+  }
+
+  type AgentDelegationGetPayload<S extends boolean | null | undefined | AgentDelegationDefaultArgs> = $Result.GetResult<Prisma.$AgentDelegationPayload, S>
+
+  type AgentDelegationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AgentDelegationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AgentDelegationCountAggregateInputType | true
+    }
+
+  export interface AgentDelegationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AgentDelegation'], meta: { name: 'AgentDelegation' } }
+    /**
+     * Find zero or one AgentDelegation that matches the filter.
+     * @param {AgentDelegationFindUniqueArgs} args - Arguments to find a AgentDelegation
+     * @example
+     * // Get one AgentDelegation
+     * const agentDelegation = await prisma.agentDelegation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AgentDelegationFindUniqueArgs>(args: SelectSubset<T, AgentDelegationFindUniqueArgs<ExtArgs>>): Prisma__AgentDelegationClient<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AgentDelegation that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AgentDelegationFindUniqueOrThrowArgs} args - Arguments to find a AgentDelegation
+     * @example
+     * // Get one AgentDelegation
+     * const agentDelegation = await prisma.agentDelegation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AgentDelegationFindUniqueOrThrowArgs>(args: SelectSubset<T, AgentDelegationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AgentDelegationClient<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentDelegation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDelegationFindFirstArgs} args - Arguments to find a AgentDelegation
+     * @example
+     * // Get one AgentDelegation
+     * const agentDelegation = await prisma.agentDelegation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AgentDelegationFindFirstArgs>(args?: SelectSubset<T, AgentDelegationFindFirstArgs<ExtArgs>>): Prisma__AgentDelegationClient<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentDelegation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDelegationFindFirstOrThrowArgs} args - Arguments to find a AgentDelegation
+     * @example
+     * // Get one AgentDelegation
+     * const agentDelegation = await prisma.agentDelegation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AgentDelegationFindFirstOrThrowArgs>(args?: SelectSubset<T, AgentDelegationFindFirstOrThrowArgs<ExtArgs>>): Prisma__AgentDelegationClient<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AgentDelegations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDelegationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AgentDelegations
+     * const agentDelegations = await prisma.agentDelegation.findMany()
+     * 
+     * // Get first 10 AgentDelegations
+     * const agentDelegations = await prisma.agentDelegation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const agentDelegationWithIdOnly = await prisma.agentDelegation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AgentDelegationFindManyArgs>(args?: SelectSubset<T, AgentDelegationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AgentDelegation.
+     * @param {AgentDelegationCreateArgs} args - Arguments to create a AgentDelegation.
+     * @example
+     * // Create one AgentDelegation
+     * const AgentDelegation = await prisma.agentDelegation.create({
+     *   data: {
+     *     // ... data to create a AgentDelegation
+     *   }
+     * })
+     * 
+     */
+    create<T extends AgentDelegationCreateArgs>(args: SelectSubset<T, AgentDelegationCreateArgs<ExtArgs>>): Prisma__AgentDelegationClient<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AgentDelegations.
+     * @param {AgentDelegationCreateManyArgs} args - Arguments to create many AgentDelegations.
+     * @example
+     * // Create many AgentDelegations
+     * const agentDelegation = await prisma.agentDelegation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AgentDelegationCreateManyArgs>(args?: SelectSubset<T, AgentDelegationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AgentDelegations and returns the data saved in the database.
+     * @param {AgentDelegationCreateManyAndReturnArgs} args - Arguments to create many AgentDelegations.
+     * @example
+     * // Create many AgentDelegations
+     * const agentDelegation = await prisma.agentDelegation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AgentDelegations and only return the `id`
+     * const agentDelegationWithIdOnly = await prisma.agentDelegation.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AgentDelegationCreateManyAndReturnArgs>(args?: SelectSubset<T, AgentDelegationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AgentDelegation.
+     * @param {AgentDelegationDeleteArgs} args - Arguments to delete one AgentDelegation.
+     * @example
+     * // Delete one AgentDelegation
+     * const AgentDelegation = await prisma.agentDelegation.delete({
+     *   where: {
+     *     // ... filter to delete one AgentDelegation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AgentDelegationDeleteArgs>(args: SelectSubset<T, AgentDelegationDeleteArgs<ExtArgs>>): Prisma__AgentDelegationClient<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AgentDelegation.
+     * @param {AgentDelegationUpdateArgs} args - Arguments to update one AgentDelegation.
+     * @example
+     * // Update one AgentDelegation
+     * const agentDelegation = await prisma.agentDelegation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AgentDelegationUpdateArgs>(args: SelectSubset<T, AgentDelegationUpdateArgs<ExtArgs>>): Prisma__AgentDelegationClient<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AgentDelegations.
+     * @param {AgentDelegationDeleteManyArgs} args - Arguments to filter AgentDelegations to delete.
+     * @example
+     * // Delete a few AgentDelegations
+     * const { count } = await prisma.agentDelegation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AgentDelegationDeleteManyArgs>(args?: SelectSubset<T, AgentDelegationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentDelegations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDelegationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AgentDelegations
+     * const agentDelegation = await prisma.agentDelegation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AgentDelegationUpdateManyArgs>(args: SelectSubset<T, AgentDelegationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentDelegations and returns the data updated in the database.
+     * @param {AgentDelegationUpdateManyAndReturnArgs} args - Arguments to update many AgentDelegations.
+     * @example
+     * // Update many AgentDelegations
+     * const agentDelegation = await prisma.agentDelegation.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AgentDelegations and only return the `id`
+     * const agentDelegationWithIdOnly = await prisma.agentDelegation.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AgentDelegationUpdateManyAndReturnArgs>(args: SelectSubset<T, AgentDelegationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AgentDelegation.
+     * @param {AgentDelegationUpsertArgs} args - Arguments to update or create a AgentDelegation.
+     * @example
+     * // Update or create a AgentDelegation
+     * const agentDelegation = await prisma.agentDelegation.upsert({
+     *   create: {
+     *     // ... data to create a AgentDelegation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AgentDelegation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AgentDelegationUpsertArgs>(args: SelectSubset<T, AgentDelegationUpsertArgs<ExtArgs>>): Prisma__AgentDelegationClient<$Result.GetResult<Prisma.$AgentDelegationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AgentDelegations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDelegationCountArgs} args - Arguments to filter AgentDelegations to count.
+     * @example
+     * // Count the number of AgentDelegations
+     * const count = await prisma.agentDelegation.count({
+     *   where: {
+     *     // ... the filter for the AgentDelegations we want to count
+     *   }
+     * })
+    **/
+    count<T extends AgentDelegationCountArgs>(
+      args?: Subset<T, AgentDelegationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AgentDelegationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AgentDelegation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDelegationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AgentDelegationAggregateArgs>(args: Subset<T, AgentDelegationAggregateArgs>): Prisma.PrismaPromise<GetAgentDelegationAggregateType<T>>
+
+    /**
+     * Group by AgentDelegation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDelegationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AgentDelegationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AgentDelegationGroupByArgs['orderBy'] }
+        : { orderBy?: AgentDelegationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AgentDelegationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAgentDelegationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AgentDelegation model
+   */
+  readonly fields: AgentDelegationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AgentDelegation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AgentDelegationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    agent<T extends AgentDefinitionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AgentDefinitionDefaultArgs<ExtArgs>>): Prisma__AgentDefinitionClient<$Result.GetResult<Prisma.$AgentDefinitionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AgentDelegation model
+   */
+  interface AgentDelegationFieldRefs {
+    readonly id: FieldRef<"AgentDelegation", 'String'>
+    readonly tenantId: FieldRef<"AgentDelegation", 'String'>
+    readonly agentId: FieldRef<"AgentDelegation", 'String'>
+    readonly delegatingUserId: FieldRef<"AgentDelegation", 'String'>
+    readonly effectivePermissions: FieldRef<"AgentDelegation", 'String[]'>
+    readonly sid: FieldRef<"AgentDelegation", 'String'>
+    readonly expiresAt: FieldRef<"AgentDelegation", 'DateTime'>
+    readonly createdAt: FieldRef<"AgentDelegation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AgentDelegation findUnique
+   */
+  export type AgentDelegationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDelegation to fetch.
+     */
+    where: AgentDelegationWhereUniqueInput
+  }
+
+  /**
+   * AgentDelegation findUniqueOrThrow
+   */
+  export type AgentDelegationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDelegation to fetch.
+     */
+    where: AgentDelegationWhereUniqueInput
+  }
+
+  /**
+   * AgentDelegation findFirst
+   */
+  export type AgentDelegationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDelegation to fetch.
+     */
+    where?: AgentDelegationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDelegations to fetch.
+     */
+    orderBy?: AgentDelegationOrderByWithRelationInput | AgentDelegationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentDelegations.
+     */
+    cursor?: AgentDelegationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDelegations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDelegations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentDelegations.
+     */
+    distinct?: AgentDelegationScalarFieldEnum | AgentDelegationScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDelegation findFirstOrThrow
+   */
+  export type AgentDelegationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDelegation to fetch.
+     */
+    where?: AgentDelegationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDelegations to fetch.
+     */
+    orderBy?: AgentDelegationOrderByWithRelationInput | AgentDelegationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentDelegations.
+     */
+    cursor?: AgentDelegationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDelegations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDelegations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentDelegations.
+     */
+    distinct?: AgentDelegationScalarFieldEnum | AgentDelegationScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDelegation findMany
+   */
+  export type AgentDelegationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDelegations to fetch.
+     */
+    where?: AgentDelegationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDelegations to fetch.
+     */
+    orderBy?: AgentDelegationOrderByWithRelationInput | AgentDelegationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AgentDelegations.
+     */
+    cursor?: AgentDelegationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDelegations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDelegations.
+     */
+    skip?: number
+    distinct?: AgentDelegationScalarFieldEnum | AgentDelegationScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDelegation create
+   */
+  export type AgentDelegationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AgentDelegation.
+     */
+    data: XOR<AgentDelegationCreateInput, AgentDelegationUncheckedCreateInput>
+  }
+
+  /**
+   * AgentDelegation createMany
+   */
+  export type AgentDelegationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AgentDelegations.
+     */
+    data: AgentDelegationCreateManyInput | AgentDelegationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AgentDelegation createManyAndReturn
+   */
+  export type AgentDelegationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * The data used to create many AgentDelegations.
+     */
+    data: AgentDelegationCreateManyInput | AgentDelegationCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AgentDelegation update
+   */
+  export type AgentDelegationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AgentDelegation.
+     */
+    data: XOR<AgentDelegationUpdateInput, AgentDelegationUncheckedUpdateInput>
+    /**
+     * Choose, which AgentDelegation to update.
+     */
+    where: AgentDelegationWhereUniqueInput
+  }
+
+  /**
+   * AgentDelegation updateMany
+   */
+  export type AgentDelegationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AgentDelegations.
+     */
+    data: XOR<AgentDelegationUpdateManyMutationInput, AgentDelegationUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentDelegations to update
+     */
+    where?: AgentDelegationWhereInput
+    /**
+     * Limit how many AgentDelegations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentDelegation updateManyAndReturn
+   */
+  export type AgentDelegationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * The data used to update AgentDelegations.
+     */
+    data: XOR<AgentDelegationUpdateManyMutationInput, AgentDelegationUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentDelegations to update
+     */
+    where?: AgentDelegationWhereInput
+    /**
+     * Limit how many AgentDelegations to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AgentDelegation upsert
+   */
+  export type AgentDelegationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AgentDelegation to update in case it exists.
+     */
+    where: AgentDelegationWhereUniqueInput
+    /**
+     * In case the AgentDelegation found by the `where` argument doesn't exist, create a new AgentDelegation with this data.
+     */
+    create: XOR<AgentDelegationCreateInput, AgentDelegationUncheckedCreateInput>
+    /**
+     * In case the AgentDelegation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AgentDelegationUpdateInput, AgentDelegationUncheckedUpdateInput>
+  }
+
+  /**
+   * AgentDelegation delete
+   */
+  export type AgentDelegationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+    /**
+     * Filter which AgentDelegation to delete.
+     */
+    where: AgentDelegationWhereUniqueInput
+  }
+
+  /**
+   * AgentDelegation deleteMany
+   */
+  export type AgentDelegationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentDelegations to delete
+     */
+    where?: AgentDelegationWhereInput
+    /**
+     * Limit how many AgentDelegations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentDelegation without action
+   */
+  export type AgentDelegationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDelegation
+     */
+    select?: AgentDelegationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDelegation
+     */
+    omit?: AgentDelegationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDelegationInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -18986,6 +31206,158 @@ export namespace Prisma {
   };
 
   export type MfaPushChallengeScalarFieldEnum = (typeof MfaPushChallengeScalarFieldEnum)[keyof typeof MfaPushChallengeScalarFieldEnum]
+
+
+  export const OAuthClientScalarFieldEnum: {
+    id: 'id',
+    clientId: 'clientId',
+    name: 'name',
+    clientSecretHash: 'clientSecretHash',
+    clientType: 'clientType',
+    platformCode: 'platformCode',
+    isFirstParty: 'isFirstParty',
+    ownerTenantId: 'ownerTenantId',
+    redirectUris: 'redirectUris',
+    postLogoutRedirectUris: 'postLogoutRedirectUris',
+    grantTypes: 'grantTypes',
+    allowedScopes: 'allowedScopes',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type OAuthClientScalarFieldEnum = (typeof OAuthClientScalarFieldEnum)[keyof typeof OAuthClientScalarFieldEnum]
+
+
+  export const AuthorizationCodeScalarFieldEnum: {
+    id: 'id',
+    codeHash: 'codeHash',
+    clientId: 'clientId',
+    userId: 'userId',
+    tenantId: 'tenantId',
+    sid: 'sid',
+    redirectUri: 'redirectUri',
+    scopes: 'scopes',
+    nonce: 'nonce',
+    codeChallenge: 'codeChallenge',
+    codeChallengeMethod: 'codeChallengeMethod',
+    expiresAt: 'expiresAt',
+    consumedAt: 'consumedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type AuthorizationCodeScalarFieldEnum = (typeof AuthorizationCodeScalarFieldEnum)[keyof typeof AuthorizationCodeScalarFieldEnum]
+
+
+  export const RefreshGrantScalarFieldEnum: {
+    id: 'id',
+    tokenHash: 'tokenHash',
+    clientId: 'clientId',
+    userId: 'userId',
+    tenantId: 'tenantId',
+    sid: 'sid',
+    scopes: 'scopes',
+    expiresAt: 'expiresAt',
+    revokedAt: 'revokedAt',
+    rotatedFromId: 'rotatedFromId',
+    createdAt: 'createdAt'
+  };
+
+  export type RefreshGrantScalarFieldEnum = (typeof RefreshGrantScalarFieldEnum)[keyof typeof RefreshGrantScalarFieldEnum]
+
+
+  export const ClientConsentScalarFieldEnum: {
+    id: 'id',
+    clientId: 'clientId',
+    userId: 'userId',
+    tenantId: 'tenantId',
+    scopes: 'scopes',
+    grantedAt: 'grantedAt',
+    revokedAt: 'revokedAt'
+  };
+
+  export type ClientConsentScalarFieldEnum = (typeof ClientConsentScalarFieldEnum)[keyof typeof ClientConsentScalarFieldEnum]
+
+
+  export const OidcSigningKeyScalarFieldEnum: {
+    id: 'id',
+    alg: 'alg',
+    publicJwk: 'publicJwk',
+    privateKeyPemEnc: 'privateKeyPemEnc',
+    status: 'status',
+    createdAt: 'createdAt',
+    retiredAt: 'retiredAt'
+  };
+
+  export type OidcSigningKeyScalarFieldEnum = (typeof OidcSigningKeyScalarFieldEnum)[keyof typeof OidcSigningKeyScalarFieldEnum]
+
+
+  export const LoginAttemptCounterScalarFieldEnum: {
+    id: 'id',
+    ipHash: 'ipHash',
+    attempts: 'attempts',
+    lockedUntil: 'lockedUntil',
+    firstSeenAt: 'firstSeenAt',
+    lastSeenAt: 'lastSeenAt'
+  };
+
+  export type LoginAttemptCounterScalarFieldEnum = (typeof LoginAttemptCounterScalarFieldEnum)[keyof typeof LoginAttemptCounterScalarFieldEnum]
+
+
+  export const PlatformScalarFieldEnum: {
+    code: 'code',
+    name: 'name',
+    port: 'port',
+    baseUrl: 'baseUrl',
+    icon: 'icon',
+    audience: 'audience',
+    requiresTenant: 'requiresTenant',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PlatformScalarFieldEnum = (typeof PlatformScalarFieldEnum)[keyof typeof PlatformScalarFieldEnum]
+
+
+  export const PlatformGrantScalarFieldEnum: {
+    id: 'id',
+    subjectType: 'subjectType',
+    subjectId: 'subjectId',
+    platformCode: 'platformCode',
+    tenantId: 'tenantId',
+    createdAt: 'createdAt'
+  };
+
+  export type PlatformGrantScalarFieldEnum = (typeof PlatformGrantScalarFieldEnum)[keyof typeof PlatformGrantScalarFieldEnum]
+
+
+  export const AgentDefinitionScalarFieldEnum: {
+    id: 'id',
+    tenantId: 'tenantId',
+    name: 'name',
+    description: 'description',
+    allowedPermissions: 'allowedPermissions',
+    requiresConfirmationAbove: 'requiresConfirmationAbove',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AgentDefinitionScalarFieldEnum = (typeof AgentDefinitionScalarFieldEnum)[keyof typeof AgentDefinitionScalarFieldEnum]
+
+
+  export const AgentDelegationScalarFieldEnum: {
+    id: 'id',
+    tenantId: 'tenantId',
+    agentId: 'agentId',
+    delegatingUserId: 'delegatingUserId',
+    effectivePermissions: 'effectivePermissions',
+    sid: 'sid',
+    expiresAt: 'expiresAt',
+    createdAt: 'createdAt'
+  };
+
+  export type AgentDelegationScalarFieldEnum = (typeof AgentDelegationScalarFieldEnum)[keyof typeof AgentDelegationScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -20224,6 +32596,772 @@ export namespace Prisma {
     status?: StringWithAggregatesFilter<"MfaPushChallenge"> | string
     createdAt?: DateTimeWithAggregatesFilter<"MfaPushChallenge"> | Date | string
     expiresAt?: DateTimeWithAggregatesFilter<"MfaPushChallenge"> | Date | string
+  }
+
+  export type OAuthClientWhereInput = {
+    AND?: OAuthClientWhereInput | OAuthClientWhereInput[]
+    OR?: OAuthClientWhereInput[]
+    NOT?: OAuthClientWhereInput | OAuthClientWhereInput[]
+    id?: StringFilter<"OAuthClient"> | string
+    clientId?: StringFilter<"OAuthClient"> | string
+    name?: StringFilter<"OAuthClient"> | string
+    clientSecretHash?: StringNullableFilter<"OAuthClient"> | string | null
+    clientType?: StringFilter<"OAuthClient"> | string
+    platformCode?: StringNullableFilter<"OAuthClient"> | string | null
+    isFirstParty?: BoolFilter<"OAuthClient"> | boolean
+    ownerTenantId?: StringNullableFilter<"OAuthClient"> | string | null
+    redirectUris?: StringNullableListFilter<"OAuthClient">
+    postLogoutRedirectUris?: StringNullableListFilter<"OAuthClient">
+    grantTypes?: StringNullableListFilter<"OAuthClient">
+    allowedScopes?: StringNullableListFilter<"OAuthClient">
+    status?: StringFilter<"OAuthClient"> | string
+    createdAt?: DateTimeFilter<"OAuthClient"> | Date | string
+    updatedAt?: DateTimeFilter<"OAuthClient"> | Date | string
+    authorizationCodes?: AuthorizationCodeListRelationFilter
+    refreshGrants?: RefreshGrantListRelationFilter
+    consents?: ClientConsentListRelationFilter
+  }
+
+  export type OAuthClientOrderByWithRelationInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    name?: SortOrder
+    clientSecretHash?: SortOrderInput | SortOrder
+    clientType?: SortOrder
+    platformCode?: SortOrderInput | SortOrder
+    isFirstParty?: SortOrder
+    ownerTenantId?: SortOrderInput | SortOrder
+    redirectUris?: SortOrder
+    postLogoutRedirectUris?: SortOrder
+    grantTypes?: SortOrder
+    allowedScopes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    authorizationCodes?: AuthorizationCodeOrderByRelationAggregateInput
+    refreshGrants?: RefreshGrantOrderByRelationAggregateInput
+    consents?: ClientConsentOrderByRelationAggregateInput
+  }
+
+  export type OAuthClientWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    clientId?: string
+    AND?: OAuthClientWhereInput | OAuthClientWhereInput[]
+    OR?: OAuthClientWhereInput[]
+    NOT?: OAuthClientWhereInput | OAuthClientWhereInput[]
+    name?: StringFilter<"OAuthClient"> | string
+    clientSecretHash?: StringNullableFilter<"OAuthClient"> | string | null
+    clientType?: StringFilter<"OAuthClient"> | string
+    platformCode?: StringNullableFilter<"OAuthClient"> | string | null
+    isFirstParty?: BoolFilter<"OAuthClient"> | boolean
+    ownerTenantId?: StringNullableFilter<"OAuthClient"> | string | null
+    redirectUris?: StringNullableListFilter<"OAuthClient">
+    postLogoutRedirectUris?: StringNullableListFilter<"OAuthClient">
+    grantTypes?: StringNullableListFilter<"OAuthClient">
+    allowedScopes?: StringNullableListFilter<"OAuthClient">
+    status?: StringFilter<"OAuthClient"> | string
+    createdAt?: DateTimeFilter<"OAuthClient"> | Date | string
+    updatedAt?: DateTimeFilter<"OAuthClient"> | Date | string
+    authorizationCodes?: AuthorizationCodeListRelationFilter
+    refreshGrants?: RefreshGrantListRelationFilter
+    consents?: ClientConsentListRelationFilter
+  }, "id" | "clientId">
+
+  export type OAuthClientOrderByWithAggregationInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    name?: SortOrder
+    clientSecretHash?: SortOrderInput | SortOrder
+    clientType?: SortOrder
+    platformCode?: SortOrderInput | SortOrder
+    isFirstParty?: SortOrder
+    ownerTenantId?: SortOrderInput | SortOrder
+    redirectUris?: SortOrder
+    postLogoutRedirectUris?: SortOrder
+    grantTypes?: SortOrder
+    allowedScopes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: OAuthClientCountOrderByAggregateInput
+    _max?: OAuthClientMaxOrderByAggregateInput
+    _min?: OAuthClientMinOrderByAggregateInput
+  }
+
+  export type OAuthClientScalarWhereWithAggregatesInput = {
+    AND?: OAuthClientScalarWhereWithAggregatesInput | OAuthClientScalarWhereWithAggregatesInput[]
+    OR?: OAuthClientScalarWhereWithAggregatesInput[]
+    NOT?: OAuthClientScalarWhereWithAggregatesInput | OAuthClientScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"OAuthClient"> | string
+    clientId?: StringWithAggregatesFilter<"OAuthClient"> | string
+    name?: StringWithAggregatesFilter<"OAuthClient"> | string
+    clientSecretHash?: StringNullableWithAggregatesFilter<"OAuthClient"> | string | null
+    clientType?: StringWithAggregatesFilter<"OAuthClient"> | string
+    platformCode?: StringNullableWithAggregatesFilter<"OAuthClient"> | string | null
+    isFirstParty?: BoolWithAggregatesFilter<"OAuthClient"> | boolean
+    ownerTenantId?: StringNullableWithAggregatesFilter<"OAuthClient"> | string | null
+    redirectUris?: StringNullableListFilter<"OAuthClient">
+    postLogoutRedirectUris?: StringNullableListFilter<"OAuthClient">
+    grantTypes?: StringNullableListFilter<"OAuthClient">
+    allowedScopes?: StringNullableListFilter<"OAuthClient">
+    status?: StringWithAggregatesFilter<"OAuthClient"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"OAuthClient"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"OAuthClient"> | Date | string
+  }
+
+  export type AuthorizationCodeWhereInput = {
+    AND?: AuthorizationCodeWhereInput | AuthorizationCodeWhereInput[]
+    OR?: AuthorizationCodeWhereInput[]
+    NOT?: AuthorizationCodeWhereInput | AuthorizationCodeWhereInput[]
+    id?: StringFilter<"AuthorizationCode"> | string
+    codeHash?: StringFilter<"AuthorizationCode"> | string
+    clientId?: StringFilter<"AuthorizationCode"> | string
+    userId?: StringFilter<"AuthorizationCode"> | string
+    tenantId?: StringFilter<"AuthorizationCode"> | string
+    sid?: StringFilter<"AuthorizationCode"> | string
+    redirectUri?: StringFilter<"AuthorizationCode"> | string
+    scopes?: StringNullableListFilter<"AuthorizationCode">
+    nonce?: StringNullableFilter<"AuthorizationCode"> | string | null
+    codeChallenge?: StringFilter<"AuthorizationCode"> | string
+    codeChallengeMethod?: StringFilter<"AuthorizationCode"> | string
+    expiresAt?: DateTimeFilter<"AuthorizationCode"> | Date | string
+    consumedAt?: DateTimeNullableFilter<"AuthorizationCode"> | Date | string | null
+    createdAt?: DateTimeFilter<"AuthorizationCode"> | Date | string
+    client?: XOR<OAuthClientScalarRelationFilter, OAuthClientWhereInput>
+  }
+
+  export type AuthorizationCodeOrderByWithRelationInput = {
+    id?: SortOrder
+    codeHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    redirectUri?: SortOrder
+    scopes?: SortOrder
+    nonce?: SortOrderInput | SortOrder
+    codeChallenge?: SortOrder
+    codeChallengeMethod?: SortOrder
+    expiresAt?: SortOrder
+    consumedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    client?: OAuthClientOrderByWithRelationInput
+  }
+
+  export type AuthorizationCodeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    codeHash?: string
+    AND?: AuthorizationCodeWhereInput | AuthorizationCodeWhereInput[]
+    OR?: AuthorizationCodeWhereInput[]
+    NOT?: AuthorizationCodeWhereInput | AuthorizationCodeWhereInput[]
+    clientId?: StringFilter<"AuthorizationCode"> | string
+    userId?: StringFilter<"AuthorizationCode"> | string
+    tenantId?: StringFilter<"AuthorizationCode"> | string
+    sid?: StringFilter<"AuthorizationCode"> | string
+    redirectUri?: StringFilter<"AuthorizationCode"> | string
+    scopes?: StringNullableListFilter<"AuthorizationCode">
+    nonce?: StringNullableFilter<"AuthorizationCode"> | string | null
+    codeChallenge?: StringFilter<"AuthorizationCode"> | string
+    codeChallengeMethod?: StringFilter<"AuthorizationCode"> | string
+    expiresAt?: DateTimeFilter<"AuthorizationCode"> | Date | string
+    consumedAt?: DateTimeNullableFilter<"AuthorizationCode"> | Date | string | null
+    createdAt?: DateTimeFilter<"AuthorizationCode"> | Date | string
+    client?: XOR<OAuthClientScalarRelationFilter, OAuthClientWhereInput>
+  }, "id" | "codeHash">
+
+  export type AuthorizationCodeOrderByWithAggregationInput = {
+    id?: SortOrder
+    codeHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    redirectUri?: SortOrder
+    scopes?: SortOrder
+    nonce?: SortOrderInput | SortOrder
+    codeChallenge?: SortOrder
+    codeChallengeMethod?: SortOrder
+    expiresAt?: SortOrder
+    consumedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: AuthorizationCodeCountOrderByAggregateInput
+    _max?: AuthorizationCodeMaxOrderByAggregateInput
+    _min?: AuthorizationCodeMinOrderByAggregateInput
+  }
+
+  export type AuthorizationCodeScalarWhereWithAggregatesInput = {
+    AND?: AuthorizationCodeScalarWhereWithAggregatesInput | AuthorizationCodeScalarWhereWithAggregatesInput[]
+    OR?: AuthorizationCodeScalarWhereWithAggregatesInput[]
+    NOT?: AuthorizationCodeScalarWhereWithAggregatesInput | AuthorizationCodeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    codeHash?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    clientId?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    userId?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    tenantId?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    sid?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    redirectUri?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    scopes?: StringNullableListFilter<"AuthorizationCode">
+    nonce?: StringNullableWithAggregatesFilter<"AuthorizationCode"> | string | null
+    codeChallenge?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    codeChallengeMethod?: StringWithAggregatesFilter<"AuthorizationCode"> | string
+    expiresAt?: DateTimeWithAggregatesFilter<"AuthorizationCode"> | Date | string
+    consumedAt?: DateTimeNullableWithAggregatesFilter<"AuthorizationCode"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"AuthorizationCode"> | Date | string
+  }
+
+  export type RefreshGrantWhereInput = {
+    AND?: RefreshGrantWhereInput | RefreshGrantWhereInput[]
+    OR?: RefreshGrantWhereInput[]
+    NOT?: RefreshGrantWhereInput | RefreshGrantWhereInput[]
+    id?: StringFilter<"RefreshGrant"> | string
+    tokenHash?: StringFilter<"RefreshGrant"> | string
+    clientId?: StringFilter<"RefreshGrant"> | string
+    userId?: StringFilter<"RefreshGrant"> | string
+    tenantId?: StringFilter<"RefreshGrant"> | string
+    sid?: StringFilter<"RefreshGrant"> | string
+    scopes?: StringNullableListFilter<"RefreshGrant">
+    expiresAt?: DateTimeFilter<"RefreshGrant"> | Date | string
+    revokedAt?: DateTimeNullableFilter<"RefreshGrant"> | Date | string | null
+    rotatedFromId?: StringNullableFilter<"RefreshGrant"> | string | null
+    createdAt?: DateTimeFilter<"RefreshGrant"> | Date | string
+    client?: XOR<OAuthClientScalarRelationFilter, OAuthClientWhereInput>
+  }
+
+  export type RefreshGrantOrderByWithRelationInput = {
+    id?: SortOrder
+    tokenHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    scopes?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    rotatedFromId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    client?: OAuthClientOrderByWithRelationInput
+  }
+
+  export type RefreshGrantWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    tokenHash?: string
+    AND?: RefreshGrantWhereInput | RefreshGrantWhereInput[]
+    OR?: RefreshGrantWhereInput[]
+    NOT?: RefreshGrantWhereInput | RefreshGrantWhereInput[]
+    clientId?: StringFilter<"RefreshGrant"> | string
+    userId?: StringFilter<"RefreshGrant"> | string
+    tenantId?: StringFilter<"RefreshGrant"> | string
+    sid?: StringFilter<"RefreshGrant"> | string
+    scopes?: StringNullableListFilter<"RefreshGrant">
+    expiresAt?: DateTimeFilter<"RefreshGrant"> | Date | string
+    revokedAt?: DateTimeNullableFilter<"RefreshGrant"> | Date | string | null
+    rotatedFromId?: StringNullableFilter<"RefreshGrant"> | string | null
+    createdAt?: DateTimeFilter<"RefreshGrant"> | Date | string
+    client?: XOR<OAuthClientScalarRelationFilter, OAuthClientWhereInput>
+  }, "id" | "tokenHash">
+
+  export type RefreshGrantOrderByWithAggregationInput = {
+    id?: SortOrder
+    tokenHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    scopes?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    rotatedFromId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: RefreshGrantCountOrderByAggregateInput
+    _max?: RefreshGrantMaxOrderByAggregateInput
+    _min?: RefreshGrantMinOrderByAggregateInput
+  }
+
+  export type RefreshGrantScalarWhereWithAggregatesInput = {
+    AND?: RefreshGrantScalarWhereWithAggregatesInput | RefreshGrantScalarWhereWithAggregatesInput[]
+    OR?: RefreshGrantScalarWhereWithAggregatesInput[]
+    NOT?: RefreshGrantScalarWhereWithAggregatesInput | RefreshGrantScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"RefreshGrant"> | string
+    tokenHash?: StringWithAggregatesFilter<"RefreshGrant"> | string
+    clientId?: StringWithAggregatesFilter<"RefreshGrant"> | string
+    userId?: StringWithAggregatesFilter<"RefreshGrant"> | string
+    tenantId?: StringWithAggregatesFilter<"RefreshGrant"> | string
+    sid?: StringWithAggregatesFilter<"RefreshGrant"> | string
+    scopes?: StringNullableListFilter<"RefreshGrant">
+    expiresAt?: DateTimeWithAggregatesFilter<"RefreshGrant"> | Date | string
+    revokedAt?: DateTimeNullableWithAggregatesFilter<"RefreshGrant"> | Date | string | null
+    rotatedFromId?: StringNullableWithAggregatesFilter<"RefreshGrant"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"RefreshGrant"> | Date | string
+  }
+
+  export type ClientConsentWhereInput = {
+    AND?: ClientConsentWhereInput | ClientConsentWhereInput[]
+    OR?: ClientConsentWhereInput[]
+    NOT?: ClientConsentWhereInput | ClientConsentWhereInput[]
+    id?: StringFilter<"ClientConsent"> | string
+    clientId?: StringFilter<"ClientConsent"> | string
+    userId?: StringFilter<"ClientConsent"> | string
+    tenantId?: StringFilter<"ClientConsent"> | string
+    scopes?: StringNullableListFilter<"ClientConsent">
+    grantedAt?: DateTimeFilter<"ClientConsent"> | Date | string
+    revokedAt?: DateTimeNullableFilter<"ClientConsent"> | Date | string | null
+    client?: XOR<OAuthClientScalarRelationFilter, OAuthClientWhereInput>
+  }
+
+  export type ClientConsentOrderByWithRelationInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    scopes?: SortOrder
+    grantedAt?: SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    client?: OAuthClientOrderByWithRelationInput
+  }
+
+  export type ClientConsentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    clientId_userId_tenantId?: ClientConsentClientIdUserIdTenantIdCompoundUniqueInput
+    AND?: ClientConsentWhereInput | ClientConsentWhereInput[]
+    OR?: ClientConsentWhereInput[]
+    NOT?: ClientConsentWhereInput | ClientConsentWhereInput[]
+    clientId?: StringFilter<"ClientConsent"> | string
+    userId?: StringFilter<"ClientConsent"> | string
+    tenantId?: StringFilter<"ClientConsent"> | string
+    scopes?: StringNullableListFilter<"ClientConsent">
+    grantedAt?: DateTimeFilter<"ClientConsent"> | Date | string
+    revokedAt?: DateTimeNullableFilter<"ClientConsent"> | Date | string | null
+    client?: XOR<OAuthClientScalarRelationFilter, OAuthClientWhereInput>
+  }, "id" | "clientId_userId_tenantId">
+
+  export type ClientConsentOrderByWithAggregationInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    scopes?: SortOrder
+    grantedAt?: SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    _count?: ClientConsentCountOrderByAggregateInput
+    _max?: ClientConsentMaxOrderByAggregateInput
+    _min?: ClientConsentMinOrderByAggregateInput
+  }
+
+  export type ClientConsentScalarWhereWithAggregatesInput = {
+    AND?: ClientConsentScalarWhereWithAggregatesInput | ClientConsentScalarWhereWithAggregatesInput[]
+    OR?: ClientConsentScalarWhereWithAggregatesInput[]
+    NOT?: ClientConsentScalarWhereWithAggregatesInput | ClientConsentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ClientConsent"> | string
+    clientId?: StringWithAggregatesFilter<"ClientConsent"> | string
+    userId?: StringWithAggregatesFilter<"ClientConsent"> | string
+    tenantId?: StringWithAggregatesFilter<"ClientConsent"> | string
+    scopes?: StringNullableListFilter<"ClientConsent">
+    grantedAt?: DateTimeWithAggregatesFilter<"ClientConsent"> | Date | string
+    revokedAt?: DateTimeNullableWithAggregatesFilter<"ClientConsent"> | Date | string | null
+  }
+
+  export type OidcSigningKeyWhereInput = {
+    AND?: OidcSigningKeyWhereInput | OidcSigningKeyWhereInput[]
+    OR?: OidcSigningKeyWhereInput[]
+    NOT?: OidcSigningKeyWhereInput | OidcSigningKeyWhereInput[]
+    id?: StringFilter<"OidcSigningKey"> | string
+    alg?: StringFilter<"OidcSigningKey"> | string
+    publicJwk?: JsonFilter<"OidcSigningKey">
+    privateKeyPemEnc?: StringFilter<"OidcSigningKey"> | string
+    status?: StringFilter<"OidcSigningKey"> | string
+    createdAt?: DateTimeFilter<"OidcSigningKey"> | Date | string
+    retiredAt?: DateTimeNullableFilter<"OidcSigningKey"> | Date | string | null
+  }
+
+  export type OidcSigningKeyOrderByWithRelationInput = {
+    id?: SortOrder
+    alg?: SortOrder
+    publicJwk?: SortOrder
+    privateKeyPemEnc?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    retiredAt?: SortOrderInput | SortOrder
+  }
+
+  export type OidcSigningKeyWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: OidcSigningKeyWhereInput | OidcSigningKeyWhereInput[]
+    OR?: OidcSigningKeyWhereInput[]
+    NOT?: OidcSigningKeyWhereInput | OidcSigningKeyWhereInput[]
+    alg?: StringFilter<"OidcSigningKey"> | string
+    publicJwk?: JsonFilter<"OidcSigningKey">
+    privateKeyPemEnc?: StringFilter<"OidcSigningKey"> | string
+    status?: StringFilter<"OidcSigningKey"> | string
+    createdAt?: DateTimeFilter<"OidcSigningKey"> | Date | string
+    retiredAt?: DateTimeNullableFilter<"OidcSigningKey"> | Date | string | null
+  }, "id">
+
+  export type OidcSigningKeyOrderByWithAggregationInput = {
+    id?: SortOrder
+    alg?: SortOrder
+    publicJwk?: SortOrder
+    privateKeyPemEnc?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    retiredAt?: SortOrderInput | SortOrder
+    _count?: OidcSigningKeyCountOrderByAggregateInput
+    _max?: OidcSigningKeyMaxOrderByAggregateInput
+    _min?: OidcSigningKeyMinOrderByAggregateInput
+  }
+
+  export type OidcSigningKeyScalarWhereWithAggregatesInput = {
+    AND?: OidcSigningKeyScalarWhereWithAggregatesInput | OidcSigningKeyScalarWhereWithAggregatesInput[]
+    OR?: OidcSigningKeyScalarWhereWithAggregatesInput[]
+    NOT?: OidcSigningKeyScalarWhereWithAggregatesInput | OidcSigningKeyScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"OidcSigningKey"> | string
+    alg?: StringWithAggregatesFilter<"OidcSigningKey"> | string
+    publicJwk?: JsonWithAggregatesFilter<"OidcSigningKey">
+    privateKeyPemEnc?: StringWithAggregatesFilter<"OidcSigningKey"> | string
+    status?: StringWithAggregatesFilter<"OidcSigningKey"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"OidcSigningKey"> | Date | string
+    retiredAt?: DateTimeNullableWithAggregatesFilter<"OidcSigningKey"> | Date | string | null
+  }
+
+  export type LoginAttemptCounterWhereInput = {
+    AND?: LoginAttemptCounterWhereInput | LoginAttemptCounterWhereInput[]
+    OR?: LoginAttemptCounterWhereInput[]
+    NOT?: LoginAttemptCounterWhereInput | LoginAttemptCounterWhereInput[]
+    id?: StringFilter<"LoginAttemptCounter"> | string
+    ipHash?: StringFilter<"LoginAttemptCounter"> | string
+    attempts?: IntFilter<"LoginAttemptCounter"> | number
+    lockedUntil?: DateTimeNullableFilter<"LoginAttemptCounter"> | Date | string | null
+    firstSeenAt?: DateTimeFilter<"LoginAttemptCounter"> | Date | string
+    lastSeenAt?: DateTimeFilter<"LoginAttemptCounter"> | Date | string
+  }
+
+  export type LoginAttemptCounterOrderByWithRelationInput = {
+    id?: SortOrder
+    ipHash?: SortOrder
+    attempts?: SortOrder
+    lockedUntil?: SortOrderInput | SortOrder
+    firstSeenAt?: SortOrder
+    lastSeenAt?: SortOrder
+  }
+
+  export type LoginAttemptCounterWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    ipHash?: string
+    AND?: LoginAttemptCounterWhereInput | LoginAttemptCounterWhereInput[]
+    OR?: LoginAttemptCounterWhereInput[]
+    NOT?: LoginAttemptCounterWhereInput | LoginAttemptCounterWhereInput[]
+    attempts?: IntFilter<"LoginAttemptCounter"> | number
+    lockedUntil?: DateTimeNullableFilter<"LoginAttemptCounter"> | Date | string | null
+    firstSeenAt?: DateTimeFilter<"LoginAttemptCounter"> | Date | string
+    lastSeenAt?: DateTimeFilter<"LoginAttemptCounter"> | Date | string
+  }, "id" | "ipHash">
+
+  export type LoginAttemptCounterOrderByWithAggregationInput = {
+    id?: SortOrder
+    ipHash?: SortOrder
+    attempts?: SortOrder
+    lockedUntil?: SortOrderInput | SortOrder
+    firstSeenAt?: SortOrder
+    lastSeenAt?: SortOrder
+    _count?: LoginAttemptCounterCountOrderByAggregateInput
+    _avg?: LoginAttemptCounterAvgOrderByAggregateInput
+    _max?: LoginAttemptCounterMaxOrderByAggregateInput
+    _min?: LoginAttemptCounterMinOrderByAggregateInput
+    _sum?: LoginAttemptCounterSumOrderByAggregateInput
+  }
+
+  export type LoginAttemptCounterScalarWhereWithAggregatesInput = {
+    AND?: LoginAttemptCounterScalarWhereWithAggregatesInput | LoginAttemptCounterScalarWhereWithAggregatesInput[]
+    OR?: LoginAttemptCounterScalarWhereWithAggregatesInput[]
+    NOT?: LoginAttemptCounterScalarWhereWithAggregatesInput | LoginAttemptCounterScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LoginAttemptCounter"> | string
+    ipHash?: StringWithAggregatesFilter<"LoginAttemptCounter"> | string
+    attempts?: IntWithAggregatesFilter<"LoginAttemptCounter"> | number
+    lockedUntil?: DateTimeNullableWithAggregatesFilter<"LoginAttemptCounter"> | Date | string | null
+    firstSeenAt?: DateTimeWithAggregatesFilter<"LoginAttemptCounter"> | Date | string
+    lastSeenAt?: DateTimeWithAggregatesFilter<"LoginAttemptCounter"> | Date | string
+  }
+
+  export type PlatformWhereInput = {
+    AND?: PlatformWhereInput | PlatformWhereInput[]
+    OR?: PlatformWhereInput[]
+    NOT?: PlatformWhereInput | PlatformWhereInput[]
+    code?: StringFilter<"Platform"> | string
+    name?: StringFilter<"Platform"> | string
+    port?: IntFilter<"Platform"> | number
+    baseUrl?: StringFilter<"Platform"> | string
+    icon?: StringNullableFilter<"Platform"> | string | null
+    audience?: StringFilter<"Platform"> | string
+    requiresTenant?: BoolFilter<"Platform"> | boolean
+    createdAt?: DateTimeFilter<"Platform"> | Date | string
+    updatedAt?: DateTimeFilter<"Platform"> | Date | string
+    grants?: PlatformGrantListRelationFilter
+  }
+
+  export type PlatformOrderByWithRelationInput = {
+    code?: SortOrder
+    name?: SortOrder
+    port?: SortOrder
+    baseUrl?: SortOrder
+    icon?: SortOrderInput | SortOrder
+    audience?: SortOrder
+    requiresTenant?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    grants?: PlatformGrantOrderByRelationAggregateInput
+  }
+
+  export type PlatformWhereUniqueInput = Prisma.AtLeast<{
+    code?: string
+    AND?: PlatformWhereInput | PlatformWhereInput[]
+    OR?: PlatformWhereInput[]
+    NOT?: PlatformWhereInput | PlatformWhereInput[]
+    name?: StringFilter<"Platform"> | string
+    port?: IntFilter<"Platform"> | number
+    baseUrl?: StringFilter<"Platform"> | string
+    icon?: StringNullableFilter<"Platform"> | string | null
+    audience?: StringFilter<"Platform"> | string
+    requiresTenant?: BoolFilter<"Platform"> | boolean
+    createdAt?: DateTimeFilter<"Platform"> | Date | string
+    updatedAt?: DateTimeFilter<"Platform"> | Date | string
+    grants?: PlatformGrantListRelationFilter
+  }, "code">
+
+  export type PlatformOrderByWithAggregationInput = {
+    code?: SortOrder
+    name?: SortOrder
+    port?: SortOrder
+    baseUrl?: SortOrder
+    icon?: SortOrderInput | SortOrder
+    audience?: SortOrder
+    requiresTenant?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PlatformCountOrderByAggregateInput
+    _avg?: PlatformAvgOrderByAggregateInput
+    _max?: PlatformMaxOrderByAggregateInput
+    _min?: PlatformMinOrderByAggregateInput
+    _sum?: PlatformSumOrderByAggregateInput
+  }
+
+  export type PlatformScalarWhereWithAggregatesInput = {
+    AND?: PlatformScalarWhereWithAggregatesInput | PlatformScalarWhereWithAggregatesInput[]
+    OR?: PlatformScalarWhereWithAggregatesInput[]
+    NOT?: PlatformScalarWhereWithAggregatesInput | PlatformScalarWhereWithAggregatesInput[]
+    code?: StringWithAggregatesFilter<"Platform"> | string
+    name?: StringWithAggregatesFilter<"Platform"> | string
+    port?: IntWithAggregatesFilter<"Platform"> | number
+    baseUrl?: StringWithAggregatesFilter<"Platform"> | string
+    icon?: StringNullableWithAggregatesFilter<"Platform"> | string | null
+    audience?: StringWithAggregatesFilter<"Platform"> | string
+    requiresTenant?: BoolWithAggregatesFilter<"Platform"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"Platform"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Platform"> | Date | string
+  }
+
+  export type PlatformGrantWhereInput = {
+    AND?: PlatformGrantWhereInput | PlatformGrantWhereInput[]
+    OR?: PlatformGrantWhereInput[]
+    NOT?: PlatformGrantWhereInput | PlatformGrantWhereInput[]
+    id?: StringFilter<"PlatformGrant"> | string
+    subjectType?: StringFilter<"PlatformGrant"> | string
+    subjectId?: StringFilter<"PlatformGrant"> | string
+    platformCode?: StringFilter<"PlatformGrant"> | string
+    tenantId?: StringNullableFilter<"PlatformGrant"> | string | null
+    createdAt?: DateTimeFilter<"PlatformGrant"> | Date | string
+    platform?: XOR<PlatformScalarRelationFilter, PlatformWhereInput>
+  }
+
+  export type PlatformGrantOrderByWithRelationInput = {
+    id?: SortOrder
+    subjectType?: SortOrder
+    subjectId?: SortOrder
+    platformCode?: SortOrder
+    tenantId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    platform?: PlatformOrderByWithRelationInput
+  }
+
+  export type PlatformGrantWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PlatformGrantWhereInput | PlatformGrantWhereInput[]
+    OR?: PlatformGrantWhereInput[]
+    NOT?: PlatformGrantWhereInput | PlatformGrantWhereInput[]
+    subjectType?: StringFilter<"PlatformGrant"> | string
+    subjectId?: StringFilter<"PlatformGrant"> | string
+    platformCode?: StringFilter<"PlatformGrant"> | string
+    tenantId?: StringNullableFilter<"PlatformGrant"> | string | null
+    createdAt?: DateTimeFilter<"PlatformGrant"> | Date | string
+    platform?: XOR<PlatformScalarRelationFilter, PlatformWhereInput>
+  }, "id">
+
+  export type PlatformGrantOrderByWithAggregationInput = {
+    id?: SortOrder
+    subjectType?: SortOrder
+    subjectId?: SortOrder
+    platformCode?: SortOrder
+    tenantId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: PlatformGrantCountOrderByAggregateInput
+    _max?: PlatformGrantMaxOrderByAggregateInput
+    _min?: PlatformGrantMinOrderByAggregateInput
+  }
+
+  export type PlatformGrantScalarWhereWithAggregatesInput = {
+    AND?: PlatformGrantScalarWhereWithAggregatesInput | PlatformGrantScalarWhereWithAggregatesInput[]
+    OR?: PlatformGrantScalarWhereWithAggregatesInput[]
+    NOT?: PlatformGrantScalarWhereWithAggregatesInput | PlatformGrantScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PlatformGrant"> | string
+    subjectType?: StringWithAggregatesFilter<"PlatformGrant"> | string
+    subjectId?: StringWithAggregatesFilter<"PlatformGrant"> | string
+    platformCode?: StringWithAggregatesFilter<"PlatformGrant"> | string
+    tenantId?: StringNullableWithAggregatesFilter<"PlatformGrant"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"PlatformGrant"> | Date | string
+  }
+
+  export type AgentDefinitionWhereInput = {
+    AND?: AgentDefinitionWhereInput | AgentDefinitionWhereInput[]
+    OR?: AgentDefinitionWhereInput[]
+    NOT?: AgentDefinitionWhereInput | AgentDefinitionWhereInput[]
+    id?: StringFilter<"AgentDefinition"> | string
+    tenantId?: StringFilter<"AgentDefinition"> | string
+    name?: StringFilter<"AgentDefinition"> | string
+    description?: StringNullableFilter<"AgentDefinition"> | string | null
+    allowedPermissions?: StringNullableListFilter<"AgentDefinition">
+    requiresConfirmationAbove?: StringNullableFilter<"AgentDefinition"> | string | null
+    status?: StringFilter<"AgentDefinition"> | string
+    createdAt?: DateTimeFilter<"AgentDefinition"> | Date | string
+    updatedAt?: DateTimeFilter<"AgentDefinition"> | Date | string
+    delegations?: AgentDelegationListRelationFilter
+  }
+
+  export type AgentDefinitionOrderByWithRelationInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    allowedPermissions?: SortOrder
+    requiresConfirmationAbove?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    delegations?: AgentDelegationOrderByRelationAggregateInput
+  }
+
+  export type AgentDefinitionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    tenantId_name?: AgentDefinitionTenantIdNameCompoundUniqueInput
+    AND?: AgentDefinitionWhereInput | AgentDefinitionWhereInput[]
+    OR?: AgentDefinitionWhereInput[]
+    NOT?: AgentDefinitionWhereInput | AgentDefinitionWhereInput[]
+    tenantId?: StringFilter<"AgentDefinition"> | string
+    name?: StringFilter<"AgentDefinition"> | string
+    description?: StringNullableFilter<"AgentDefinition"> | string | null
+    allowedPermissions?: StringNullableListFilter<"AgentDefinition">
+    requiresConfirmationAbove?: StringNullableFilter<"AgentDefinition"> | string | null
+    status?: StringFilter<"AgentDefinition"> | string
+    createdAt?: DateTimeFilter<"AgentDefinition"> | Date | string
+    updatedAt?: DateTimeFilter<"AgentDefinition"> | Date | string
+    delegations?: AgentDelegationListRelationFilter
+  }, "id" | "tenantId_name">
+
+  export type AgentDefinitionOrderByWithAggregationInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    allowedPermissions?: SortOrder
+    requiresConfirmationAbove?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AgentDefinitionCountOrderByAggregateInput
+    _max?: AgentDefinitionMaxOrderByAggregateInput
+    _min?: AgentDefinitionMinOrderByAggregateInput
+  }
+
+  export type AgentDefinitionScalarWhereWithAggregatesInput = {
+    AND?: AgentDefinitionScalarWhereWithAggregatesInput | AgentDefinitionScalarWhereWithAggregatesInput[]
+    OR?: AgentDefinitionScalarWhereWithAggregatesInput[]
+    NOT?: AgentDefinitionScalarWhereWithAggregatesInput | AgentDefinitionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AgentDefinition"> | string
+    tenantId?: StringWithAggregatesFilter<"AgentDefinition"> | string
+    name?: StringWithAggregatesFilter<"AgentDefinition"> | string
+    description?: StringNullableWithAggregatesFilter<"AgentDefinition"> | string | null
+    allowedPermissions?: StringNullableListFilter<"AgentDefinition">
+    requiresConfirmationAbove?: StringNullableWithAggregatesFilter<"AgentDefinition"> | string | null
+    status?: StringWithAggregatesFilter<"AgentDefinition"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"AgentDefinition"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AgentDefinition"> | Date | string
+  }
+
+  export type AgentDelegationWhereInput = {
+    AND?: AgentDelegationWhereInput | AgentDelegationWhereInput[]
+    OR?: AgentDelegationWhereInput[]
+    NOT?: AgentDelegationWhereInput | AgentDelegationWhereInput[]
+    id?: StringFilter<"AgentDelegation"> | string
+    tenantId?: StringFilter<"AgentDelegation"> | string
+    agentId?: StringFilter<"AgentDelegation"> | string
+    delegatingUserId?: StringFilter<"AgentDelegation"> | string
+    effectivePermissions?: StringNullableListFilter<"AgentDelegation">
+    sid?: StringFilter<"AgentDelegation"> | string
+    expiresAt?: DateTimeFilter<"AgentDelegation"> | Date | string
+    createdAt?: DateTimeFilter<"AgentDelegation"> | Date | string
+    agent?: XOR<AgentDefinitionScalarRelationFilter, AgentDefinitionWhereInput>
+  }
+
+  export type AgentDelegationOrderByWithRelationInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    agentId?: SortOrder
+    delegatingUserId?: SortOrder
+    effectivePermissions?: SortOrder
+    sid?: SortOrder
+    expiresAt?: SortOrder
+    createdAt?: SortOrder
+    agent?: AgentDefinitionOrderByWithRelationInput
+  }
+
+  export type AgentDelegationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AgentDelegationWhereInput | AgentDelegationWhereInput[]
+    OR?: AgentDelegationWhereInput[]
+    NOT?: AgentDelegationWhereInput | AgentDelegationWhereInput[]
+    tenantId?: StringFilter<"AgentDelegation"> | string
+    agentId?: StringFilter<"AgentDelegation"> | string
+    delegatingUserId?: StringFilter<"AgentDelegation"> | string
+    effectivePermissions?: StringNullableListFilter<"AgentDelegation">
+    sid?: StringFilter<"AgentDelegation"> | string
+    expiresAt?: DateTimeFilter<"AgentDelegation"> | Date | string
+    createdAt?: DateTimeFilter<"AgentDelegation"> | Date | string
+    agent?: XOR<AgentDefinitionScalarRelationFilter, AgentDefinitionWhereInput>
+  }, "id">
+
+  export type AgentDelegationOrderByWithAggregationInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    agentId?: SortOrder
+    delegatingUserId?: SortOrder
+    effectivePermissions?: SortOrder
+    sid?: SortOrder
+    expiresAt?: SortOrder
+    createdAt?: SortOrder
+    _count?: AgentDelegationCountOrderByAggregateInput
+    _max?: AgentDelegationMaxOrderByAggregateInput
+    _min?: AgentDelegationMinOrderByAggregateInput
+  }
+
+  export type AgentDelegationScalarWhereWithAggregatesInput = {
+    AND?: AgentDelegationScalarWhereWithAggregatesInput | AgentDelegationScalarWhereWithAggregatesInput[]
+    OR?: AgentDelegationScalarWhereWithAggregatesInput[]
+    NOT?: AgentDelegationScalarWhereWithAggregatesInput | AgentDelegationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AgentDelegation"> | string
+    tenantId?: StringWithAggregatesFilter<"AgentDelegation"> | string
+    agentId?: StringWithAggregatesFilter<"AgentDelegation"> | string
+    delegatingUserId?: StringWithAggregatesFilter<"AgentDelegation"> | string
+    effectivePermissions?: StringNullableListFilter<"AgentDelegation">
+    sid?: StringWithAggregatesFilter<"AgentDelegation"> | string
+    expiresAt?: DateTimeWithAggregatesFilter<"AgentDelegation"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"AgentDelegation"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -21485,6 +34623,875 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type OAuthClientCreateInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    authorizationCodes?: AuthorizationCodeCreateNestedManyWithoutClientInput
+    refreshGrants?: RefreshGrantCreateNestedManyWithoutClientInput
+    consents?: ClientConsentCreateNestedManyWithoutClientInput
+  }
+
+  export type OAuthClientUncheckedCreateInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    authorizationCodes?: AuthorizationCodeUncheckedCreateNestedManyWithoutClientInput
+    refreshGrants?: RefreshGrantUncheckedCreateNestedManyWithoutClientInput
+    consents?: ClientConsentUncheckedCreateNestedManyWithoutClientInput
+  }
+
+  export type OAuthClientUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    authorizationCodes?: AuthorizationCodeUpdateManyWithoutClientNestedInput
+    refreshGrants?: RefreshGrantUpdateManyWithoutClientNestedInput
+    consents?: ClientConsentUpdateManyWithoutClientNestedInput
+  }
+
+  export type OAuthClientUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    authorizationCodes?: AuthorizationCodeUncheckedUpdateManyWithoutClientNestedInput
+    refreshGrants?: RefreshGrantUncheckedUpdateManyWithoutClientNestedInput
+    consents?: ClientConsentUncheckedUpdateManyWithoutClientNestedInput
+  }
+
+  export type OAuthClientCreateManyInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OAuthClientUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OAuthClientUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuthorizationCodeCreateInput = {
+    id?: string
+    codeHash: string
+    userId: string
+    tenantId: string
+    sid: string
+    redirectUri: string
+    scopes?: AuthorizationCodeCreatescopesInput | string[]
+    nonce?: string | null
+    codeChallenge: string
+    codeChallengeMethod?: string
+    expiresAt: Date | string
+    consumedAt?: Date | string | null
+    createdAt?: Date | string
+    client: OAuthClientCreateNestedOneWithoutAuthorizationCodesInput
+  }
+
+  export type AuthorizationCodeUncheckedCreateInput = {
+    id?: string
+    codeHash: string
+    clientId: string
+    userId: string
+    tenantId: string
+    sid: string
+    redirectUri: string
+    scopes?: AuthorizationCodeCreatescopesInput | string[]
+    nonce?: string | null
+    codeChallenge: string
+    codeChallengeMethod?: string
+    expiresAt: Date | string
+    consumedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type AuthorizationCodeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    codeHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    redirectUri?: StringFieldUpdateOperationsInput | string
+    scopes?: AuthorizationCodeUpdatescopesInput | string[]
+    nonce?: NullableStringFieldUpdateOperationsInput | string | null
+    codeChallenge?: StringFieldUpdateOperationsInput | string
+    codeChallengeMethod?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    consumedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    client?: OAuthClientUpdateOneRequiredWithoutAuthorizationCodesNestedInput
+  }
+
+  export type AuthorizationCodeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    codeHash?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    redirectUri?: StringFieldUpdateOperationsInput | string
+    scopes?: AuthorizationCodeUpdatescopesInput | string[]
+    nonce?: NullableStringFieldUpdateOperationsInput | string | null
+    codeChallenge?: StringFieldUpdateOperationsInput | string
+    codeChallengeMethod?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    consumedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuthorizationCodeCreateManyInput = {
+    id?: string
+    codeHash: string
+    clientId: string
+    userId: string
+    tenantId: string
+    sid: string
+    redirectUri: string
+    scopes?: AuthorizationCodeCreatescopesInput | string[]
+    nonce?: string | null
+    codeChallenge: string
+    codeChallengeMethod?: string
+    expiresAt: Date | string
+    consumedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type AuthorizationCodeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    codeHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    redirectUri?: StringFieldUpdateOperationsInput | string
+    scopes?: AuthorizationCodeUpdatescopesInput | string[]
+    nonce?: NullableStringFieldUpdateOperationsInput | string | null
+    codeChallenge?: StringFieldUpdateOperationsInput | string
+    codeChallengeMethod?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    consumedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuthorizationCodeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    codeHash?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    redirectUri?: StringFieldUpdateOperationsInput | string
+    scopes?: AuthorizationCodeUpdatescopesInput | string[]
+    nonce?: NullableStringFieldUpdateOperationsInput | string | null
+    codeChallenge?: StringFieldUpdateOperationsInput | string
+    codeChallengeMethod?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    consumedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RefreshGrantCreateInput = {
+    id?: string
+    tokenHash: string
+    userId: string
+    tenantId: string
+    sid: string
+    scopes?: RefreshGrantCreatescopesInput | string[]
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    rotatedFromId?: string | null
+    createdAt?: Date | string
+    client: OAuthClientCreateNestedOneWithoutRefreshGrantsInput
+  }
+
+  export type RefreshGrantUncheckedCreateInput = {
+    id?: string
+    tokenHash: string
+    clientId: string
+    userId: string
+    tenantId: string
+    sid: string
+    scopes?: RefreshGrantCreatescopesInput | string[]
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    rotatedFromId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type RefreshGrantUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    scopes?: RefreshGrantUpdatescopesInput | string[]
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotatedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    client?: OAuthClientUpdateOneRequiredWithoutRefreshGrantsNestedInput
+  }
+
+  export type RefreshGrantUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    scopes?: RefreshGrantUpdatescopesInput | string[]
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotatedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RefreshGrantCreateManyInput = {
+    id?: string
+    tokenHash: string
+    clientId: string
+    userId: string
+    tenantId: string
+    sid: string
+    scopes?: RefreshGrantCreatescopesInput | string[]
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    rotatedFromId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type RefreshGrantUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    scopes?: RefreshGrantUpdatescopesInput | string[]
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotatedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RefreshGrantUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    scopes?: RefreshGrantUpdatescopesInput | string[]
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotatedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ClientConsentCreateInput = {
+    id?: string
+    userId: string
+    tenantId: string
+    scopes?: ClientConsentCreatescopesInput | string[]
+    grantedAt?: Date | string
+    revokedAt?: Date | string | null
+    client: OAuthClientCreateNestedOneWithoutConsentsInput
+  }
+
+  export type ClientConsentUncheckedCreateInput = {
+    id?: string
+    clientId: string
+    userId: string
+    tenantId: string
+    scopes?: ClientConsentCreatescopesInput | string[]
+    grantedAt?: Date | string
+    revokedAt?: Date | string | null
+  }
+
+  export type ClientConsentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    scopes?: ClientConsentUpdatescopesInput | string[]
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    client?: OAuthClientUpdateOneRequiredWithoutConsentsNestedInput
+  }
+
+  export type ClientConsentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    scopes?: ClientConsentUpdatescopesInput | string[]
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ClientConsentCreateManyInput = {
+    id?: string
+    clientId: string
+    userId: string
+    tenantId: string
+    scopes?: ClientConsentCreatescopesInput | string[]
+    grantedAt?: Date | string
+    revokedAt?: Date | string | null
+  }
+
+  export type ClientConsentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    scopes?: ClientConsentUpdatescopesInput | string[]
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ClientConsentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    scopes?: ClientConsentUpdatescopesInput | string[]
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type OidcSigningKeyCreateInput = {
+    id: string
+    alg?: string
+    publicJwk: JsonNullValueInput | InputJsonValue
+    privateKeyPemEnc: string
+    status?: string
+    createdAt?: Date | string
+    retiredAt?: Date | string | null
+  }
+
+  export type OidcSigningKeyUncheckedCreateInput = {
+    id: string
+    alg?: string
+    publicJwk: JsonNullValueInput | InputJsonValue
+    privateKeyPemEnc: string
+    status?: string
+    createdAt?: Date | string
+    retiredAt?: Date | string | null
+  }
+
+  export type OidcSigningKeyUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    alg?: StringFieldUpdateOperationsInput | string
+    publicJwk?: JsonNullValueInput | InputJsonValue
+    privateKeyPemEnc?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    retiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type OidcSigningKeyUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    alg?: StringFieldUpdateOperationsInput | string
+    publicJwk?: JsonNullValueInput | InputJsonValue
+    privateKeyPemEnc?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    retiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type OidcSigningKeyCreateManyInput = {
+    id: string
+    alg?: string
+    publicJwk: JsonNullValueInput | InputJsonValue
+    privateKeyPemEnc: string
+    status?: string
+    createdAt?: Date | string
+    retiredAt?: Date | string | null
+  }
+
+  export type OidcSigningKeyUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    alg?: StringFieldUpdateOperationsInput | string
+    publicJwk?: JsonNullValueInput | InputJsonValue
+    privateKeyPemEnc?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    retiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type OidcSigningKeyUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    alg?: StringFieldUpdateOperationsInput | string
+    publicJwk?: JsonNullValueInput | InputJsonValue
+    privateKeyPemEnc?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    retiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type LoginAttemptCounterCreateInput = {
+    id?: string
+    ipHash: string
+    attempts?: number
+    lockedUntil?: Date | string | null
+    firstSeenAt?: Date | string
+    lastSeenAt?: Date | string
+  }
+
+  export type LoginAttemptCounterUncheckedCreateInput = {
+    id?: string
+    ipHash: string
+    attempts?: number
+    lockedUntil?: Date | string | null
+    firstSeenAt?: Date | string
+    lastSeenAt?: Date | string
+  }
+
+  export type LoginAttemptCounterUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ipHash?: StringFieldUpdateOperationsInput | string
+    attempts?: IntFieldUpdateOperationsInput | number
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    firstSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LoginAttemptCounterUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ipHash?: StringFieldUpdateOperationsInput | string
+    attempts?: IntFieldUpdateOperationsInput | number
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    firstSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LoginAttemptCounterCreateManyInput = {
+    id?: string
+    ipHash: string
+    attempts?: number
+    lockedUntil?: Date | string | null
+    firstSeenAt?: Date | string
+    lastSeenAt?: Date | string
+  }
+
+  export type LoginAttemptCounterUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ipHash?: StringFieldUpdateOperationsInput | string
+    attempts?: IntFieldUpdateOperationsInput | number
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    firstSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LoginAttemptCounterUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ipHash?: StringFieldUpdateOperationsInput | string
+    attempts?: IntFieldUpdateOperationsInput | number
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    firstSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlatformCreateInput = {
+    code: string
+    name: string
+    port: number
+    baseUrl: string
+    icon?: string | null
+    audience?: string
+    requiresTenant?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    grants?: PlatformGrantCreateNestedManyWithoutPlatformInput
+  }
+
+  export type PlatformUncheckedCreateInput = {
+    code: string
+    name: string
+    port: number
+    baseUrl: string
+    icon?: string | null
+    audience?: string
+    requiresTenant?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    grants?: PlatformGrantUncheckedCreateNestedManyWithoutPlatformInput
+  }
+
+  export type PlatformUpdateInput = {
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    baseUrl?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
+    audience?: StringFieldUpdateOperationsInput | string
+    requiresTenant?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    grants?: PlatformGrantUpdateManyWithoutPlatformNestedInput
+  }
+
+  export type PlatformUncheckedUpdateInput = {
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    baseUrl?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
+    audience?: StringFieldUpdateOperationsInput | string
+    requiresTenant?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    grants?: PlatformGrantUncheckedUpdateManyWithoutPlatformNestedInput
+  }
+
+  export type PlatformCreateManyInput = {
+    code: string
+    name: string
+    port: number
+    baseUrl: string
+    icon?: string | null
+    audience?: string
+    requiresTenant?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PlatformUpdateManyMutationInput = {
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    baseUrl?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
+    audience?: StringFieldUpdateOperationsInput | string
+    requiresTenant?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlatformUncheckedUpdateManyInput = {
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    baseUrl?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
+    audience?: StringFieldUpdateOperationsInput | string
+    requiresTenant?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlatformGrantCreateInput = {
+    id?: string
+    subjectType: string
+    subjectId: string
+    tenantId?: string | null
+    createdAt?: Date | string
+    platform: PlatformCreateNestedOneWithoutGrantsInput
+  }
+
+  export type PlatformGrantUncheckedCreateInput = {
+    id?: string
+    subjectType: string
+    subjectId: string
+    platformCode: string
+    tenantId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PlatformGrantUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectType?: StringFieldUpdateOperationsInput | string
+    subjectId?: StringFieldUpdateOperationsInput | string
+    tenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    platform?: PlatformUpdateOneRequiredWithoutGrantsNestedInput
+  }
+
+  export type PlatformGrantUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectType?: StringFieldUpdateOperationsInput | string
+    subjectId?: StringFieldUpdateOperationsInput | string
+    platformCode?: StringFieldUpdateOperationsInput | string
+    tenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlatformGrantCreateManyInput = {
+    id?: string
+    subjectType: string
+    subjectId: string
+    platformCode: string
+    tenantId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PlatformGrantUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectType?: StringFieldUpdateOperationsInput | string
+    subjectId?: StringFieldUpdateOperationsInput | string
+    tenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlatformGrantUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectType?: StringFieldUpdateOperationsInput | string
+    subjectId?: StringFieldUpdateOperationsInput | string
+    platformCode?: StringFieldUpdateOperationsInput | string
+    tenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDefinitionCreateInput = {
+    id?: string
+    tenantId: string
+    name: string
+    description?: string | null
+    allowedPermissions?: AgentDefinitionCreateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    delegations?: AgentDelegationCreateNestedManyWithoutAgentInput
+  }
+
+  export type AgentDefinitionUncheckedCreateInput = {
+    id?: string
+    tenantId: string
+    name: string
+    description?: string | null
+    allowedPermissions?: AgentDefinitionCreateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    delegations?: AgentDelegationUncheckedCreateNestedManyWithoutAgentInput
+  }
+
+  export type AgentDefinitionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedPermissions?: AgentDefinitionUpdateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    delegations?: AgentDelegationUpdateManyWithoutAgentNestedInput
+  }
+
+  export type AgentDefinitionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedPermissions?: AgentDefinitionUpdateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    delegations?: AgentDelegationUncheckedUpdateManyWithoutAgentNestedInput
+  }
+
+  export type AgentDefinitionCreateManyInput = {
+    id?: string
+    tenantId: string
+    name: string
+    description?: string | null
+    allowedPermissions?: AgentDefinitionCreateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AgentDefinitionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedPermissions?: AgentDefinitionUpdateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDefinitionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedPermissions?: AgentDefinitionUpdateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDelegationCreateInput = {
+    id?: string
+    tenantId: string
+    delegatingUserId: string
+    effectivePermissions?: AgentDelegationCreateeffectivePermissionsInput | string[]
+    sid: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+    agent: AgentDefinitionCreateNestedOneWithoutDelegationsInput
+  }
+
+  export type AgentDelegationUncheckedCreateInput = {
+    id?: string
+    tenantId: string
+    agentId: string
+    delegatingUserId: string
+    effectivePermissions?: AgentDelegationCreateeffectivePermissionsInput | string[]
+    sid: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type AgentDelegationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    delegatingUserId?: StringFieldUpdateOperationsInput | string
+    effectivePermissions?: AgentDelegationUpdateeffectivePermissionsInput | string[]
+    sid?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    agent?: AgentDefinitionUpdateOneRequiredWithoutDelegationsNestedInput
+  }
+
+  export type AgentDelegationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    delegatingUserId?: StringFieldUpdateOperationsInput | string
+    effectivePermissions?: AgentDelegationUpdateeffectivePermissionsInput | string[]
+    sid?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDelegationCreateManyInput = {
+    id?: string
+    tenantId: string
+    agentId: string
+    delegatingUserId: string
+    effectivePermissions?: AgentDelegationCreateeffectivePermissionsInput | string[]
+    sid: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type AgentDelegationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    delegatingUserId?: StringFieldUpdateOperationsInput | string
+    effectivePermissions?: AgentDelegationUpdateeffectivePermissionsInput | string[]
+    sid?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDelegationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    delegatingUserId?: StringFieldUpdateOperationsInput | string
+    effectivePermissions?: AgentDelegationUpdateeffectivePermissionsInput | string[]
+    sid?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -22349,6 +36356,452 @@ export namespace Prisma {
     expiresAt?: SortOrder
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type AuthorizationCodeListRelationFilter = {
+    every?: AuthorizationCodeWhereInput
+    some?: AuthorizationCodeWhereInput
+    none?: AuthorizationCodeWhereInput
+  }
+
+  export type RefreshGrantListRelationFilter = {
+    every?: RefreshGrantWhereInput
+    some?: RefreshGrantWhereInput
+    none?: RefreshGrantWhereInput
+  }
+
+  export type ClientConsentListRelationFilter = {
+    every?: ClientConsentWhereInput
+    some?: ClientConsentWhereInput
+    none?: ClientConsentWhereInput
+  }
+
+  export type AuthorizationCodeOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type RefreshGrantOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ClientConsentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type OAuthClientCountOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    name?: SortOrder
+    clientSecretHash?: SortOrder
+    clientType?: SortOrder
+    platformCode?: SortOrder
+    isFirstParty?: SortOrder
+    ownerTenantId?: SortOrder
+    redirectUris?: SortOrder
+    postLogoutRedirectUris?: SortOrder
+    grantTypes?: SortOrder
+    allowedScopes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OAuthClientMaxOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    name?: SortOrder
+    clientSecretHash?: SortOrder
+    clientType?: SortOrder
+    platformCode?: SortOrder
+    isFirstParty?: SortOrder
+    ownerTenantId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OAuthClientMinOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    name?: SortOrder
+    clientSecretHash?: SortOrder
+    clientType?: SortOrder
+    platformCode?: SortOrder
+    isFirstParty?: SortOrder
+    ownerTenantId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OAuthClientScalarRelationFilter = {
+    is?: OAuthClientWhereInput
+    isNot?: OAuthClientWhereInput
+  }
+
+  export type AuthorizationCodeCountOrderByAggregateInput = {
+    id?: SortOrder
+    codeHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    redirectUri?: SortOrder
+    scopes?: SortOrder
+    nonce?: SortOrder
+    codeChallenge?: SortOrder
+    codeChallengeMethod?: SortOrder
+    expiresAt?: SortOrder
+    consumedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AuthorizationCodeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    codeHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    redirectUri?: SortOrder
+    nonce?: SortOrder
+    codeChallenge?: SortOrder
+    codeChallengeMethod?: SortOrder
+    expiresAt?: SortOrder
+    consumedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AuthorizationCodeMinOrderByAggregateInput = {
+    id?: SortOrder
+    codeHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    redirectUri?: SortOrder
+    nonce?: SortOrder
+    codeChallenge?: SortOrder
+    codeChallengeMethod?: SortOrder
+    expiresAt?: SortOrder
+    consumedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RefreshGrantCountOrderByAggregateInput = {
+    id?: SortOrder
+    tokenHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    scopes?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    rotatedFromId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RefreshGrantMaxOrderByAggregateInput = {
+    id?: SortOrder
+    tokenHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    rotatedFromId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RefreshGrantMinOrderByAggregateInput = {
+    id?: SortOrder
+    tokenHash?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    sid?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    rotatedFromId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ClientConsentClientIdUserIdTenantIdCompoundUniqueInput = {
+    clientId: string
+    userId: string
+    tenantId: string
+  }
+
+  export type ClientConsentCountOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    scopes?: SortOrder
+    grantedAt?: SortOrder
+    revokedAt?: SortOrder
+  }
+
+  export type ClientConsentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    grantedAt?: SortOrder
+    revokedAt?: SortOrder
+  }
+
+  export type ClientConsentMinOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    userId?: SortOrder
+    tenantId?: SortOrder
+    grantedAt?: SortOrder
+    revokedAt?: SortOrder
+  }
+
+  export type OidcSigningKeyCountOrderByAggregateInput = {
+    id?: SortOrder
+    alg?: SortOrder
+    publicJwk?: SortOrder
+    privateKeyPemEnc?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    retiredAt?: SortOrder
+  }
+
+  export type OidcSigningKeyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    alg?: SortOrder
+    privateKeyPemEnc?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    retiredAt?: SortOrder
+  }
+
+  export type OidcSigningKeyMinOrderByAggregateInput = {
+    id?: SortOrder
+    alg?: SortOrder
+    privateKeyPemEnc?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    retiredAt?: SortOrder
+  }
+
+  export type LoginAttemptCounterCountOrderByAggregateInput = {
+    id?: SortOrder
+    ipHash?: SortOrder
+    attempts?: SortOrder
+    lockedUntil?: SortOrder
+    firstSeenAt?: SortOrder
+    lastSeenAt?: SortOrder
+  }
+
+  export type LoginAttemptCounterAvgOrderByAggregateInput = {
+    attempts?: SortOrder
+  }
+
+  export type LoginAttemptCounterMaxOrderByAggregateInput = {
+    id?: SortOrder
+    ipHash?: SortOrder
+    attempts?: SortOrder
+    lockedUntil?: SortOrder
+    firstSeenAt?: SortOrder
+    lastSeenAt?: SortOrder
+  }
+
+  export type LoginAttemptCounterMinOrderByAggregateInput = {
+    id?: SortOrder
+    ipHash?: SortOrder
+    attempts?: SortOrder
+    lockedUntil?: SortOrder
+    firstSeenAt?: SortOrder
+    lastSeenAt?: SortOrder
+  }
+
+  export type LoginAttemptCounterSumOrderByAggregateInput = {
+    attempts?: SortOrder
+  }
+
+  export type PlatformGrantListRelationFilter = {
+    every?: PlatformGrantWhereInput
+    some?: PlatformGrantWhereInput
+    none?: PlatformGrantWhereInput
+  }
+
+  export type PlatformGrantOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PlatformCountOrderByAggregateInput = {
+    code?: SortOrder
+    name?: SortOrder
+    port?: SortOrder
+    baseUrl?: SortOrder
+    icon?: SortOrder
+    audience?: SortOrder
+    requiresTenant?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlatformAvgOrderByAggregateInput = {
+    port?: SortOrder
+  }
+
+  export type PlatformMaxOrderByAggregateInput = {
+    code?: SortOrder
+    name?: SortOrder
+    port?: SortOrder
+    baseUrl?: SortOrder
+    icon?: SortOrder
+    audience?: SortOrder
+    requiresTenant?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlatformMinOrderByAggregateInput = {
+    code?: SortOrder
+    name?: SortOrder
+    port?: SortOrder
+    baseUrl?: SortOrder
+    icon?: SortOrder
+    audience?: SortOrder
+    requiresTenant?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlatformSumOrderByAggregateInput = {
+    port?: SortOrder
+  }
+
+  export type PlatformScalarRelationFilter = {
+    is?: PlatformWhereInput
+    isNot?: PlatformWhereInput
+  }
+
+  export type PlatformGrantCountOrderByAggregateInput = {
+    id?: SortOrder
+    subjectType?: SortOrder
+    subjectId?: SortOrder
+    platformCode?: SortOrder
+    tenantId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlatformGrantMaxOrderByAggregateInput = {
+    id?: SortOrder
+    subjectType?: SortOrder
+    subjectId?: SortOrder
+    platformCode?: SortOrder
+    tenantId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlatformGrantMinOrderByAggregateInput = {
+    id?: SortOrder
+    subjectType?: SortOrder
+    subjectId?: SortOrder
+    platformCode?: SortOrder
+    tenantId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentDelegationListRelationFilter = {
+    every?: AgentDelegationWhereInput
+    some?: AgentDelegationWhereInput
+    none?: AgentDelegationWhereInput
+  }
+
+  export type AgentDelegationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AgentDefinitionTenantIdNameCompoundUniqueInput = {
+    tenantId: string
+    name: string
+  }
+
+  export type AgentDefinitionCountOrderByAggregateInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    allowedPermissions?: SortOrder
+    requiresConfirmationAbove?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AgentDefinitionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    requiresConfirmationAbove?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AgentDefinitionMinOrderByAggregateInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    requiresConfirmationAbove?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AgentDefinitionScalarRelationFilter = {
+    is?: AgentDefinitionWhereInput
+    isNot?: AgentDefinitionWhereInput
+  }
+
+  export type AgentDelegationCountOrderByAggregateInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    agentId?: SortOrder
+    delegatingUserId?: SortOrder
+    effectivePermissions?: SortOrder
+    sid?: SortOrder
+    expiresAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentDelegationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    agentId?: SortOrder
+    delegatingUserId?: SortOrder
+    sid?: SortOrder
+    expiresAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentDelegationMinOrderByAggregateInput = {
+    id?: SortOrder
+    tenantId?: SortOrder
+    agentId?: SortOrder
+    delegatingUserId?: SortOrder
+    sid?: SortOrder
+    expiresAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type UserRoleCreateNestedManyWithoutUserInput = {
     create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
@@ -22871,6 +37324,367 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutGroupMembershipsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutGroupMembershipsInput, UserUpdateWithoutGroupMembershipsInput>, UserUncheckedUpdateWithoutGroupMembershipsInput>
+  }
+
+  export type OAuthClientCreateredirectUrisInput = {
+    set: string[]
+  }
+
+  export type OAuthClientCreatepostLogoutRedirectUrisInput = {
+    set: string[]
+  }
+
+  export type OAuthClientCreategrantTypesInput = {
+    set: string[]
+  }
+
+  export type OAuthClientCreateallowedScopesInput = {
+    set: string[]
+  }
+
+  export type AuthorizationCodeCreateNestedManyWithoutClientInput = {
+    create?: XOR<AuthorizationCodeCreateWithoutClientInput, AuthorizationCodeUncheckedCreateWithoutClientInput> | AuthorizationCodeCreateWithoutClientInput[] | AuthorizationCodeUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: AuthorizationCodeCreateOrConnectWithoutClientInput | AuthorizationCodeCreateOrConnectWithoutClientInput[]
+    createMany?: AuthorizationCodeCreateManyClientInputEnvelope
+    connect?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+  }
+
+  export type RefreshGrantCreateNestedManyWithoutClientInput = {
+    create?: XOR<RefreshGrantCreateWithoutClientInput, RefreshGrantUncheckedCreateWithoutClientInput> | RefreshGrantCreateWithoutClientInput[] | RefreshGrantUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: RefreshGrantCreateOrConnectWithoutClientInput | RefreshGrantCreateOrConnectWithoutClientInput[]
+    createMany?: RefreshGrantCreateManyClientInputEnvelope
+    connect?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+  }
+
+  export type ClientConsentCreateNestedManyWithoutClientInput = {
+    create?: XOR<ClientConsentCreateWithoutClientInput, ClientConsentUncheckedCreateWithoutClientInput> | ClientConsentCreateWithoutClientInput[] | ClientConsentUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: ClientConsentCreateOrConnectWithoutClientInput | ClientConsentCreateOrConnectWithoutClientInput[]
+    createMany?: ClientConsentCreateManyClientInputEnvelope
+    connect?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+  }
+
+  export type AuthorizationCodeUncheckedCreateNestedManyWithoutClientInput = {
+    create?: XOR<AuthorizationCodeCreateWithoutClientInput, AuthorizationCodeUncheckedCreateWithoutClientInput> | AuthorizationCodeCreateWithoutClientInput[] | AuthorizationCodeUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: AuthorizationCodeCreateOrConnectWithoutClientInput | AuthorizationCodeCreateOrConnectWithoutClientInput[]
+    createMany?: AuthorizationCodeCreateManyClientInputEnvelope
+    connect?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+  }
+
+  export type RefreshGrantUncheckedCreateNestedManyWithoutClientInput = {
+    create?: XOR<RefreshGrantCreateWithoutClientInput, RefreshGrantUncheckedCreateWithoutClientInput> | RefreshGrantCreateWithoutClientInput[] | RefreshGrantUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: RefreshGrantCreateOrConnectWithoutClientInput | RefreshGrantCreateOrConnectWithoutClientInput[]
+    createMany?: RefreshGrantCreateManyClientInputEnvelope
+    connect?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+  }
+
+  export type ClientConsentUncheckedCreateNestedManyWithoutClientInput = {
+    create?: XOR<ClientConsentCreateWithoutClientInput, ClientConsentUncheckedCreateWithoutClientInput> | ClientConsentCreateWithoutClientInput[] | ClientConsentUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: ClientConsentCreateOrConnectWithoutClientInput | ClientConsentCreateOrConnectWithoutClientInput[]
+    createMany?: ClientConsentCreateManyClientInputEnvelope
+    connect?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+  }
+
+  export type OAuthClientUpdateredirectUrisInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type OAuthClientUpdatepostLogoutRedirectUrisInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type OAuthClientUpdategrantTypesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type OAuthClientUpdateallowedScopesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type AuthorizationCodeUpdateManyWithoutClientNestedInput = {
+    create?: XOR<AuthorizationCodeCreateWithoutClientInput, AuthorizationCodeUncheckedCreateWithoutClientInput> | AuthorizationCodeCreateWithoutClientInput[] | AuthorizationCodeUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: AuthorizationCodeCreateOrConnectWithoutClientInput | AuthorizationCodeCreateOrConnectWithoutClientInput[]
+    upsert?: AuthorizationCodeUpsertWithWhereUniqueWithoutClientInput | AuthorizationCodeUpsertWithWhereUniqueWithoutClientInput[]
+    createMany?: AuthorizationCodeCreateManyClientInputEnvelope
+    set?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+    disconnect?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+    delete?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+    connect?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+    update?: AuthorizationCodeUpdateWithWhereUniqueWithoutClientInput | AuthorizationCodeUpdateWithWhereUniqueWithoutClientInput[]
+    updateMany?: AuthorizationCodeUpdateManyWithWhereWithoutClientInput | AuthorizationCodeUpdateManyWithWhereWithoutClientInput[]
+    deleteMany?: AuthorizationCodeScalarWhereInput | AuthorizationCodeScalarWhereInput[]
+  }
+
+  export type RefreshGrantUpdateManyWithoutClientNestedInput = {
+    create?: XOR<RefreshGrantCreateWithoutClientInput, RefreshGrantUncheckedCreateWithoutClientInput> | RefreshGrantCreateWithoutClientInput[] | RefreshGrantUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: RefreshGrantCreateOrConnectWithoutClientInput | RefreshGrantCreateOrConnectWithoutClientInput[]
+    upsert?: RefreshGrantUpsertWithWhereUniqueWithoutClientInput | RefreshGrantUpsertWithWhereUniqueWithoutClientInput[]
+    createMany?: RefreshGrantCreateManyClientInputEnvelope
+    set?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+    disconnect?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+    delete?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+    connect?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+    update?: RefreshGrantUpdateWithWhereUniqueWithoutClientInput | RefreshGrantUpdateWithWhereUniqueWithoutClientInput[]
+    updateMany?: RefreshGrantUpdateManyWithWhereWithoutClientInput | RefreshGrantUpdateManyWithWhereWithoutClientInput[]
+    deleteMany?: RefreshGrantScalarWhereInput | RefreshGrantScalarWhereInput[]
+  }
+
+  export type ClientConsentUpdateManyWithoutClientNestedInput = {
+    create?: XOR<ClientConsentCreateWithoutClientInput, ClientConsentUncheckedCreateWithoutClientInput> | ClientConsentCreateWithoutClientInput[] | ClientConsentUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: ClientConsentCreateOrConnectWithoutClientInput | ClientConsentCreateOrConnectWithoutClientInput[]
+    upsert?: ClientConsentUpsertWithWhereUniqueWithoutClientInput | ClientConsentUpsertWithWhereUniqueWithoutClientInput[]
+    createMany?: ClientConsentCreateManyClientInputEnvelope
+    set?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+    disconnect?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+    delete?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+    connect?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+    update?: ClientConsentUpdateWithWhereUniqueWithoutClientInput | ClientConsentUpdateWithWhereUniqueWithoutClientInput[]
+    updateMany?: ClientConsentUpdateManyWithWhereWithoutClientInput | ClientConsentUpdateManyWithWhereWithoutClientInput[]
+    deleteMany?: ClientConsentScalarWhereInput | ClientConsentScalarWhereInput[]
+  }
+
+  export type AuthorizationCodeUncheckedUpdateManyWithoutClientNestedInput = {
+    create?: XOR<AuthorizationCodeCreateWithoutClientInput, AuthorizationCodeUncheckedCreateWithoutClientInput> | AuthorizationCodeCreateWithoutClientInput[] | AuthorizationCodeUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: AuthorizationCodeCreateOrConnectWithoutClientInput | AuthorizationCodeCreateOrConnectWithoutClientInput[]
+    upsert?: AuthorizationCodeUpsertWithWhereUniqueWithoutClientInput | AuthorizationCodeUpsertWithWhereUniqueWithoutClientInput[]
+    createMany?: AuthorizationCodeCreateManyClientInputEnvelope
+    set?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+    disconnect?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+    delete?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+    connect?: AuthorizationCodeWhereUniqueInput | AuthorizationCodeWhereUniqueInput[]
+    update?: AuthorizationCodeUpdateWithWhereUniqueWithoutClientInput | AuthorizationCodeUpdateWithWhereUniqueWithoutClientInput[]
+    updateMany?: AuthorizationCodeUpdateManyWithWhereWithoutClientInput | AuthorizationCodeUpdateManyWithWhereWithoutClientInput[]
+    deleteMany?: AuthorizationCodeScalarWhereInput | AuthorizationCodeScalarWhereInput[]
+  }
+
+  export type RefreshGrantUncheckedUpdateManyWithoutClientNestedInput = {
+    create?: XOR<RefreshGrantCreateWithoutClientInput, RefreshGrantUncheckedCreateWithoutClientInput> | RefreshGrantCreateWithoutClientInput[] | RefreshGrantUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: RefreshGrantCreateOrConnectWithoutClientInput | RefreshGrantCreateOrConnectWithoutClientInput[]
+    upsert?: RefreshGrantUpsertWithWhereUniqueWithoutClientInput | RefreshGrantUpsertWithWhereUniqueWithoutClientInput[]
+    createMany?: RefreshGrantCreateManyClientInputEnvelope
+    set?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+    disconnect?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+    delete?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+    connect?: RefreshGrantWhereUniqueInput | RefreshGrantWhereUniqueInput[]
+    update?: RefreshGrantUpdateWithWhereUniqueWithoutClientInput | RefreshGrantUpdateWithWhereUniqueWithoutClientInput[]
+    updateMany?: RefreshGrantUpdateManyWithWhereWithoutClientInput | RefreshGrantUpdateManyWithWhereWithoutClientInput[]
+    deleteMany?: RefreshGrantScalarWhereInput | RefreshGrantScalarWhereInput[]
+  }
+
+  export type ClientConsentUncheckedUpdateManyWithoutClientNestedInput = {
+    create?: XOR<ClientConsentCreateWithoutClientInput, ClientConsentUncheckedCreateWithoutClientInput> | ClientConsentCreateWithoutClientInput[] | ClientConsentUncheckedCreateWithoutClientInput[]
+    connectOrCreate?: ClientConsentCreateOrConnectWithoutClientInput | ClientConsentCreateOrConnectWithoutClientInput[]
+    upsert?: ClientConsentUpsertWithWhereUniqueWithoutClientInput | ClientConsentUpsertWithWhereUniqueWithoutClientInput[]
+    createMany?: ClientConsentCreateManyClientInputEnvelope
+    set?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+    disconnect?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+    delete?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+    connect?: ClientConsentWhereUniqueInput | ClientConsentWhereUniqueInput[]
+    update?: ClientConsentUpdateWithWhereUniqueWithoutClientInput | ClientConsentUpdateWithWhereUniqueWithoutClientInput[]
+    updateMany?: ClientConsentUpdateManyWithWhereWithoutClientInput | ClientConsentUpdateManyWithWhereWithoutClientInput[]
+    deleteMany?: ClientConsentScalarWhereInput | ClientConsentScalarWhereInput[]
+  }
+
+  export type AuthorizationCodeCreatescopesInput = {
+    set: string[]
+  }
+
+  export type OAuthClientCreateNestedOneWithoutAuthorizationCodesInput = {
+    create?: XOR<OAuthClientCreateWithoutAuthorizationCodesInput, OAuthClientUncheckedCreateWithoutAuthorizationCodesInput>
+    connectOrCreate?: OAuthClientCreateOrConnectWithoutAuthorizationCodesInput
+    connect?: OAuthClientWhereUniqueInput
+  }
+
+  export type AuthorizationCodeUpdatescopesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type OAuthClientUpdateOneRequiredWithoutAuthorizationCodesNestedInput = {
+    create?: XOR<OAuthClientCreateWithoutAuthorizationCodesInput, OAuthClientUncheckedCreateWithoutAuthorizationCodesInput>
+    connectOrCreate?: OAuthClientCreateOrConnectWithoutAuthorizationCodesInput
+    upsert?: OAuthClientUpsertWithoutAuthorizationCodesInput
+    connect?: OAuthClientWhereUniqueInput
+    update?: XOR<XOR<OAuthClientUpdateToOneWithWhereWithoutAuthorizationCodesInput, OAuthClientUpdateWithoutAuthorizationCodesInput>, OAuthClientUncheckedUpdateWithoutAuthorizationCodesInput>
+  }
+
+  export type RefreshGrantCreatescopesInput = {
+    set: string[]
+  }
+
+  export type OAuthClientCreateNestedOneWithoutRefreshGrantsInput = {
+    create?: XOR<OAuthClientCreateWithoutRefreshGrantsInput, OAuthClientUncheckedCreateWithoutRefreshGrantsInput>
+    connectOrCreate?: OAuthClientCreateOrConnectWithoutRefreshGrantsInput
+    connect?: OAuthClientWhereUniqueInput
+  }
+
+  export type RefreshGrantUpdatescopesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type OAuthClientUpdateOneRequiredWithoutRefreshGrantsNestedInput = {
+    create?: XOR<OAuthClientCreateWithoutRefreshGrantsInput, OAuthClientUncheckedCreateWithoutRefreshGrantsInput>
+    connectOrCreate?: OAuthClientCreateOrConnectWithoutRefreshGrantsInput
+    upsert?: OAuthClientUpsertWithoutRefreshGrantsInput
+    connect?: OAuthClientWhereUniqueInput
+    update?: XOR<XOR<OAuthClientUpdateToOneWithWhereWithoutRefreshGrantsInput, OAuthClientUpdateWithoutRefreshGrantsInput>, OAuthClientUncheckedUpdateWithoutRefreshGrantsInput>
+  }
+
+  export type ClientConsentCreatescopesInput = {
+    set: string[]
+  }
+
+  export type OAuthClientCreateNestedOneWithoutConsentsInput = {
+    create?: XOR<OAuthClientCreateWithoutConsentsInput, OAuthClientUncheckedCreateWithoutConsentsInput>
+    connectOrCreate?: OAuthClientCreateOrConnectWithoutConsentsInput
+    connect?: OAuthClientWhereUniqueInput
+  }
+
+  export type ClientConsentUpdatescopesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type OAuthClientUpdateOneRequiredWithoutConsentsNestedInput = {
+    create?: XOR<OAuthClientCreateWithoutConsentsInput, OAuthClientUncheckedCreateWithoutConsentsInput>
+    connectOrCreate?: OAuthClientCreateOrConnectWithoutConsentsInput
+    upsert?: OAuthClientUpsertWithoutConsentsInput
+    connect?: OAuthClientWhereUniqueInput
+    update?: XOR<XOR<OAuthClientUpdateToOneWithWhereWithoutConsentsInput, OAuthClientUpdateWithoutConsentsInput>, OAuthClientUncheckedUpdateWithoutConsentsInput>
+  }
+
+  export type PlatformGrantCreateNestedManyWithoutPlatformInput = {
+    create?: XOR<PlatformGrantCreateWithoutPlatformInput, PlatformGrantUncheckedCreateWithoutPlatformInput> | PlatformGrantCreateWithoutPlatformInput[] | PlatformGrantUncheckedCreateWithoutPlatformInput[]
+    connectOrCreate?: PlatformGrantCreateOrConnectWithoutPlatformInput | PlatformGrantCreateOrConnectWithoutPlatformInput[]
+    createMany?: PlatformGrantCreateManyPlatformInputEnvelope
+    connect?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+  }
+
+  export type PlatformGrantUncheckedCreateNestedManyWithoutPlatformInput = {
+    create?: XOR<PlatformGrantCreateWithoutPlatformInput, PlatformGrantUncheckedCreateWithoutPlatformInput> | PlatformGrantCreateWithoutPlatformInput[] | PlatformGrantUncheckedCreateWithoutPlatformInput[]
+    connectOrCreate?: PlatformGrantCreateOrConnectWithoutPlatformInput | PlatformGrantCreateOrConnectWithoutPlatformInput[]
+    createMany?: PlatformGrantCreateManyPlatformInputEnvelope
+    connect?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+  }
+
+  export type PlatformGrantUpdateManyWithoutPlatformNestedInput = {
+    create?: XOR<PlatformGrantCreateWithoutPlatformInput, PlatformGrantUncheckedCreateWithoutPlatformInput> | PlatformGrantCreateWithoutPlatformInput[] | PlatformGrantUncheckedCreateWithoutPlatformInput[]
+    connectOrCreate?: PlatformGrantCreateOrConnectWithoutPlatformInput | PlatformGrantCreateOrConnectWithoutPlatformInput[]
+    upsert?: PlatformGrantUpsertWithWhereUniqueWithoutPlatformInput | PlatformGrantUpsertWithWhereUniqueWithoutPlatformInput[]
+    createMany?: PlatformGrantCreateManyPlatformInputEnvelope
+    set?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+    disconnect?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+    delete?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+    connect?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+    update?: PlatformGrantUpdateWithWhereUniqueWithoutPlatformInput | PlatformGrantUpdateWithWhereUniqueWithoutPlatformInput[]
+    updateMany?: PlatformGrantUpdateManyWithWhereWithoutPlatformInput | PlatformGrantUpdateManyWithWhereWithoutPlatformInput[]
+    deleteMany?: PlatformGrantScalarWhereInput | PlatformGrantScalarWhereInput[]
+  }
+
+  export type PlatformGrantUncheckedUpdateManyWithoutPlatformNestedInput = {
+    create?: XOR<PlatformGrantCreateWithoutPlatformInput, PlatformGrantUncheckedCreateWithoutPlatformInput> | PlatformGrantCreateWithoutPlatformInput[] | PlatformGrantUncheckedCreateWithoutPlatformInput[]
+    connectOrCreate?: PlatformGrantCreateOrConnectWithoutPlatformInput | PlatformGrantCreateOrConnectWithoutPlatformInput[]
+    upsert?: PlatformGrantUpsertWithWhereUniqueWithoutPlatformInput | PlatformGrantUpsertWithWhereUniqueWithoutPlatformInput[]
+    createMany?: PlatformGrantCreateManyPlatformInputEnvelope
+    set?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+    disconnect?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+    delete?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+    connect?: PlatformGrantWhereUniqueInput | PlatformGrantWhereUniqueInput[]
+    update?: PlatformGrantUpdateWithWhereUniqueWithoutPlatformInput | PlatformGrantUpdateWithWhereUniqueWithoutPlatformInput[]
+    updateMany?: PlatformGrantUpdateManyWithWhereWithoutPlatformInput | PlatformGrantUpdateManyWithWhereWithoutPlatformInput[]
+    deleteMany?: PlatformGrantScalarWhereInput | PlatformGrantScalarWhereInput[]
+  }
+
+  export type PlatformCreateNestedOneWithoutGrantsInput = {
+    create?: XOR<PlatformCreateWithoutGrantsInput, PlatformUncheckedCreateWithoutGrantsInput>
+    connectOrCreate?: PlatformCreateOrConnectWithoutGrantsInput
+    connect?: PlatformWhereUniqueInput
+  }
+
+  export type PlatformUpdateOneRequiredWithoutGrantsNestedInput = {
+    create?: XOR<PlatformCreateWithoutGrantsInput, PlatformUncheckedCreateWithoutGrantsInput>
+    connectOrCreate?: PlatformCreateOrConnectWithoutGrantsInput
+    upsert?: PlatformUpsertWithoutGrantsInput
+    connect?: PlatformWhereUniqueInput
+    update?: XOR<XOR<PlatformUpdateToOneWithWhereWithoutGrantsInput, PlatformUpdateWithoutGrantsInput>, PlatformUncheckedUpdateWithoutGrantsInput>
+  }
+
+  export type AgentDefinitionCreateallowedPermissionsInput = {
+    set: string[]
+  }
+
+  export type AgentDelegationCreateNestedManyWithoutAgentInput = {
+    create?: XOR<AgentDelegationCreateWithoutAgentInput, AgentDelegationUncheckedCreateWithoutAgentInput> | AgentDelegationCreateWithoutAgentInput[] | AgentDelegationUncheckedCreateWithoutAgentInput[]
+    connectOrCreate?: AgentDelegationCreateOrConnectWithoutAgentInput | AgentDelegationCreateOrConnectWithoutAgentInput[]
+    createMany?: AgentDelegationCreateManyAgentInputEnvelope
+    connect?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+  }
+
+  export type AgentDelegationUncheckedCreateNestedManyWithoutAgentInput = {
+    create?: XOR<AgentDelegationCreateWithoutAgentInput, AgentDelegationUncheckedCreateWithoutAgentInput> | AgentDelegationCreateWithoutAgentInput[] | AgentDelegationUncheckedCreateWithoutAgentInput[]
+    connectOrCreate?: AgentDelegationCreateOrConnectWithoutAgentInput | AgentDelegationCreateOrConnectWithoutAgentInput[]
+    createMany?: AgentDelegationCreateManyAgentInputEnvelope
+    connect?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+  }
+
+  export type AgentDefinitionUpdateallowedPermissionsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type AgentDelegationUpdateManyWithoutAgentNestedInput = {
+    create?: XOR<AgentDelegationCreateWithoutAgentInput, AgentDelegationUncheckedCreateWithoutAgentInput> | AgentDelegationCreateWithoutAgentInput[] | AgentDelegationUncheckedCreateWithoutAgentInput[]
+    connectOrCreate?: AgentDelegationCreateOrConnectWithoutAgentInput | AgentDelegationCreateOrConnectWithoutAgentInput[]
+    upsert?: AgentDelegationUpsertWithWhereUniqueWithoutAgentInput | AgentDelegationUpsertWithWhereUniqueWithoutAgentInput[]
+    createMany?: AgentDelegationCreateManyAgentInputEnvelope
+    set?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+    disconnect?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+    delete?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+    connect?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+    update?: AgentDelegationUpdateWithWhereUniqueWithoutAgentInput | AgentDelegationUpdateWithWhereUniqueWithoutAgentInput[]
+    updateMany?: AgentDelegationUpdateManyWithWhereWithoutAgentInput | AgentDelegationUpdateManyWithWhereWithoutAgentInput[]
+    deleteMany?: AgentDelegationScalarWhereInput | AgentDelegationScalarWhereInput[]
+  }
+
+  export type AgentDelegationUncheckedUpdateManyWithoutAgentNestedInput = {
+    create?: XOR<AgentDelegationCreateWithoutAgentInput, AgentDelegationUncheckedCreateWithoutAgentInput> | AgentDelegationCreateWithoutAgentInput[] | AgentDelegationUncheckedCreateWithoutAgentInput[]
+    connectOrCreate?: AgentDelegationCreateOrConnectWithoutAgentInput | AgentDelegationCreateOrConnectWithoutAgentInput[]
+    upsert?: AgentDelegationUpsertWithWhereUniqueWithoutAgentInput | AgentDelegationUpsertWithWhereUniqueWithoutAgentInput[]
+    createMany?: AgentDelegationCreateManyAgentInputEnvelope
+    set?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+    disconnect?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+    delete?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+    connect?: AgentDelegationWhereUniqueInput | AgentDelegationWhereUniqueInput[]
+    update?: AgentDelegationUpdateWithWhereUniqueWithoutAgentInput | AgentDelegationUpdateWithWhereUniqueWithoutAgentInput[]
+    updateMany?: AgentDelegationUpdateManyWithWhereWithoutAgentInput | AgentDelegationUpdateManyWithWhereWithoutAgentInput[]
+    deleteMany?: AgentDelegationScalarWhereInput | AgentDelegationScalarWhereInput[]
+  }
+
+  export type AgentDelegationCreateeffectivePermissionsInput = {
+    set: string[]
+  }
+
+  export type AgentDefinitionCreateNestedOneWithoutDelegationsInput = {
+    create?: XOR<AgentDefinitionCreateWithoutDelegationsInput, AgentDefinitionUncheckedCreateWithoutDelegationsInput>
+    connectOrCreate?: AgentDefinitionCreateOrConnectWithoutDelegationsInput
+    connect?: AgentDefinitionWhereUniqueInput
+  }
+
+  export type AgentDelegationUpdateeffectivePermissionsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type AgentDefinitionUpdateOneRequiredWithoutDelegationsNestedInput = {
+    create?: XOR<AgentDefinitionCreateWithoutDelegationsInput, AgentDefinitionUncheckedCreateWithoutDelegationsInput>
+    connectOrCreate?: AgentDefinitionCreateOrConnectWithoutDelegationsInput
+    upsert?: AgentDefinitionUpsertWithoutDelegationsInput
+    connect?: AgentDefinitionWhereUniqueInput
+    update?: XOR<XOR<AgentDefinitionUpdateToOneWithWhereWithoutDelegationsInput, AgentDefinitionUpdateWithoutDelegationsInput>, AgentDefinitionUncheckedUpdateWithoutDelegationsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -24689,6 +39503,740 @@ export namespace Prisma {
     directReports?: UserProfileUncheckedUpdateManyWithoutManagerNestedInput
   }
 
+  export type AuthorizationCodeCreateWithoutClientInput = {
+    id?: string
+    codeHash: string
+    userId: string
+    tenantId: string
+    sid: string
+    redirectUri: string
+    scopes?: AuthorizationCodeCreatescopesInput | string[]
+    nonce?: string | null
+    codeChallenge: string
+    codeChallengeMethod?: string
+    expiresAt: Date | string
+    consumedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type AuthorizationCodeUncheckedCreateWithoutClientInput = {
+    id?: string
+    codeHash: string
+    userId: string
+    tenantId: string
+    sid: string
+    redirectUri: string
+    scopes?: AuthorizationCodeCreatescopesInput | string[]
+    nonce?: string | null
+    codeChallenge: string
+    codeChallengeMethod?: string
+    expiresAt: Date | string
+    consumedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type AuthorizationCodeCreateOrConnectWithoutClientInput = {
+    where: AuthorizationCodeWhereUniqueInput
+    create: XOR<AuthorizationCodeCreateWithoutClientInput, AuthorizationCodeUncheckedCreateWithoutClientInput>
+  }
+
+  export type AuthorizationCodeCreateManyClientInputEnvelope = {
+    data: AuthorizationCodeCreateManyClientInput | AuthorizationCodeCreateManyClientInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type RefreshGrantCreateWithoutClientInput = {
+    id?: string
+    tokenHash: string
+    userId: string
+    tenantId: string
+    sid: string
+    scopes?: RefreshGrantCreatescopesInput | string[]
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    rotatedFromId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type RefreshGrantUncheckedCreateWithoutClientInput = {
+    id?: string
+    tokenHash: string
+    userId: string
+    tenantId: string
+    sid: string
+    scopes?: RefreshGrantCreatescopesInput | string[]
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    rotatedFromId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type RefreshGrantCreateOrConnectWithoutClientInput = {
+    where: RefreshGrantWhereUniqueInput
+    create: XOR<RefreshGrantCreateWithoutClientInput, RefreshGrantUncheckedCreateWithoutClientInput>
+  }
+
+  export type RefreshGrantCreateManyClientInputEnvelope = {
+    data: RefreshGrantCreateManyClientInput | RefreshGrantCreateManyClientInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ClientConsentCreateWithoutClientInput = {
+    id?: string
+    userId: string
+    tenantId: string
+    scopes?: ClientConsentCreatescopesInput | string[]
+    grantedAt?: Date | string
+    revokedAt?: Date | string | null
+  }
+
+  export type ClientConsentUncheckedCreateWithoutClientInput = {
+    id?: string
+    userId: string
+    tenantId: string
+    scopes?: ClientConsentCreatescopesInput | string[]
+    grantedAt?: Date | string
+    revokedAt?: Date | string | null
+  }
+
+  export type ClientConsentCreateOrConnectWithoutClientInput = {
+    where: ClientConsentWhereUniqueInput
+    create: XOR<ClientConsentCreateWithoutClientInput, ClientConsentUncheckedCreateWithoutClientInput>
+  }
+
+  export type ClientConsentCreateManyClientInputEnvelope = {
+    data: ClientConsentCreateManyClientInput | ClientConsentCreateManyClientInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type AuthorizationCodeUpsertWithWhereUniqueWithoutClientInput = {
+    where: AuthorizationCodeWhereUniqueInput
+    update: XOR<AuthorizationCodeUpdateWithoutClientInput, AuthorizationCodeUncheckedUpdateWithoutClientInput>
+    create: XOR<AuthorizationCodeCreateWithoutClientInput, AuthorizationCodeUncheckedCreateWithoutClientInput>
+  }
+
+  export type AuthorizationCodeUpdateWithWhereUniqueWithoutClientInput = {
+    where: AuthorizationCodeWhereUniqueInput
+    data: XOR<AuthorizationCodeUpdateWithoutClientInput, AuthorizationCodeUncheckedUpdateWithoutClientInput>
+  }
+
+  export type AuthorizationCodeUpdateManyWithWhereWithoutClientInput = {
+    where: AuthorizationCodeScalarWhereInput
+    data: XOR<AuthorizationCodeUpdateManyMutationInput, AuthorizationCodeUncheckedUpdateManyWithoutClientInput>
+  }
+
+  export type AuthorizationCodeScalarWhereInput = {
+    AND?: AuthorizationCodeScalarWhereInput | AuthorizationCodeScalarWhereInput[]
+    OR?: AuthorizationCodeScalarWhereInput[]
+    NOT?: AuthorizationCodeScalarWhereInput | AuthorizationCodeScalarWhereInput[]
+    id?: StringFilter<"AuthorizationCode"> | string
+    codeHash?: StringFilter<"AuthorizationCode"> | string
+    clientId?: StringFilter<"AuthorizationCode"> | string
+    userId?: StringFilter<"AuthorizationCode"> | string
+    tenantId?: StringFilter<"AuthorizationCode"> | string
+    sid?: StringFilter<"AuthorizationCode"> | string
+    redirectUri?: StringFilter<"AuthorizationCode"> | string
+    scopes?: StringNullableListFilter<"AuthorizationCode">
+    nonce?: StringNullableFilter<"AuthorizationCode"> | string | null
+    codeChallenge?: StringFilter<"AuthorizationCode"> | string
+    codeChallengeMethod?: StringFilter<"AuthorizationCode"> | string
+    expiresAt?: DateTimeFilter<"AuthorizationCode"> | Date | string
+    consumedAt?: DateTimeNullableFilter<"AuthorizationCode"> | Date | string | null
+    createdAt?: DateTimeFilter<"AuthorizationCode"> | Date | string
+  }
+
+  export type RefreshGrantUpsertWithWhereUniqueWithoutClientInput = {
+    where: RefreshGrantWhereUniqueInput
+    update: XOR<RefreshGrantUpdateWithoutClientInput, RefreshGrantUncheckedUpdateWithoutClientInput>
+    create: XOR<RefreshGrantCreateWithoutClientInput, RefreshGrantUncheckedCreateWithoutClientInput>
+  }
+
+  export type RefreshGrantUpdateWithWhereUniqueWithoutClientInput = {
+    where: RefreshGrantWhereUniqueInput
+    data: XOR<RefreshGrantUpdateWithoutClientInput, RefreshGrantUncheckedUpdateWithoutClientInput>
+  }
+
+  export type RefreshGrantUpdateManyWithWhereWithoutClientInput = {
+    where: RefreshGrantScalarWhereInput
+    data: XOR<RefreshGrantUpdateManyMutationInput, RefreshGrantUncheckedUpdateManyWithoutClientInput>
+  }
+
+  export type RefreshGrantScalarWhereInput = {
+    AND?: RefreshGrantScalarWhereInput | RefreshGrantScalarWhereInput[]
+    OR?: RefreshGrantScalarWhereInput[]
+    NOT?: RefreshGrantScalarWhereInput | RefreshGrantScalarWhereInput[]
+    id?: StringFilter<"RefreshGrant"> | string
+    tokenHash?: StringFilter<"RefreshGrant"> | string
+    clientId?: StringFilter<"RefreshGrant"> | string
+    userId?: StringFilter<"RefreshGrant"> | string
+    tenantId?: StringFilter<"RefreshGrant"> | string
+    sid?: StringFilter<"RefreshGrant"> | string
+    scopes?: StringNullableListFilter<"RefreshGrant">
+    expiresAt?: DateTimeFilter<"RefreshGrant"> | Date | string
+    revokedAt?: DateTimeNullableFilter<"RefreshGrant"> | Date | string | null
+    rotatedFromId?: StringNullableFilter<"RefreshGrant"> | string | null
+    createdAt?: DateTimeFilter<"RefreshGrant"> | Date | string
+  }
+
+  export type ClientConsentUpsertWithWhereUniqueWithoutClientInput = {
+    where: ClientConsentWhereUniqueInput
+    update: XOR<ClientConsentUpdateWithoutClientInput, ClientConsentUncheckedUpdateWithoutClientInput>
+    create: XOR<ClientConsentCreateWithoutClientInput, ClientConsentUncheckedCreateWithoutClientInput>
+  }
+
+  export type ClientConsentUpdateWithWhereUniqueWithoutClientInput = {
+    where: ClientConsentWhereUniqueInput
+    data: XOR<ClientConsentUpdateWithoutClientInput, ClientConsentUncheckedUpdateWithoutClientInput>
+  }
+
+  export type ClientConsentUpdateManyWithWhereWithoutClientInput = {
+    where: ClientConsentScalarWhereInput
+    data: XOR<ClientConsentUpdateManyMutationInput, ClientConsentUncheckedUpdateManyWithoutClientInput>
+  }
+
+  export type ClientConsentScalarWhereInput = {
+    AND?: ClientConsentScalarWhereInput | ClientConsentScalarWhereInput[]
+    OR?: ClientConsentScalarWhereInput[]
+    NOT?: ClientConsentScalarWhereInput | ClientConsentScalarWhereInput[]
+    id?: StringFilter<"ClientConsent"> | string
+    clientId?: StringFilter<"ClientConsent"> | string
+    userId?: StringFilter<"ClientConsent"> | string
+    tenantId?: StringFilter<"ClientConsent"> | string
+    scopes?: StringNullableListFilter<"ClientConsent">
+    grantedAt?: DateTimeFilter<"ClientConsent"> | Date | string
+    revokedAt?: DateTimeNullableFilter<"ClientConsent"> | Date | string | null
+  }
+
+  export type OAuthClientCreateWithoutAuthorizationCodesInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    refreshGrants?: RefreshGrantCreateNestedManyWithoutClientInput
+    consents?: ClientConsentCreateNestedManyWithoutClientInput
+  }
+
+  export type OAuthClientUncheckedCreateWithoutAuthorizationCodesInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    refreshGrants?: RefreshGrantUncheckedCreateNestedManyWithoutClientInput
+    consents?: ClientConsentUncheckedCreateNestedManyWithoutClientInput
+  }
+
+  export type OAuthClientCreateOrConnectWithoutAuthorizationCodesInput = {
+    where: OAuthClientWhereUniqueInput
+    create: XOR<OAuthClientCreateWithoutAuthorizationCodesInput, OAuthClientUncheckedCreateWithoutAuthorizationCodesInput>
+  }
+
+  export type OAuthClientUpsertWithoutAuthorizationCodesInput = {
+    update: XOR<OAuthClientUpdateWithoutAuthorizationCodesInput, OAuthClientUncheckedUpdateWithoutAuthorizationCodesInput>
+    create: XOR<OAuthClientCreateWithoutAuthorizationCodesInput, OAuthClientUncheckedCreateWithoutAuthorizationCodesInput>
+    where?: OAuthClientWhereInput
+  }
+
+  export type OAuthClientUpdateToOneWithWhereWithoutAuthorizationCodesInput = {
+    where?: OAuthClientWhereInput
+    data: XOR<OAuthClientUpdateWithoutAuthorizationCodesInput, OAuthClientUncheckedUpdateWithoutAuthorizationCodesInput>
+  }
+
+  export type OAuthClientUpdateWithoutAuthorizationCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    refreshGrants?: RefreshGrantUpdateManyWithoutClientNestedInput
+    consents?: ClientConsentUpdateManyWithoutClientNestedInput
+  }
+
+  export type OAuthClientUncheckedUpdateWithoutAuthorizationCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    refreshGrants?: RefreshGrantUncheckedUpdateManyWithoutClientNestedInput
+    consents?: ClientConsentUncheckedUpdateManyWithoutClientNestedInput
+  }
+
+  export type OAuthClientCreateWithoutRefreshGrantsInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    authorizationCodes?: AuthorizationCodeCreateNestedManyWithoutClientInput
+    consents?: ClientConsentCreateNestedManyWithoutClientInput
+  }
+
+  export type OAuthClientUncheckedCreateWithoutRefreshGrantsInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    authorizationCodes?: AuthorizationCodeUncheckedCreateNestedManyWithoutClientInput
+    consents?: ClientConsentUncheckedCreateNestedManyWithoutClientInput
+  }
+
+  export type OAuthClientCreateOrConnectWithoutRefreshGrantsInput = {
+    where: OAuthClientWhereUniqueInput
+    create: XOR<OAuthClientCreateWithoutRefreshGrantsInput, OAuthClientUncheckedCreateWithoutRefreshGrantsInput>
+  }
+
+  export type OAuthClientUpsertWithoutRefreshGrantsInput = {
+    update: XOR<OAuthClientUpdateWithoutRefreshGrantsInput, OAuthClientUncheckedUpdateWithoutRefreshGrantsInput>
+    create: XOR<OAuthClientCreateWithoutRefreshGrantsInput, OAuthClientUncheckedCreateWithoutRefreshGrantsInput>
+    where?: OAuthClientWhereInput
+  }
+
+  export type OAuthClientUpdateToOneWithWhereWithoutRefreshGrantsInput = {
+    where?: OAuthClientWhereInput
+    data: XOR<OAuthClientUpdateWithoutRefreshGrantsInput, OAuthClientUncheckedUpdateWithoutRefreshGrantsInput>
+  }
+
+  export type OAuthClientUpdateWithoutRefreshGrantsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    authorizationCodes?: AuthorizationCodeUpdateManyWithoutClientNestedInput
+    consents?: ClientConsentUpdateManyWithoutClientNestedInput
+  }
+
+  export type OAuthClientUncheckedUpdateWithoutRefreshGrantsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    authorizationCodes?: AuthorizationCodeUncheckedUpdateManyWithoutClientNestedInput
+    consents?: ClientConsentUncheckedUpdateManyWithoutClientNestedInput
+  }
+
+  export type OAuthClientCreateWithoutConsentsInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    authorizationCodes?: AuthorizationCodeCreateNestedManyWithoutClientInput
+    refreshGrants?: RefreshGrantCreateNestedManyWithoutClientInput
+  }
+
+  export type OAuthClientUncheckedCreateWithoutConsentsInput = {
+    id?: string
+    clientId: string
+    name: string
+    clientSecretHash?: string | null
+    clientType?: string
+    platformCode?: string | null
+    isFirstParty?: boolean
+    ownerTenantId?: string | null
+    redirectUris?: OAuthClientCreateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientCreatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientCreategrantTypesInput | string[]
+    allowedScopes?: OAuthClientCreateallowedScopesInput | string[]
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    authorizationCodes?: AuthorizationCodeUncheckedCreateNestedManyWithoutClientInput
+    refreshGrants?: RefreshGrantUncheckedCreateNestedManyWithoutClientInput
+  }
+
+  export type OAuthClientCreateOrConnectWithoutConsentsInput = {
+    where: OAuthClientWhereUniqueInput
+    create: XOR<OAuthClientCreateWithoutConsentsInput, OAuthClientUncheckedCreateWithoutConsentsInput>
+  }
+
+  export type OAuthClientUpsertWithoutConsentsInput = {
+    update: XOR<OAuthClientUpdateWithoutConsentsInput, OAuthClientUncheckedUpdateWithoutConsentsInput>
+    create: XOR<OAuthClientCreateWithoutConsentsInput, OAuthClientUncheckedCreateWithoutConsentsInput>
+    where?: OAuthClientWhereInput
+  }
+
+  export type OAuthClientUpdateToOneWithWhereWithoutConsentsInput = {
+    where?: OAuthClientWhereInput
+    data: XOR<OAuthClientUpdateWithoutConsentsInput, OAuthClientUncheckedUpdateWithoutConsentsInput>
+  }
+
+  export type OAuthClientUpdateWithoutConsentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    authorizationCodes?: AuthorizationCodeUpdateManyWithoutClientNestedInput
+    refreshGrants?: RefreshGrantUpdateManyWithoutClientNestedInput
+  }
+
+  export type OAuthClientUncheckedUpdateWithoutConsentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    clientSecretHash?: NullableStringFieldUpdateOperationsInput | string | null
+    clientType?: StringFieldUpdateOperationsInput | string
+    platformCode?: NullableStringFieldUpdateOperationsInput | string | null
+    isFirstParty?: BoolFieldUpdateOperationsInput | boolean
+    ownerTenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    redirectUris?: OAuthClientUpdateredirectUrisInput | string[]
+    postLogoutRedirectUris?: OAuthClientUpdatepostLogoutRedirectUrisInput | string[]
+    grantTypes?: OAuthClientUpdategrantTypesInput | string[]
+    allowedScopes?: OAuthClientUpdateallowedScopesInput | string[]
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    authorizationCodes?: AuthorizationCodeUncheckedUpdateManyWithoutClientNestedInput
+    refreshGrants?: RefreshGrantUncheckedUpdateManyWithoutClientNestedInput
+  }
+
+  export type PlatformGrantCreateWithoutPlatformInput = {
+    id?: string
+    subjectType: string
+    subjectId: string
+    tenantId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PlatformGrantUncheckedCreateWithoutPlatformInput = {
+    id?: string
+    subjectType: string
+    subjectId: string
+    tenantId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PlatformGrantCreateOrConnectWithoutPlatformInput = {
+    where: PlatformGrantWhereUniqueInput
+    create: XOR<PlatformGrantCreateWithoutPlatformInput, PlatformGrantUncheckedCreateWithoutPlatformInput>
+  }
+
+  export type PlatformGrantCreateManyPlatformInputEnvelope = {
+    data: PlatformGrantCreateManyPlatformInput | PlatformGrantCreateManyPlatformInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PlatformGrantUpsertWithWhereUniqueWithoutPlatformInput = {
+    where: PlatformGrantWhereUniqueInput
+    update: XOR<PlatformGrantUpdateWithoutPlatformInput, PlatformGrantUncheckedUpdateWithoutPlatformInput>
+    create: XOR<PlatformGrantCreateWithoutPlatformInput, PlatformGrantUncheckedCreateWithoutPlatformInput>
+  }
+
+  export type PlatformGrantUpdateWithWhereUniqueWithoutPlatformInput = {
+    where: PlatformGrantWhereUniqueInput
+    data: XOR<PlatformGrantUpdateWithoutPlatformInput, PlatformGrantUncheckedUpdateWithoutPlatformInput>
+  }
+
+  export type PlatformGrantUpdateManyWithWhereWithoutPlatformInput = {
+    where: PlatformGrantScalarWhereInput
+    data: XOR<PlatformGrantUpdateManyMutationInput, PlatformGrantUncheckedUpdateManyWithoutPlatformInput>
+  }
+
+  export type PlatformGrantScalarWhereInput = {
+    AND?: PlatformGrantScalarWhereInput | PlatformGrantScalarWhereInput[]
+    OR?: PlatformGrantScalarWhereInput[]
+    NOT?: PlatformGrantScalarWhereInput | PlatformGrantScalarWhereInput[]
+    id?: StringFilter<"PlatformGrant"> | string
+    subjectType?: StringFilter<"PlatformGrant"> | string
+    subjectId?: StringFilter<"PlatformGrant"> | string
+    platformCode?: StringFilter<"PlatformGrant"> | string
+    tenantId?: StringNullableFilter<"PlatformGrant"> | string | null
+    createdAt?: DateTimeFilter<"PlatformGrant"> | Date | string
+  }
+
+  export type PlatformCreateWithoutGrantsInput = {
+    code: string
+    name: string
+    port: number
+    baseUrl: string
+    icon?: string | null
+    audience?: string
+    requiresTenant?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PlatformUncheckedCreateWithoutGrantsInput = {
+    code: string
+    name: string
+    port: number
+    baseUrl: string
+    icon?: string | null
+    audience?: string
+    requiresTenant?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PlatformCreateOrConnectWithoutGrantsInput = {
+    where: PlatformWhereUniqueInput
+    create: XOR<PlatformCreateWithoutGrantsInput, PlatformUncheckedCreateWithoutGrantsInput>
+  }
+
+  export type PlatformUpsertWithoutGrantsInput = {
+    update: XOR<PlatformUpdateWithoutGrantsInput, PlatformUncheckedUpdateWithoutGrantsInput>
+    create: XOR<PlatformCreateWithoutGrantsInput, PlatformUncheckedCreateWithoutGrantsInput>
+    where?: PlatformWhereInput
+  }
+
+  export type PlatformUpdateToOneWithWhereWithoutGrantsInput = {
+    where?: PlatformWhereInput
+    data: XOR<PlatformUpdateWithoutGrantsInput, PlatformUncheckedUpdateWithoutGrantsInput>
+  }
+
+  export type PlatformUpdateWithoutGrantsInput = {
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    baseUrl?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
+    audience?: StringFieldUpdateOperationsInput | string
+    requiresTenant?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlatformUncheckedUpdateWithoutGrantsInput = {
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    baseUrl?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
+    audience?: StringFieldUpdateOperationsInput | string
+    requiresTenant?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDelegationCreateWithoutAgentInput = {
+    id?: string
+    tenantId: string
+    delegatingUserId: string
+    effectivePermissions?: AgentDelegationCreateeffectivePermissionsInput | string[]
+    sid: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type AgentDelegationUncheckedCreateWithoutAgentInput = {
+    id?: string
+    tenantId: string
+    delegatingUserId: string
+    effectivePermissions?: AgentDelegationCreateeffectivePermissionsInput | string[]
+    sid: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type AgentDelegationCreateOrConnectWithoutAgentInput = {
+    where: AgentDelegationWhereUniqueInput
+    create: XOR<AgentDelegationCreateWithoutAgentInput, AgentDelegationUncheckedCreateWithoutAgentInput>
+  }
+
+  export type AgentDelegationCreateManyAgentInputEnvelope = {
+    data: AgentDelegationCreateManyAgentInput | AgentDelegationCreateManyAgentInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type AgentDelegationUpsertWithWhereUniqueWithoutAgentInput = {
+    where: AgentDelegationWhereUniqueInput
+    update: XOR<AgentDelegationUpdateWithoutAgentInput, AgentDelegationUncheckedUpdateWithoutAgentInput>
+    create: XOR<AgentDelegationCreateWithoutAgentInput, AgentDelegationUncheckedCreateWithoutAgentInput>
+  }
+
+  export type AgentDelegationUpdateWithWhereUniqueWithoutAgentInput = {
+    where: AgentDelegationWhereUniqueInput
+    data: XOR<AgentDelegationUpdateWithoutAgentInput, AgentDelegationUncheckedUpdateWithoutAgentInput>
+  }
+
+  export type AgentDelegationUpdateManyWithWhereWithoutAgentInput = {
+    where: AgentDelegationScalarWhereInput
+    data: XOR<AgentDelegationUpdateManyMutationInput, AgentDelegationUncheckedUpdateManyWithoutAgentInput>
+  }
+
+  export type AgentDelegationScalarWhereInput = {
+    AND?: AgentDelegationScalarWhereInput | AgentDelegationScalarWhereInput[]
+    OR?: AgentDelegationScalarWhereInput[]
+    NOT?: AgentDelegationScalarWhereInput | AgentDelegationScalarWhereInput[]
+    id?: StringFilter<"AgentDelegation"> | string
+    tenantId?: StringFilter<"AgentDelegation"> | string
+    agentId?: StringFilter<"AgentDelegation"> | string
+    delegatingUserId?: StringFilter<"AgentDelegation"> | string
+    effectivePermissions?: StringNullableListFilter<"AgentDelegation">
+    sid?: StringFilter<"AgentDelegation"> | string
+    expiresAt?: DateTimeFilter<"AgentDelegation"> | Date | string
+    createdAt?: DateTimeFilter<"AgentDelegation"> | Date | string
+  }
+
+  export type AgentDefinitionCreateWithoutDelegationsInput = {
+    id?: string
+    tenantId: string
+    name: string
+    description?: string | null
+    allowedPermissions?: AgentDefinitionCreateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AgentDefinitionUncheckedCreateWithoutDelegationsInput = {
+    id?: string
+    tenantId: string
+    name: string
+    description?: string | null
+    allowedPermissions?: AgentDefinitionCreateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AgentDefinitionCreateOrConnectWithoutDelegationsInput = {
+    where: AgentDefinitionWhereUniqueInput
+    create: XOR<AgentDefinitionCreateWithoutDelegationsInput, AgentDefinitionUncheckedCreateWithoutDelegationsInput>
+  }
+
+  export type AgentDefinitionUpsertWithoutDelegationsInput = {
+    update: XOR<AgentDefinitionUpdateWithoutDelegationsInput, AgentDefinitionUncheckedUpdateWithoutDelegationsInput>
+    create: XOR<AgentDefinitionCreateWithoutDelegationsInput, AgentDefinitionUncheckedCreateWithoutDelegationsInput>
+    where?: AgentDefinitionWhereInput
+  }
+
+  export type AgentDefinitionUpdateToOneWithWhereWithoutDelegationsInput = {
+    where?: AgentDefinitionWhereInput
+    data: XOR<AgentDefinitionUpdateWithoutDelegationsInput, AgentDefinitionUncheckedUpdateWithoutDelegationsInput>
+  }
+
+  export type AgentDefinitionUpdateWithoutDelegationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedPermissions?: AgentDefinitionUpdateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDefinitionUncheckedUpdateWithoutDelegationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedPermissions?: AgentDefinitionUpdateallowedPermissionsInput | string[]
+    requiresConfirmationAbove?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserRoleCreateManyUserInput = {
     roleId: string
     assignedAt?: Date | string
@@ -25003,6 +40551,230 @@ export namespace Prisma {
   export type UserGroupMemberUncheckedUpdateManyWithoutGroupInput = {
     userId?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuthorizationCodeCreateManyClientInput = {
+    id?: string
+    codeHash: string
+    userId: string
+    tenantId: string
+    sid: string
+    redirectUri: string
+    scopes?: AuthorizationCodeCreatescopesInput | string[]
+    nonce?: string | null
+    codeChallenge: string
+    codeChallengeMethod?: string
+    expiresAt: Date | string
+    consumedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type RefreshGrantCreateManyClientInput = {
+    id?: string
+    tokenHash: string
+    userId: string
+    tenantId: string
+    sid: string
+    scopes?: RefreshGrantCreatescopesInput | string[]
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    rotatedFromId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ClientConsentCreateManyClientInput = {
+    id?: string
+    userId: string
+    tenantId: string
+    scopes?: ClientConsentCreatescopesInput | string[]
+    grantedAt?: Date | string
+    revokedAt?: Date | string | null
+  }
+
+  export type AuthorizationCodeUpdateWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    codeHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    redirectUri?: StringFieldUpdateOperationsInput | string
+    scopes?: AuthorizationCodeUpdatescopesInput | string[]
+    nonce?: NullableStringFieldUpdateOperationsInput | string | null
+    codeChallenge?: StringFieldUpdateOperationsInput | string
+    codeChallengeMethod?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    consumedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuthorizationCodeUncheckedUpdateWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    codeHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    redirectUri?: StringFieldUpdateOperationsInput | string
+    scopes?: AuthorizationCodeUpdatescopesInput | string[]
+    nonce?: NullableStringFieldUpdateOperationsInput | string | null
+    codeChallenge?: StringFieldUpdateOperationsInput | string
+    codeChallengeMethod?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    consumedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuthorizationCodeUncheckedUpdateManyWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    codeHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    redirectUri?: StringFieldUpdateOperationsInput | string
+    scopes?: AuthorizationCodeUpdatescopesInput | string[]
+    nonce?: NullableStringFieldUpdateOperationsInput | string | null
+    codeChallenge?: StringFieldUpdateOperationsInput | string
+    codeChallengeMethod?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    consumedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RefreshGrantUpdateWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    scopes?: RefreshGrantUpdatescopesInput | string[]
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotatedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RefreshGrantUncheckedUpdateWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    scopes?: RefreshGrantUpdatescopesInput | string[]
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotatedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RefreshGrantUncheckedUpdateManyWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tokenHash?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    sid?: StringFieldUpdateOperationsInput | string
+    scopes?: RefreshGrantUpdatescopesInput | string[]
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotatedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ClientConsentUpdateWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    scopes?: ClientConsentUpdatescopesInput | string[]
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ClientConsentUncheckedUpdateWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    scopes?: ClientConsentUpdatescopesInput | string[]
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ClientConsentUncheckedUpdateManyWithoutClientInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    scopes?: ClientConsentUpdatescopesInput | string[]
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PlatformGrantCreateManyPlatformInput = {
+    id?: string
+    subjectType: string
+    subjectId: string
+    tenantId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PlatformGrantUpdateWithoutPlatformInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectType?: StringFieldUpdateOperationsInput | string
+    subjectId?: StringFieldUpdateOperationsInput | string
+    tenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlatformGrantUncheckedUpdateWithoutPlatformInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectType?: StringFieldUpdateOperationsInput | string
+    subjectId?: StringFieldUpdateOperationsInput | string
+    tenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlatformGrantUncheckedUpdateManyWithoutPlatformInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectType?: StringFieldUpdateOperationsInput | string
+    subjectId?: StringFieldUpdateOperationsInput | string
+    tenantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDelegationCreateManyAgentInput = {
+    id?: string
+    tenantId: string
+    delegatingUserId: string
+    effectivePermissions?: AgentDelegationCreateeffectivePermissionsInput | string[]
+    sid: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type AgentDelegationUpdateWithoutAgentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    delegatingUserId?: StringFieldUpdateOperationsInput | string
+    effectivePermissions?: AgentDelegationUpdateeffectivePermissionsInput | string[]
+    sid?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDelegationUncheckedUpdateWithoutAgentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    delegatingUserId?: StringFieldUpdateOperationsInput | string
+    effectivePermissions?: AgentDelegationUpdateeffectivePermissionsInput | string[]
+    sid?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDelegationUncheckedUpdateManyWithoutAgentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
+    delegatingUserId?: StringFieldUpdateOperationsInput | string
+    effectivePermissions?: AgentDelegationUpdateeffectivePermissionsInput | string[]
+    sid?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

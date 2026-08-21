@@ -789,37 +789,6 @@ model BuilderTheme {
   @@map("builder_themes")
 }
 
-model BuilderEnvironment {
-  id              String   @id @default(cuid())
-  tenantId        String   @map("tenant_id")
-  name            String
-  envType         String   @default("DEVELOPMENT") @map("env_type")
-  description     String?  @db.Text
-  settings        Json?
-  isActive        Boolean  @default(true) @map("is_active")
-  createdAt       DateTime @default(now()) @map("created_at")
-  builderDeployments BuilderDeployment[]
-  @@index([tenantId])
-  @@map("builder_environments")
-}
-
-model BuilderDeployment {
-  id              String   @id @default(cuid())
-  tenantId        String   @map("tenant_id")
-  environmentId   String   @map("environment_id")
-  version         String
-  changeSummary   String?  @db.Text @map("change_summary")
-  artifacts       Json?
-  status          String   @default("PENDING")
-  deployedBy      String?  @map("deployed_by")
-  deployedAt      DateTime? @map("deployed_at")
-  rolledBackAt    DateTime? @map("rolled_back_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-  environment     BuilderEnvironment @relation(fields: [environmentId], references: [id])
-  @@index([tenantId, environmentId])
-  @@map("builder_deployments")
-}
-
 model MarketplacePackage {
   id              String   @id @default(cuid())
   tenantId        String?  @map("tenant_id")
@@ -2191,15 +2160,22 @@ model Deployment {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  environment       DeploymentStage @relation("EnvironmentDeployment", fields: [environmentId], references: [id])
+  /// P6 fix. `environmentId` used to relate to `DeploymentStage`, so
+  /// `deployment.environment` returned a STAGE, not an environment — while a
+  /// second, correct `depEnvironmentId -> Environment` sat unused beside it.
+  /// The column now points where its name always claimed.
+  environment       Environment       @relation(fields: [environmentId], references: [id])
   stages            DeploymentStage[] @relation("DeploymentStages")
   buildLogs         BuildLog[]
   artifacts         ReleaseArtifact[]
-  depEnvironmentId  String?            @map("dep_environment_id")
-  depEnvironment    Environment?       @relation(fields: [depEnvironmentId], references: [id], onDelete: SetNull)
+  /// P6 — which authored release this deployment shipped. Nullable: platform
+  /// CI deployments have no tenant-authored release behind them.
+  releaseId         String?            @map("release_id")
+  release           ProjectRelease?    @relation(fields: [releaseId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@index([tenantId, environmentId])
   @@index([tenantId, status])
+  @@index([tenantId, releaseId])
   @@map("deployments")
 }

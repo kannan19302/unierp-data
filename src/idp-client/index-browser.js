@@ -297,6 +297,128 @@ exports.Prisma.MfaPushChallengeScalarFieldEnum = {
   expiresAt: 'expiresAt'
 };
 
+exports.Prisma.OAuthClientScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  name: 'name',
+  clientSecretHash: 'clientSecretHash',
+  clientType: 'clientType',
+  platformCode: 'platformCode',
+  isFirstParty: 'isFirstParty',
+  ownerTenantId: 'ownerTenantId',
+  redirectUris: 'redirectUris',
+  postLogoutRedirectUris: 'postLogoutRedirectUris',
+  grantTypes: 'grantTypes',
+  allowedScopes: 'allowedScopes',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AuthorizationCodeScalarFieldEnum = {
+  id: 'id',
+  codeHash: 'codeHash',
+  clientId: 'clientId',
+  userId: 'userId',
+  tenantId: 'tenantId',
+  sid: 'sid',
+  redirectUri: 'redirectUri',
+  scopes: 'scopes',
+  nonce: 'nonce',
+  codeChallenge: 'codeChallenge',
+  codeChallengeMethod: 'codeChallengeMethod',
+  expiresAt: 'expiresAt',
+  consumedAt: 'consumedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.RefreshGrantScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  clientId: 'clientId',
+  userId: 'userId',
+  tenantId: 'tenantId',
+  sid: 'sid',
+  scopes: 'scopes',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  rotatedFromId: 'rotatedFromId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ClientConsentScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  userId: 'userId',
+  tenantId: 'tenantId',
+  scopes: 'scopes',
+  grantedAt: 'grantedAt',
+  revokedAt: 'revokedAt'
+};
+
+exports.Prisma.OidcSigningKeyScalarFieldEnum = {
+  id: 'id',
+  alg: 'alg',
+  publicJwk: 'publicJwk',
+  privateKeyPemEnc: 'privateKeyPemEnc',
+  status: 'status',
+  createdAt: 'createdAt',
+  retiredAt: 'retiredAt'
+};
+
+exports.Prisma.LoginAttemptCounterScalarFieldEnum = {
+  id: 'id',
+  ipHash: 'ipHash',
+  attempts: 'attempts',
+  lockedUntil: 'lockedUntil',
+  firstSeenAt: 'firstSeenAt',
+  lastSeenAt: 'lastSeenAt'
+};
+
+exports.Prisma.PlatformScalarFieldEnum = {
+  code: 'code',
+  name: 'name',
+  port: 'port',
+  baseUrl: 'baseUrl',
+  icon: 'icon',
+  audience: 'audience',
+  requiresTenant: 'requiresTenant',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PlatformGrantScalarFieldEnum = {
+  id: 'id',
+  subjectType: 'subjectType',
+  subjectId: 'subjectId',
+  platformCode: 'platformCode',
+  tenantId: 'tenantId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AgentDefinitionScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  name: 'name',
+  description: 'description',
+  allowedPermissions: 'allowedPermissions',
+  requiresConfirmationAbove: 'requiresConfirmationAbove',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgentDelegationScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  agentId: 'agentId',
+  delegatingUserId: 'delegatingUserId',
+  effectivePermissions: 'effectivePermissions',
+  sid: 'sid',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -337,7 +459,17 @@ exports.Prisma.ModelName = {
   PasswordResetToken: 'PasswordResetToken',
   EmailVerificationToken: 'EmailVerificationToken',
   PushSubscription: 'PushSubscription',
-  MfaPushChallenge: 'MfaPushChallenge'
+  MfaPushChallenge: 'MfaPushChallenge',
+  OAuthClient: 'OAuthClient',
+  AuthorizationCode: 'AuthorizationCode',
+  RefreshGrant: 'RefreshGrant',
+  ClientConsent: 'ClientConsent',
+  OidcSigningKey: 'OidcSigningKey',
+  LoginAttemptCounter: 'LoginAttemptCounter',
+  Platform: 'Platform',
+  PlatformGrant: 'PlatformGrant',
+  AgentDefinition: 'AgentDefinition',
+  AgentDelegation: 'AgentDelegation'
 };
 
 /**

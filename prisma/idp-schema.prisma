@@ -694,3 +694,276 @@ model MfaPushChallenge {
   @@index([tenantId, userId])
   @@map("mfa_push_challenges")
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// OIDC PROVIDER (W1)
+//
+// UniERP's ten platforms, the Flutter app, the desktop shell and every
+// third-party marketplace application authenticate through one authorization
+// server. Before this, apps shared a session only because browsers ignore port
+// numbers on localhost, and every service held the same HS256 secret — so any
+// service (or anyone reading the source) could mint a token every other service
+// would accept. These models back the authorization-code + PKCE flow that
+// replaces that arrangement.
+// ════════════════════════════════════════════════════════════════════════════
+
+/// A registered relying party: one of the ten first-party platforms, a native
+/// client (mobile/desktop), or a third-party marketplace/developer application.
+model OAuthClient {
+  id        String @id @default(cuid())
+  clientId  String @unique @map("client_id")
+  name      String
+  /// Null for PUBLIC clients. Native and browser clients cannot keep a secret,
+  /// so they are public and rely on PKCE instead.
+  clientSecretHash String? @map("client_secret_hash")
+  /// CONFIDENTIAL | PUBLIC
+  clientType       String  @default("PUBLIC") @map("client_type")
+
+  /// First-party platform binding (P1..P10). Null for third-party apps.
+  /// /authorize consults PlatformGrant for this code before issuing a code, so
+  /// a tenant user cannot obtain a token for the internal control plane even by
+  /// crafting the request by hand.
+  platformCode String? @map("platform_code")
+
+  /// First-party clients are pre-consented; third-party clients must show the
+  /// consent screen before any scope is granted.
+  isFirstParty Boolean @default(false) @map("is_first_party")
+
+  /// Owning tenant for tenant-private developer apps. Null for platform and
+  /// publicly listed marketplace clients.
+  ownerTenantId String? @map("owner_tenant_id")
+
+  redirectUris           String[] @map("redirect_uris")
+  postLogoutRedirectUris String[] @map("post_logout_redirect_uris")
+  /// authorization_code | refresh_token | client_credentials | token-exchange
+  grantTypes             String[] @map("grant_types")
+  /// Upper bound on what this client may ever request. Effective authority is
+  /// still scopes ∩ user permissions ∩ tenant entitlements.
+  allowedScopes          String[] @map("allowed_scopes")
+
+  /// ACTIVE | SUSPENDED | REVOKED
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  authorizationCodes AuthorizationCode[]
+  refreshGrants      RefreshGrant[]
+  consents           ClientConsent[]
+
+  @@index([ownerTenantId])
+  @@index([platformCode])
+  @@map("oauth_clients")
+}
+
+/// A single-use authorization code. Stored as a hash: a leaked database backup
+/// must not yield usable codes.
+model AuthorizationCode {
+  id       String @id @default(cuid())
+  codeHash String @unique @map("code_hash")
+
+  clientId String @map("client_id")
+  userId   String @map("user_id")
+  tenantId String @map("tenant_id")
+  /// Session this code was issued against; the resulting tokens inherit it, so
+  /// revoking the session revokes everything derived from it.
+  sid      String
+
+  redirectUri String   @map("redirect_uri")
+  scopes      String[]
+  nonce       String?
+
+  /// PKCE is mandatory. S256 only — `plain` is not accepted.
+  codeChallenge       String @map("code_challenge")
+  codeChallengeMethod String @default("S256") @map("code_challenge_method")
+
+  expiresAt  DateTime  @map("expires_at")
+  /// Set on first exchange. A second presentation is replay: it fails AND
+  /// revokes every token already derived from this code.
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("oauth_authorization_codes")
+}
+
+/// A refresh token, stored as a hash and rotated on every use.
+model RefreshGrant {
+  id        String @id @default(cuid())
+  tokenHash String @unique @map("token_hash")
+
+  clientId String   @map("client_id")
+  userId   String   @map("user_id")
+  tenantId String   @map("tenant_id")
+  sid      String
+  scopes   String[]
+
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  /// Rotation chain. If a already-rotated token is presented again it has been
+  /// stolen, and the whole chain is revoked rather than just this row.
+  rotatedFromId String? @map("rotated_from_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sid])
+  @@index([expiresAt])
+  @@map("oauth_refresh_grants")
+}
+
+/// A user's standing consent for a third-party client's scopes. First-party
+/// platform clients never create rows here.
+model ClientConsent {
+  id       String   @id @default(cuid())
+  clientId String   @map("client_id")
+  userId   String   @map("user_id")
+  tenantId String   @map("tenant_id")
+  scopes   String[]
+
+  grantedAt DateTime  @default(now()) @map("granted_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  @@unique([clientId, userId, tenantId])
+  @@index([userId])
+  @@map("oauth_client_consents")
+}
+
+/// RS256 signing keys, published through /oidc/jwks.json.
+///
+/// Asymmetric signing is the point: only the IdP holds a private key, so no
+/// other service — and nobody reading the repository — can mint a token. The
+/// private key is encrypted at rest with the platform encryption key.
+model OidcSigningKey {
+  /// The `kid` published in the JWKS and stamped on every token header.
+  id  String @id
+  alg String @default("RS256")
+
+  publicJwk          Json   @map("public_jwk")
+  privateKeyPemEnc   String @map("private_key_pem_enc")
+
+  /// CURRENT — signs new tokens. PREVIOUS — still verifies during rotation
+  /// overlap. RETIRED — no longer published.
+  status String @default("CURRENT")
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  retiredAt  DateTime? @map("retired_at")
+
+  @@index([status])
+  @@map("oidc_signing_keys")
+}
+
+/// Per-IP login throttling. Per-ACCOUNT lockout already exists on User
+/// (failedLoginAttempts / lockedUntil); this is the complementary bound that
+/// stops one attacker spraying many accounts from a single origin.
+model LoginAttemptCounter {
+  id          String    @id @default(cuid())
+  /// Hashed: raw client IPs are personal data and this table is long-lived.
+  ipHash      String    @unique @map("ip_hash")
+  attempts    Int       @default(0)
+  lockedUntil DateTime? @map("locked_until")
+  firstSeenAt DateTime  @default(now()) @map("first_seen_at")
+  lastSeenAt  DateTime  @updatedAt @map("last_seen_at")
+
+  @@index([lockedUntil])
+  @@map("login_attempt_counters")
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// PLATFORM ENTITLEMENT, AGENT DELEGATION (W2)
+//
+// W1 built the mechanism that issues tokens. This is the data that decides
+// WHICH of the ten platforms a token may be issued for, and the registry that
+// bounds what a delegated AI agent may ever be exchanged a token for.
+// ════════════════════════════════════════════════════════════════════════════
+
+/// One of the ten platforms. `audience: INTERNAL` (currently only P2) requires
+/// control-plane authority regardless of any grant below; `PUBLIC` platforms
+/// are reachable subject to entitlement.
+model Platform {
+  code           String   @id
+  name           String
+  port           Int
+  baseUrl        String   @map("base_url")
+  icon           String?
+  audience       String   @default("PUBLIC")
+  requiresTenant Boolean  @default(true) @map("requires_tenant")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  grants PlatformGrant[]
+
+  @@map("platforms")
+}
+
+/// Grants access to a platform. Checked at /oidc/authorize; any matching row
+/// admits. subjectId means a role name (ROLE), a SaaSPlan.id (PLAN), or a
+/// User.id (USER, always tenant-scoped — a user grant with no tenant would not
+/// know which tenant's token to issue).
+model PlatformGrant {
+  id           String   @id @default(cuid())
+  subjectType  String   @map("subject_type")
+  subjectId    String   @map("subject_id")
+  platformCode String   @map("platform_code")
+  tenantId     String?  @map("tenant_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  platform Platform @relation(fields: [platformCode], references: [code], onDelete: Cascade)
+
+  @@index([platformCode])
+  @@index([tenantId])
+  @@map("platform_grants")
+}
+
+/// A tenant's registry of AI agents that may ever be exchanged a token for.
+/// `allowedPermissions` is a CEILING, checked against the CHECK constraint that
+/// bans system.* and platform.* namespaces and the "*" wildcard outright,
+/// enforced twice — once here, once in AgentDelegationService — because a
+/// delegated agent obtaining control-plane authority is not a bug to catch
+/// later, it is the one outcome this whole design exists to make impossible.
+model AgentDefinition {
+  id                        String   @id @default(cuid())
+  tenantId                  String   @map("tenant_id")
+  name                      String
+  description                String?
+  allowedPermissions         String[] @map("allowed_permissions")
+  requiresConfirmationAbove  String?  @map("requires_confirmation_above")
+  status                     String   @default("ACTIVE")
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
+
+  delegations AgentDelegation[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("agent_definitions")
+}
+
+/// One token-exchange grant. `effectivePermissions` is allowedPermissions ∩ the
+/// delegating user's permissions AT THAT MOMENT — recorded rather than derived,
+/// because both sides of that intersection change over time and the audit
+/// trail must answer "what could this agent do when it acted", not "what could
+/// it do now".
+model AgentDelegation {
+  id                    String   @id @default(cuid())
+  tenantId              String   @map("tenant_id")
+  agentId               String   @map("agent_id")
+  delegatingUserId      String   @map("delegating_user_id")
+  effectivePermissions  String[] @map("effective_permissions")
+  sid                   String
+  expiresAt             DateTime @map("expires_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  agent AgentDefinition @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([agentId])
+  @@index([sid])
+  @@map("agent_delegations")
+}
