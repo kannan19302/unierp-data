@@ -52,6 +52,7 @@ model Environment {
   configs      EnvironmentConfig[]
   deployments  Deployment[]
   releases     Release[]
+  developerBindings EnvironmentBinding[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])

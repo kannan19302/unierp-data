@@ -42,6 +42,14 @@ model DevProject {
   ownedArtifacts BuilderArtifact[]           @relation("ArtifactOwner")
   attachments    BuilderArtifactAttachment[]
   releases       ProjectRelease[]
+  installations  ProjectInstallation[]
+  validationRuns ProjectValidationRun[]
+  testRuns       ProjectTestRun[]
+  releaseApprovals ProjectReleaseApproval[]
+  previewSessions ProjectPreviewSession[]
+  auditEvents     DeveloperAuditEvent[]
+  environmentBindings EnvironmentBinding[]
+  changeSets ProjectChangeSet[]
 
   @@unique([tenantId, kind, slug])
   @@index([tenantId, kind, status])
@@ -104,11 +112,474 @@ model BuilderArtifact {
 
   owner       DevProject?                 @relation("ArtifactOwner", fields: [ownerProjectId], references: [id], onDelete: SetNull)
   attachments BuilderArtifactAttachment[]
+  revisions   ArtifactRevision[]
+  dependencyTargets ArtifactDependency[] @relation("ArtifactDependencyTarget")
+  packageItems DevPackageItem[]
+  overlays ArtifactOverlay[]
 
   @@unique([tenantId, artifactType, artifactId])
   @@index([tenantId, ownerProjectId, artifactType])
   @@index([tenantId, artifactType, updatedAt(sort: Desc)])
   @@map("builder_artifacts")
+}
+
+/// Reviewable, hash-pinned pro-code changeset. This is platform-native and
+/// can later be mapped to a Git branch/PR without making Git the source of
+/// truth for tenant authorization or release evidence.
+model ProjectChangeSet {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  projectId       String   @map("project_id")
+  branch          String
+  title           String
+  description     String?
+  bundle          Json
+  bundleHash      String   @map("bundle_hash")
+  baseFingerprint String   @map("base_fingerprint")
+  status          String   @default("DRAFT")
+  createdBy       String?  @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  submittedAt     DateTime? @map("submitted_at")
+  mergedAt        DateTime? @map("merged_at")
+  mergedBy        String?  @map("merged_by")
+
+  project DevProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reviews ProjectChangeSetReview[]
+
+  @@index([tenantId, projectId, status, createdAt(sort: Desc)])
+  @@map("project_change_sets")
+}
+
+model ProjectChangeSetReview {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  changeSetId String   @map("change_set_id")
+  reviewerId  String   @map("reviewer_id")
+  decision    String
+  comment     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  changeSet ProjectChangeSet @relation(fields: [changeSetId], references: [id], onDelete: Cascade)
+
+  @@unique([changeSetId, reviewerId])
+  @@index([tenantId, changeSetId, decision])
+  @@map("project_change_set_reviews")
+}
+
+/// Control-plane assignment for the bounded runtime-cell topology. Assignment
+/// is stable across deploys; relocation is an explicit, auditable operation
+/// rather than a side-effect of a changed hash-ring configuration.
+model RuntimeCellAssignment {
+  id              String   @id @default(cuid())
+  tenantId        String   @unique @map("tenant_id")
+  cellId          String   @map("cell_id")
+  shard           Int
+  region          String
+  topologyVersion String   @map("topology_version")
+  status          String   @default("ACTIVE")
+  relocationCount Int      @default(0) @map("relocation_count")
+  assignedAt      DateTime @default(now()) @map("assigned_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  events RuntimeCellAssignmentEvent[]
+
+  @@index([region, cellId, status])
+  @@map("runtime_cell_assignments")
+}
+
+/// Tenant-scoped capacity/feature entitlement consumed by the shared project
+/// governor. Values are policy data, never builder-specific forks.
+model TenantDeveloperEntitlement {
+  id        String   @id @default(cuid())
+  tenantId  String   @unique @map("tenant_id")
+  limits    Json     @default("{}")
+  status    String   @default("ACTIVE")
+  updatedBy String?  @map("updated_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tenant_developer_entitlements")
+}
+
+/// Append-only control-plane evidence for placement and relocation decisions.
+model RuntimeCellAssignmentEvent {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  assignmentId String   @map("assignment_id")
+  action       String
+  actorId      String?  @map("actor_id")
+  previous     Json     @default("{}")
+  target       Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  assignment RuntimeCellAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@index([assignmentId, createdAt(sort: Desc)])
+  @@map("runtime_cell_assignment_events")
+}
+
+/// Immutable canonical source for one artifact. Mutable editor autosave may
+/// advance the artifact's head, but a published package or release always
+/// resolves an exact revision and content hash.
+model ArtifactRevision {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  artifactId       String   @map("artifact_id")
+  revision         Int
+  parentRevisionId String?  @map("parent_revision_id")
+  apiVersion       String   @default("unierp.dev/v1") @map("api_version")
+  schemaVersion    Int      @default(1) @map("schema_version")
+  source           Json
+  contentHash      String   @map("content_hash")
+  validationStatus String   @default("PENDING") @map("validation_status")
+  validationResult Json?    @map("validation_result")
+  createdBy        String?  @map("created_by")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  artifact    BuilderArtifact    @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  parent      ArtifactRevision?  @relation("ArtifactRevisionParent", fields: [parentRevisionId], references: [id], onDelete: SetNull)
+  children    ArtifactRevision[] @relation("ArtifactRevisionParent")
+  dependencies ArtifactDependency[]
+  packageItems DevPackageItem[]
+  overlays ArtifactOverlay[] @relation("OverlaySource")
+  builds ArtifactBuild[]
+
+  @@unique([artifactId, revision])
+  @@unique([artifactId, contentHash])
+  @@index([tenantId, artifactId, createdAt(sort: Desc)])
+  @@map("artifact_revisions")
+}
+
+/// A typed dependency extracted deterministically from an immutable revision.
+/// `targetCoordinate` is the portable package/interface coordinate;
+/// `targetArtifactId` is populated only after a project installation resolves it.
+model ArtifactDependency {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  sourceRevisionId String   @map("source_revision_id")
+  alias             String
+  targetKind        String   @map("target_kind")
+  targetCoordinate  String   @map("target_coordinate")
+  versionRange      String   @map("version_range")
+  targetArtifactId  String?  @map("target_artifact_id")
+  optional          Boolean  @default(false)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  sourceRevision ArtifactRevision @relation(fields: [sourceRevisionId], references: [id], onDelete: Cascade)
+  targetArtifact BuilderArtifact? @relation("ArtifactDependencyTarget", fields: [targetArtifactId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceRevisionId, alias])
+  @@index([tenantId, targetCoordinate])
+  @@index([tenantId, targetArtifactId])
+  @@map("artifact_dependencies")
+}
+
+/// Deterministic compiler output for an immutable revision. Output bytes live
+/// in content-addressed object storage; this row is their verifiable index.
+model ArtifactBuild {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  revisionId      String   @map("revision_id")
+  compilerId      String   @map("compiler_id")
+  compilerVersion String   @map("compiler_version")
+  sourceHash      String   @map("source_hash")
+  outputHash      String   @map("output_hash")
+  status          String   @default("SUCCESS")
+  diagnostics     Json     @default("[]")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  revision ArtifactRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+
+  @@unique([revisionId, compilerId, compilerVersion])
+  @@index([tenantId, outputHash])
+  @@map("artifact_builds")
+}
+
+/// Stable distributable identity. Versions, never this row, carry content.
+model DevPackage {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  namespace   String
+  name        String
+  description String?
+  visibility  String   @default("PRIVATE")
+  editability String   @default("INTERNAL")
+  status      String   @default("ACTIVE")
+  createdBy   String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  versions DevPackageVersion[]
+  installations ProjectInstallation[]
+
+  @@unique([tenantId, namespace, name])
+  @@index([tenantId, visibility, status])
+  @@map("dev_packages")
+}
+
+/// Public verification keys for tenant-authored packages. Private keys never
+/// enter UniERP persistence; signing happens in the trusted build/CLI boundary.
+model DevSigningKey {
+  id         String    @id @default(cuid())
+  tenantId   String    @map("tenant_id")
+  keyId      String    @map("key_id")
+  algorithm  String    @default("Ed25519")
+  publicKey  String    @map("public_key") @db.Text
+  label      String
+  status     String    @default("ACTIVE")
+  createdBy  String?   @map("created_by")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  revokedAt  DateTime? @map("revoked_at")
+
+  @@unique([tenantId, keyId])
+  @@index([tenantId, status])
+  @@map("dev_signing_keys")
+}
+
+/// Immutable semantic package version and signed manifest.
+model DevPackageVersion {
+  id                   String    @id @default(cuid())
+  tenantId             String    @map("tenant_id")
+  packageId            String    @map("package_id")
+  version              String
+  manifest             Json
+  contentHash          String    @map("content_hash")
+  signature            String?
+  requiredCapabilities Json      @default("[]") @map("required_capabilities")
+  compatibility        Json      @default("{}")
+  licenseExpression    String?   @map("license_expression")
+  sbomDigest           String?   @map("sbom_digest")
+  vulnerabilityStatus  String    @default("UNKNOWN") @map("vulnerability_status")
+  vulnerabilityReport  Json      @default("[]") @map("vulnerability_report")
+  status               String    @default("DRAFT")
+  publishedBy          String?   @map("published_by")
+  publishedAt          DateTime? @map("published_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  package       DevPackage            @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  items         DevPackageItem[]
+  installations ProjectInstallation[]
+  targetOverlays ArtifactOverlay[] @relation("OverlayTarget")
+  certifications PackageCertification[]
+
+  @@unique([packageId, version])
+  @@unique([tenantId, contentHash])
+  @@index([tenantId, status, publishedAt(sort: Desc)])
+  @@map("dev_package_versions")
+}
+
+model DevPackageItem {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  packageVersionId String   @map("package_version_id")
+  artifactId       String   @map("artifact_id")
+  revisionId       String   @map("revision_id")
+  exportName       String   @map("export_name")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  packageVersion DevPackageVersion @relation(fields: [packageVersionId], references: [id], onDelete: Cascade)
+  artifact       BuilderArtifact   @relation(fields: [artifactId], references: [id], onDelete: Restrict)
+  revision       ArtifactRevision  @relation(fields: [revisionId], references: [id], onDelete: Restrict)
+
+  @@unique([packageVersionId, exportName])
+  @@unique([packageVersionId, artifactId])
+  @@index([tenantId, artifactId])
+  @@map("dev_package_items")
+}
+
+/// Certification evidence for a published package version. Marketplace
+/// promotion is permitted only from a passing immutable certification.
+model PackageCertification {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  packageVersionId String   @map("package_version_id")
+  status           String   @default("RUNNING")
+  report           Json     @default("[]")
+  certifiedBy      String?  @map("certified_by")
+  certifiedAt      DateTime? @map("certified_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  packageVersion DevPackageVersion @relation(fields: [packageVersionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, packageVersionId, status])
+  @@map("package_certifications")
+}
+
+/// A resolved project dependency. Production always stores an exact version;
+/// `requestedRange` records user intent while `lock` records deployable truth.
+model ProjectInstallation {
+  id                String    @id @default(cuid())
+  tenantId          String    @map("tenant_id")
+  projectId         String    @map("project_id")
+  packageId         String    @map("package_id")
+  packageVersionId  String    @map("package_version_id")
+  mode              String    @default("PINNED")
+  requestedRange    String?   @map("requested_range")
+  lock              Json
+  resourceMappings  Json      @default("{}") @map("resource_mappings")
+  capabilityGrants  Json      @default("[]") @map("capability_grants")
+  status            String    @default("ACTIVE")
+  installedBy       String?   @map("installed_by")
+  installedAt       DateTime  @default(now()) @map("installed_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  removedAt         DateTime? @map("removed_at")
+
+  project        DevProject        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  package        DevPackage        @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  packageVersion DevPackageVersion @relation(fields: [packageVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([projectId, packageId])
+  @@index([tenantId, projectId, status])
+  @@map("project_installations")
+}
+
+/// Evidence that one exact project composition passed its release gates.
+model ProjectValidationRun {
+  id                String    @id @default(cuid())
+  tenantId          String    @map("tenant_id")
+  projectId         String    @map("project_id")
+  sourceFingerprint String    @map("source_fingerprint")
+  status            String    @default("RUNNING")
+  score             Int?
+  checks            Json      @default("[]")
+  evidence          Json      @default("[]")
+  startedBy         String?   @map("started_by")
+  startedAt         DateTime  @default(now()) @map("started_at")
+  completedAt       DateTime? @map("completed_at")
+
+  project DevProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId, sourceFingerprint, status])
+  @@map("project_validation_runs")
+}
+
+/// Immutable evidence from executing project test-suite artifacts against one
+/// exact source composition. Test runs are never overwritten; release gates
+/// resolve them by `sourceFingerprint` so a later draft cannot borrow an old
+/// passing result.
+model ProjectTestRun {
+  id                String    @id @default(cuid())
+  tenantId          String    @map("tenant_id")
+  projectId         String    @map("project_id")
+  sourceFingerprint String    @map("source_fingerprint")
+  status            String    @default("RUNNING")
+  summary           Json      @default("{}")
+  evidence          Json      @default("[]")
+  startedBy         String?   @map("started_by")
+  startedAt         DateTime  @default(now()) @map("started_at")
+  completedAt       DateTime? @map("completed_at")
+
+  project DevProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId, sourceFingerprint, status])
+  @@map("project_test_runs")
+}
+
+/// Authenticated approval evidence for a specific immutable release. The
+/// deploy endpoint reads these rows; callers never provide approver IDs.
+model ProjectReleaseApproval {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  projectId String   @map("project_id")
+  releaseId String   @map("release_id")
+  userId    String   @map("user_id")
+  status    String   @default("APPROVED")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project DevProject     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  release ProjectRelease @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseId, userId])
+  @@index([tenantId, projectId, releaseId, status])
+  @@map("project_release_approvals")
+}
+
+/// Ephemeral, tenant-isolated preview control-plane record. The browser gets
+/// the opaque token once; only its hash persists, and previews never point at
+/// production release activation or secret values.
+model ProjectPreviewSession {
+  id                String    @id @default(cuid())
+  tenantId          String    @map("tenant_id")
+  projectId         String    @map("project_id")
+  sourceFingerprint String    @map("source_fingerprint")
+  tokenHash         String    @unique @map("token_hash")
+  context           Json      @default("{}")
+  status            String    @default("ACTIVE")
+  expiresAt         DateTime  @map("expires_at")
+  createdBy         String?   @map("created_by")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  revokedAt         DateTime? @map("revoked_at")
+
+  project DevProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId, status, expiresAt])
+  @@map("project_preview_sessions")
+}
+
+/// Append-only developer-platform audit event. Metadata contains identifiers,
+/// hashes and policy outcomes only—never raw source secrets or preview tokens.
+model DeveloperAuditEvent {
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  projectId     String   @map("project_id")
+  action        String
+  actorId       String?  @map("actor_id")
+  correlationId String?  @map("correlation_id")
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project DevProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId, createdAt(sort: Desc)])
+  @@index([tenantId, action, createdAt(sort: Desc)])
+  @@map("developer_audit_events")
+}
+
+/// Non-secret, environment-specific reference to a vault/service binding.
+model EnvironmentBinding {
+  id                   String    @id @default(cuid())
+  tenantId             String    @map("tenant_id")
+  projectId            String    @map("project_id")
+  environmentId        String    @map("environment_id")
+  key                   String
+  kind                  String
+  reference             String
+  requiredCapabilities  Json      @default("[]") @map("required_capabilities")
+  status                String    @default("UNVERIFIED")
+  verifiedAt            DateTime? @map("verified_at")
+  createdBy             String?   @map("created_by")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  project     DevProject  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, environmentId, key])
+  @@index([tenantId, environmentId, status])
+  @@map("environment_bindings")
+}
+
+/// Consumer customization is separate from immutable installed source.
+model ArtifactOverlay {
+  id                     String   @id @default(cuid())
+  tenantId               String   @map("tenant_id")
+  artifactId             String   @map("artifact_id")
+  sourceRevisionId       String   @map("source_revision_id")
+  targetPackageVersionId String   @map("target_package_version_id")
+  patch                  Json
+  contentHash            String   @map("content_hash")
+  conflictStatus         String   @default("CLEAN") @map("conflict_status")
+  createdBy              String?  @map("created_by")
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  artifact             BuilderArtifact   @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  sourceRevision       ArtifactRevision  @relation("OverlaySource", fields: [sourceRevisionId], references: [id], onDelete: Restrict)
+  targetPackageVersion DevPackageVersion @relation("OverlayTarget", fields: [targetPackageVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([artifactId, targetPackageVersionId, contentHash])
+  @@index([tenantId, targetPackageVersionId])
+  @@map("artifact_overlays")
 }
 
 /// Many-to-many: a Library artifact published INTO one or more projects.
@@ -165,6 +636,11 @@ model ProjectRelease {
   /// collections}.
   snapshot      Json      @default("{}")
   schemaVersion Int       @default(1) @map("schema_version")
+  manifestHash  String?   @map("manifest_hash")
+  signature     String?
+  signingKeyId  String?   @map("signing_key_id")
+  sourceFingerprint String? @map("source_fingerprint")
+  policyBundleVersion String? @map("policy_bundle_version")
   testScore     Int?      @map("test_score")
   status        String    @default("DRAFT")
   publishedBy   String?   @map("published_by")
@@ -173,10 +649,12 @@ model ProjectRelease {
 
   project     DevProject   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   deployments Deployment[]
+  approvals ProjectReleaseApproval[]
 
   @@unique([projectId, version])
   @@index([tenantId, projectId, publishedAt(sort: Desc)])
   @@index([channel, status])
+  @@index([tenantId, manifestHash])
   @@map("project_releases")
 }
 

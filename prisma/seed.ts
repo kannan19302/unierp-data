@@ -2611,27 +2611,27 @@ async function main() {
     },
   });
 
-  await prisma.webPage.upsert({
-    where: { tenantId_slug: { tenantId: tenant.id, slug: "home" } },
+  // `web_pages` was replaced by site-scoped `web_site_pages`. Keep the demo
+  // seed aligned with the multi-site model rather than calling a Prisma model
+  // that no longer exists after the Web Studio migration.
+  const defaultSite = await prisma.webSite.upsert({
+    where: { tenantId_slug: { tenantId: tenant.id, slug: "default" } },
+    update: {},
+    create: { tenantId: tenant.id, name: "Default Site", slug: "default", status: "ACTIVE" },
+  });
+  await prisma.webSitePage.upsert({
+    where: { siteId_path: { siteId: defaultSite.id, path: "/" } },
     update: {},
     create: {
       tenantId: tenant.id,
-      name: "Home Page",
-      slug: "home",
+      siteId: defaultSite.id,
+      title: "Home Page",
+      path: "/",
       status: "PUBLISHED",
-      sections: JSON.stringify([
-        {
-          type: "hero",
-          content: {
-            title: "Welcome to UniERP",
-            subtitle: "The modern way to run your business",
-          },
-        },
-        {
-          type: "features",
-          content: { items: ["Fast", "Secure", "Customizable"] },
-        },
-      ]),
+      blocks: [
+        { type: "hero", content: { title: "Welcome to UniERP", subtitle: "The modern way to run your business" } },
+        { type: "features", content: { items: ["Fast", "Secure", "Customizable"] } },
+      ],
     },
   });
 
