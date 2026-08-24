@@ -81,19 +81,11 @@ const STAFF_PERMISSIONS = [
   "system.security.admin",
 ];
 
-const STAFF_EMAIL = process.env.PROVIDER_SEED_EMAIL ?? "staff@unierp.dev";
-
-/**
- * Pre-hashed password for 'ProviderPassw0rd!' (bcrypt, cost 12) — same
- * convention as DEFAULT_PASSWORD_HASH in seed.ts, and for the same reason:
- * this package does not depend on bcryptjs and should not grow a dependency
- * just to seed one row.
- *
- * To regenerate:
- *   node -e "require('bcryptjs').hash('NEW',12).then(console.log)"
- */
-const STAFF_PASSWORD_HASH =
-  "$2a$12$k2xLuPQvhK.QOt7qJSQNQ.awYgCoBPCrGlPGMcxiNILnpm6qJ2mi.";
+const STAFF_EMAIL = (
+  process.env.BOOTSTRAP_PLATFORM_ADMIN_EMAIL ??
+  process.env.PROVIDER_SEED_EMAIL ??
+  "kannan19302@gmail.com"
+).trim().toLowerCase();
 
 async function main(): Promise<void> {
   const tenant = await prisma.tenant.upsert({
@@ -109,32 +101,51 @@ async function main(): Promise<void> {
     select: { id: true },
   });
 
-  const role = await idpPrisma.role.upsert({
-    where: { id: `role-${TENANT_SLUG}-${STAFF_ROLE}` },
-    // Permissions are re-applied on update: this is the row that decides whether
-    // the control plane is reachable at all, so a re-run must repair it.
-    update: { permissions: STAFF_PERMISSIONS },
-    create: {
-      id: `role-${TENANT_SLUG}-${STAFF_ROLE}`,
-      tenantId: tenant.id,
-      name: STAFF_ROLE,
-      isSystem: true,
-      permissions: STAFF_PERMISSIONS,
+  // Prefer the already-approved principal. Provider authority is a role on a
+  // principal, not a second account created merely because an email matches.
+  // The explicit execution of this bootstrap seed is the administrative
+  // approval event; runtime authentication never grants authority by email.
+  let user = await idpPrisma.user.findFirst({
+    where: {
+      email: { equals: STAFF_EMAIL, mode: "insensitive" },
+      status: "ACTIVE",
+      deletedAt: null,
     },
-    select: { id: true },
+    orderBy: { createdAt: "asc" },
   });
 
-  const user = await idpPrisma.user.upsert({
-    where: { tenantId_email: { tenantId: tenant.id, email: STAFF_EMAIL } },
-    update: { passwordHash: STAFF_PASSWORD_HASH, status: "ACTIVE" },
-    create: {
+  if (!user && !process.env.BOOTSTRAP_PLATFORM_ADMIN_PASSWORD_HASH?.trim()) {
+    throw new Error(
+      `Cannot bootstrap ${STAFF_EMAIL} without an approved existing principal or BOOTSTRAP_PLATFORM_ADMIN_PASSWORD_HASH`,
+    );
+  }
+
+  if (!user) {
+    user = await idpPrisma.user.create({
+      data: {
       id: `usr-${randomUUID()}`,
       tenantId: tenant.id,
       email: STAFF_EMAIL,
-      passwordHash: STAFF_PASSWORD_HASH,
+      passwordHash: process.env.BOOTSTRAP_PLATFORM_ADMIN_PASSWORD_HASH!.trim(),
       firstName: "Platform",
-      lastName: "Staff",
+      lastName: "Administrator",
       status: "ACTIVE",
+      },
+    });
+  }
+
+  const roleId = `role-${user.tenantId}-${STAFF_ROLE}`;
+  const role = await idpPrisma.role.upsert({
+    where: { id: roleId },
+    // Permissions are re-applied on update: this row decides whether a
+    // provider-realm session can reach the control plane.
+    update: { permissions: STAFF_PERMISSIONS },
+    create: {
+      id: roleId,
+      tenantId: user.tenantId,
+      name: STAFF_ROLE,
+      isSystem: true,
+      permissions: STAFF_PERMISSIONS,
     },
     select: { id: true },
   });
@@ -145,7 +156,9 @@ async function main(): Promise<void> {
     create: { userId: user.id, roleId: role.id },
   });
 
-  console.log(`provider realm ready — tenant ${tenant.id}, ${STAFF_EMAIL} (${STAFF_ROLE})`);
+  console.log(
+    `provider realm ready — catalog tenant ${tenant.id}, principal ${user.id}, ${STAFF_EMAIL} (${STAFF_ROLE})`,
+  );
 }
 
 main()

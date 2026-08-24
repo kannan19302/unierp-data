@@ -19,6 +19,8 @@ model Tenant {
 
   organizations                   Organization[]
   subscription                    TenantSubscription?
+  onboardingProgress              TenantOnboardingProgress?
+  masterDataImportJobs            MasterDataImportJob[]
   installedAppsRel                InstalledApp[]                   @relation("TenantInstalledApps")
   demoDataRecords                 DemoDataRecord[]
   accessPackages                  AccessPackage[]
@@ -146,15 +148,62 @@ model SavedView {
 }
 
 model Passkey {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
-  credentialID String   @unique @map("credential_id")
-  publicKey    String   @map("public_key")
-  counter      Int
-  transports   String?
-  createdAt    DateTime @default(now()) @map("created_at")
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  userId         String    @map("user_id")
+  credentialID   String    @unique @map("credential_id")
+  publicKey      String    @map("public_key")
+  counter         BigInt    @default(0)
+  transports      String?
+  name            String
+  deviceType      String?   @map("device_type")
+  backupEligible  Boolean   @default(false) @map("backup_eligible")
+  backedUp        Boolean   @default(false) @map("backed_up")
+  aaguid          String?
+  lastUsedAt      DateTime? @map("last_used_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
+  @@index([tenantId, userId])
   @@map("passkeys")
+}
+
+model AccountContact {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  userId          String    @map("user_id")
+  type            String    @default("EMAIL")
+  value           String
+  normalizedValue String    @map("normalized_value")
+  label           String    @default("Recovery email")
+  isPrimary       Boolean   @default(false) @map("is_primary")
+  verifiedAt      DateTime? @map("verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  verificationTokens AccountContactVerification[]
+
+  @@unique([tenantId, type, normalizedValue])
+  @@unique([tenantId, userId, id])
+  @@index([tenantId, userId])
+  @@map("account_contacts")
+}
+
+model AccountContactVerification {
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  userId    String    @map("user_id")
+  contactId String    @map("contact_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  contact AccountContact @relation(fields: [tenantId, userId, contactId], references: [tenantId, userId, id], onDelete: Cascade)
+
+  @@index([tenantId, userId, contactId])
+  @@index([expiresAt])
+  @@map("account_contact_verifications")
 }
 
 model Organization {
@@ -2183,4 +2232,52 @@ model HelpdeskTicket {
   @@index([tenantId, assignedTo])
   @@index([tenantId, priority])
   @@map("helpdesk_tickets")
+}
+
+model TenantOnboardingProgress {
+  id                 String    @id @default(cuid())
+  tenantId           String    @unique @map("tenant_id")
+  currentStep        String    @default("ORGANIZATION_PROFILE") @map("current_step")
+  completedSteps     String[]  @default([]) @map("completed_steps")
+  percentComplete    Int       @default(0) @map("percent_complete")
+  industryTemplate   String?   @map("industry_template")
+  currencySet        Boolean   @default(false) @map("currency_set")
+  chartOfAccountsSet Boolean   @default(false) @map("chart_of_accounts_set")
+  teamInvited        Boolean   @default(false) @map("team_invited")
+  dataImported       Boolean   @default(false) @map("data_imported")
+  firstTransactionAt DateTime? @map("first_transaction_at")
+  isCompleted        Boolean   @default(false) @map("is_completed")
+  completedAt        DateTime? @map("completed_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  tenant             Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("tenant_onboarding_progress")
+}
+
+model MasterDataImportJob {
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  entityType    String    @map("entity_type") // CUSTOMER, VENDOR, ITEM, GL_ACCOUNT, OPENING_BALANCE, EMPLOYEE
+  fileName      String    @map("file_name")
+  fileSize      Int       @map("file_size")
+  totalRows     Int       @default(0) @map("total_rows")
+  processedRows Int       @default(0) @map("processed_rows")
+  successRows   Int       @default(0) @map("success_rows")
+  errorRows     Int       @default(0) @map("error_rows")
+  errorDetails  Json?     @map("error_details")
+  fieldMappings Json      @map("field_mappings")
+  status        String    @default("PENDING") @map("status") // PENDING, VALIDATING, IMPORTING, COMPLETED, FAILED
+  startedAt     DateTime? @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  createdBy     String    @map("created_by")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, entityType])
+  @@map("master_data_import_jobs")
 }

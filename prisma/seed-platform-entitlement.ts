@@ -20,24 +20,31 @@ interface PlatformSeed {
   port: number;
   audience: "INTERNAL" | "PUBLIC";
   requiresTenant: boolean;
+  lifecycle: "ACTIVE" | "RETIRED";
+  surfaceType: "USER_UI" | "NATIVE_CLIENT" | "OPERATIONS";
+  isUserFacing: boolean;
+  discoverability: "PUBLIC" | "ENTITLED" | "INTERNAL";
+  category: "DISCOVER" | "OPERATIONS" | "WORK" | "BUILD";
+  sortWeight: number;
+  minimumAssurance?: "aal2" | "aal3";
 }
 
 const PLATFORMS: PlatformSeed[] = [
-  { code: "P1", name: "Marketing Site", port: 4001, audience: "PUBLIC", requiresTenant: false },
-  { code: "P2", name: "Provider Admin OS", port: 4002, audience: "INTERNAL", requiresTenant: false },
-  { code: "P3", name: "Tenant Applications", port: 4003, audience: "PUBLIC", requiresTenant: true },
-  { code: "P4", name: "Tenant Websites", port: 4004, audience: "PUBLIC", requiresTenant: true },
+  { code: "P1", name: "Marketing Site", port: 4001, audience: "PUBLIC", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "PUBLIC", category: "DISCOVER", sortWeight: 10 },
+  { code: "P2", name: "Provider Admin OS", port: 4002, audience: "INTERNAL", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "OPERATIONS", isUserFacing: true, discoverability: "INTERNAL", category: "OPERATIONS", sortWeight: 20, minimumAssurance: "aal2" },
+  { code: "P3", name: "Tenant Applications", port: 4003, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "WORK", sortWeight: 30 },
+  { code: "P4", name: "Tenant Websites", port: 4004, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "WORK", sortWeight: 40 },
   // P5 is RETIRED — Web Studio is now a pillar of P8, not a platform of its own.
   // The row stays so the `unierp-web-studio` OIDC client keeps a valid
   // platformCode and existing :4005 bookmarks resolve; the app on that port is
   // a path-preserving redirect to :4008. It is granted to nobody (see
   // PLAN_GATED_PLATFORMS below), so it no longer appears in the wizard.
-  { code: "P5", name: "Web Studio (merged into P8)", port: 4005, audience: "PUBLIC", requiresTenant: true },
-  { code: "P6", name: "Tenant Admin Console", port: 4006, audience: "PUBLIC", requiresTenant: true },
-  { code: "P7", name: "Marketplace", port: 4007, audience: "PUBLIC", requiresTenant: false },
-  { code: "P8", name: "Developer Platform", port: 4008, audience: "PUBLIC", requiresTenant: false },
-  { code: "P9", name: "Mobile", port: 4009, audience: "PUBLIC", requiresTenant: true },
-  { code: "P10", name: "Desktop", port: 4010, audience: "PUBLIC", requiresTenant: true },
+  { code: "P5", name: "Web Studio (merged into P8)", port: 4005, audience: "PUBLIC", requiresTenant: true, lifecycle: "RETIRED", surfaceType: "USER_UI", isUserFacing: false, discoverability: "ENTITLED", category: "BUILD", sortWeight: 50 },
+  { code: "P6", name: "Tenant Admin Console", port: 4006, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "OPERATIONS", sortWeight: 60 },
+  { code: "P7", name: "Marketplace", port: 4007, audience: "PUBLIC", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "DISCOVER", sortWeight: 70 },
+  { code: "P8", name: "Developer Platform", port: 4008, audience: "PUBLIC", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "BUILD", sortWeight: 80 },
+  { code: "P9", name: "Mobile", port: 4009, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "NATIVE_CLIENT", isUserFacing: true, discoverability: "ENTITLED", category: "WORK", sortWeight: 90 },
+  { code: "P10", name: "Desktop", port: 4010, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "NATIVE_CLIENT", isUserFacing: true, discoverability: "ENTITLED", category: "WORK", sortWeight: 100 },
 ];
 
 /**
@@ -93,6 +100,13 @@ async function main() {
         baseUrl: `http://localhost:${p.port}`,
         audience: p.audience,
         requiresTenant: p.requiresTenant,
+        lifecycle: p.lifecycle,
+        surfaceType: p.surfaceType,
+        isUserFacing: p.isUserFacing,
+        discoverability: p.discoverability,
+        category: p.category,
+        sortWeight: p.sortWeight,
+        minimumAssurance: p.minimumAssurance ?? null,
       },
       update: {
         name: p.name,
@@ -100,6 +114,13 @@ async function main() {
         baseUrl: `http://localhost:${p.port}`,
         audience: p.audience,
         requiresTenant: p.requiresTenant,
+        lifecycle: p.lifecycle,
+        surfaceType: p.surfaceType,
+        isUserFacing: p.isUserFacing,
+        discoverability: p.discoverability,
+        category: p.category,
+        sortWeight: p.sortWeight,
+        minimumAssurance: p.minimumAssurance ?? null,
       },
     });
   }
@@ -117,8 +138,8 @@ async function main() {
         // input for a COALESCE index, so this upsert keys on a find first.
         id: await findOrPlaceholder("ROLE", "*", code, null),
       },
-      create: { subjectType: "ROLE", subjectId: "*", platformCode: code, tenantId: null },
-      update: {},
+      create: { subjectType: "ROLE", subjectId: "*", platformCode: code, tenantId: null, effect: "ALLOW", reason: "baseline tenant platform" },
+      update: { effect: "ALLOW", validFrom: null, validUntil: null, reason: "baseline tenant platform" },
     });
   }
 
@@ -135,8 +156,8 @@ async function main() {
     for (const code of PLAN_GATED_PLATFORMS) {
       await idpPrisma.platformGrant.upsert({
         where: { id: await findOrPlaceholder("PLAN", plan.id, code, null) },
-        create: { subjectType: "PLAN", subjectId: plan.id, platformCode: code, tenantId: null },
-        update: {},
+        create: { subjectType: "PLAN", subjectId: plan.id, platformCode: code, tenantId: null, effect: "ALLOW", reason: `plan entitlement: ${plan.name}` },
+        update: { effect: "ALLOW", reason: `plan entitlement: ${plan.name}` },
       });
     }
     console.log(
@@ -164,13 +185,15 @@ async function main() {
     );
   }
 
-  console.log("Granting provider-staff access to the control plane (P2)…");
+  console.log("Granting provider-staff access to all active platform surfaces…");
   for (const role of PROVIDER_STAFF_ROLES) {
-    await idpPrisma.platformGrant.upsert({
-      where: { id: await findOrPlaceholder("ROLE", role, "P2", null) },
-      create: { subjectType: "ROLE", subjectId: role, platformCode: "P2", tenantId: null },
-      update: {},
-    });
+    for (const platform of PLATFORMS.filter((entry) => entry.lifecycle === "ACTIVE")) {
+      await idpPrisma.platformGrant.upsert({
+        where: { id: await findOrPlaceholder("ROLE", role, platform.code, null) },
+        create: { subjectType: "ROLE", subjectId: role, platformCode: platform.code, tenantId: null, effect: "ALLOW", reason: "provider staff platform access" },
+        update: { effect: "ALLOW", validFrom: null, validUntil: null, reason: "provider staff platform access" },
+      });
+    }
   }
 
   const platformCount = await idpPrisma.platform.count();

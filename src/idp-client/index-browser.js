@@ -145,6 +145,49 @@ exports.Prisma.UserScalarFieldEnum = {
   passwordChangedAt: 'passwordChangedAt'
 };
 
+exports.Prisma.AccountContactScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  userId: 'userId',
+  type: 'type',
+  value: 'value',
+  normalizedValue: 'normalizedValue',
+  label: 'label',
+  isPrimary: 'isPrimary',
+  verifiedAt: 'verifiedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AccountContactVerificationScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  userId: 'userId',
+  contactId: 'contactId',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PasskeyScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  userId: 'userId',
+  credentialId: 'credentialId',
+  publicKey: 'publicKey',
+  counter: 'counter',
+  transports: 'transports',
+  name: 'name',
+  deviceType: 'deviceType',
+  backupEligible: 'backupEligible',
+  backedUp: 'backedUp',
+  aaguid: 'aaguid',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.UserProfileScalarFieldEnum = {
   id: 'id',
   tenantId: 'tenantId',
@@ -276,6 +319,64 @@ exports.Prisma.EmailVerificationTokenScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.EmailDeliveryScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  queueJobId: 'queueJobId',
+  provider: 'provider',
+  providerMessageId: 'providerMessageId',
+  recipientHash: 'recipientHash',
+  template: 'template',
+  status: 'status',
+  isCanary: 'isCanary',
+  attemptedProviders: 'attemptedProviders',
+  acceptedAt: 'acceptedAt',
+  lastEventAt: 'lastEventAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EmailDeliveryEventScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  deliveryId: 'deliveryId',
+  provider: 'provider',
+  providerEventId: 'providerEventId',
+  providerMessageId: 'providerMessageId',
+  type: 'type',
+  reason: 'reason',
+  occurredAt: 'occurredAt',
+  receivedAt: 'receivedAt'
+};
+
+exports.Prisma.EmailSuppressionScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  recipientHash: 'recipientHash',
+  reason: 'reason',
+  sourceProvider: 'sourceProvider',
+  sourceEventId: 'sourceEventId',
+  active: 'active',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EmailUsageDailyScalarFieldEnum = {
+  tenantId: 'tenantId',
+  usageDate: 'usageDate',
+  reservedCount: 'reservedCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EmailSendReservationScalarFieldEnum = {
+  tenantId: 'tenantId',
+  queueJobId: 'queueJobId',
+  usageDate: 'usageDate',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.PushSubscriptionScalarFieldEnum = {
   id: 'id',
   tenantId: 'tenantId',
@@ -383,6 +484,13 @@ exports.Prisma.PlatformScalarFieldEnum = {
   icon: 'icon',
   audience: 'audience',
   requiresTenant: 'requiresTenant',
+  lifecycle: 'lifecycle',
+  surfaceType: 'surfaceType',
+  isUserFacing: 'isUserFacing',
+  discoverability: 'discoverability',
+  category: 'category',
+  sortWeight: 'sortWeight',
+  minimumAssurance: 'minimumAssurance',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -393,6 +501,13 @@ exports.Prisma.PlatformGrantScalarFieldEnum = {
   subjectId: 'subjectId',
   platformCode: 'platformCode',
   tenantId: 'tenantId',
+  effect: 'effect',
+  validFrom: 'validFrom',
+  validUntil: 'validUntil',
+  conditions: 'conditions',
+  reason: 'reason',
+  createdBy: 'createdBy',
+  reviewAt: 'reviewAt',
   createdAt: 'createdAt'
 };
 
@@ -447,6 +562,9 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  AccountContact: 'AccountContact',
+  AccountContactVerification: 'AccountContactVerification',
+  Passkey: 'Passkey',
   UserProfile: 'UserProfile',
   UserIdentity: 'UserIdentity',
   Role: 'Role',
@@ -458,6 +576,11 @@ exports.Prisma.ModelName = {
   UserGroupMember: 'UserGroupMember',
   PasswordResetToken: 'PasswordResetToken',
   EmailVerificationToken: 'EmailVerificationToken',
+  EmailDelivery: 'EmailDelivery',
+  EmailDeliveryEvent: 'EmailDeliveryEvent',
+  EmailSuppression: 'EmailSuppression',
+  EmailUsageDaily: 'EmailUsageDaily',
+  EmailSendReservation: 'EmailSendReservation',
   PushSubscription: 'PushSubscription',
   MfaPushChallenge: 'MfaPushChallenge',
   OAuthClient: 'OAuthClient',

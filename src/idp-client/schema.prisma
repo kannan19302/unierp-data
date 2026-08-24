@@ -41,11 +41,76 @@ model User {
   apiTokens        AuthApiToken[]
   profile          UserProfile?
   directReports    UserProfile[]     @relation("UserProfileManager")
+  passkeys         Passkey[]
+  accountContacts  AccountContact[]
 
   @@unique([tenantId, email])
+  @@unique([tenantId, id])
   @@index([tenantId])
   @@index([email])
   @@map("users")
+}
+
+model AccountContact {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  userId          String    @map("user_id")
+  type            String    @default("EMAIL")
+  value           String
+  normalizedValue String    @map("normalized_value")
+  label           String    @default("Recovery email")
+  isPrimary       Boolean   @default(false) @map("is_primary")
+  verifiedAt      DateTime? @map("verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user               User                         @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+  verificationTokens AccountContactVerification[]
+
+  @@unique([tenantId, type, normalizedValue])
+  @@unique([tenantId, userId, id])
+  @@index([tenantId, userId])
+  @@map("account_contacts")
+}
+
+model AccountContactVerification {
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  userId    String    @map("user_id")
+  contactId String    @map("contact_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  contact AccountContact @relation(fields: [tenantId, userId, contactId], references: [tenantId, userId, id], onDelete: Cascade)
+
+  @@index([tenantId, userId, contactId])
+  @@index([expiresAt])
+  @@map("account_contact_verifications")
+}
+
+model Passkey {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  userId         String    @map("user_id")
+  credentialId   String    @unique @map("credential_id")
+  publicKey      String    @map("public_key")
+  counter        BigInt    @default(0)
+  transports     String?
+  name           String
+  deviceType     String?   @map("device_type")
+  backupEligible Boolean   @default(false) @map("backup_eligible")
+  backedUp       Boolean   @default(false) @map("backed_up")
+  aaguid         String?
+  lastUsedAt     DateTime? @map("last_used_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+  @@map("passkeys")
 }
 
 model UserProfile {
@@ -741,6 +806,99 @@ model EmailVerificationToken {
   @@map("email_verification_tokens")
 }
 
+/// Privacy-minimised transactional-email ledger. Recipient addresses are
+/// represented only by a keyed HMAC so delivery operations never become a
+/// second plaintext identity store.
+model EmailDelivery {
+  id                 String    @id @default(cuid())
+  tenantId           String    @map("tenant_id")
+  queueJobId         String    @map("queue_job_id")
+  provider           String
+  providerMessageId  String    @map("provider_message_id")
+  recipientHash      String    @map("recipient_hash")
+  template           String?
+  status             String    @default("ACCEPTED")
+  isCanary           Boolean   @default(false) @map("is_canary")
+  attemptedProviders String[]  @default([]) @map("attempted_providers")
+  acceptedAt         DateTime  @default(now()) @map("accepted_at")
+  lastEventAt        DateTime? @map("last_event_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  events EmailDeliveryEvent[]
+
+  @@unique([provider, providerMessageId])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, isCanary, createdAt])
+  @@map("email_deliveries")
+}
+
+/// One authenticated provider callback. The provider event id is globally
+/// idempotent, which makes at-least-once webhook delivery safe.
+model EmailDeliveryEvent {
+  id                String   @id @default(cuid())
+  tenantId          String   @map("tenant_id")
+  deliveryId        String   @map("delivery_id")
+  provider          String
+  providerEventId   String   @map("provider_event_id")
+  providerMessageId String   @map("provider_message_id")
+  type              String
+  reason            String?
+  occurredAt        DateTime @map("occurred_at")
+  receivedAt        DateTime @default(now()) @map("received_at")
+
+  delivery EmailDelivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerEventId])
+  @@index([tenantId, occurredAt])
+  @@index([deliveryId, occurredAt])
+  @@map("email_delivery_events")
+}
+
+/// Permanent or time-bounded delivery exclusion created from authenticated
+/// hard-bounce, complaint, invalid-address, or operator events.
+model EmailSuppression {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  recipientHash  String    @map("recipient_hash")
+  reason         String
+  sourceProvider String    @map("source_provider")
+  sourceEventId  String    @map("source_event_id")
+  active         Boolean   @default(true)
+  expiresAt      DateTime? @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, recipientHash])
+  @@index([tenantId, active])
+  @@map("email_suppressions")
+}
+
+/// Atomic UTC-day send reservations enforce a hard per-tenant ceiling before
+/// any provider call is attempted.
+model EmailUsageDaily {
+  tenantId      String   @map("tenant_id")
+  usageDate     DateTime @map("usage_date") @db.Date
+  reservedCount Int      @default(0) @map("reserved_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@id([tenantId, usageDate])
+  @@map("email_usage_daily")
+}
+
+/// Stable job reservation prevents BullMQ retries from consuming quota twice.
+model EmailSendReservation {
+  tenantId   String   @map("tenant_id")
+  queueJobId String   @map("queue_job_id")
+  usageDate  DateTime @map("usage_date") @db.Date
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@id([tenantId, queueJobId])
+  @@index([tenantId, usageDate])
+  @@map("email_send_reservations")
+}
+
 model PushSubscription {
   id        String   @id @default(cuid())
   tenantId  String   @map("tenant_id")
@@ -959,15 +1117,25 @@ model LoginAttemptCounter {
 /// control-plane authority regardless of any grant below; `PUBLIC` platforms
 /// are reachable subject to entitlement.
 model Platform {
-  code           String   @id
-  name           String
-  port           Int
-  baseUrl        String   @map("base_url")
-  icon           String?
-  audience       String   @default("PUBLIC")
-  requiresTenant Boolean  @default(true) @map("requires_tenant")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  code             String   @id
+  name             String
+  port             Int
+  baseUrl          String   @map("base_url")
+  icon             String?
+  audience         String   @default("PUBLIC")
+  requiresTenant   Boolean  @default(true) @map("requires_tenant")
+  /// ACTIVE | MAINTENANCE | SUSPENDED | RETIRED
+  lifecycle        String   @default("ACTIVE")
+  /// USER_UI | NATIVE_CLIENT | SERVICE | OPERATIONS
+  surfaceType      String   @default("USER_UI") @map("surface_type")
+  isUserFacing     Boolean  @default(true) @map("is_user_facing")
+  /// PUBLIC | ENTITLED | INTERNAL. Controls discovery, never enforcement.
+  discoverability  String   @default("ENTITLED")
+  category         String   @default("WORK")
+  sortWeight       Int      @default(0) @map("sort_weight")
+  minimumAssurance String?  @map("minimum_assurance")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   grants PlatformGrant[]
 
@@ -979,12 +1147,20 @@ model Platform {
 /// User.id (USER, always tenant-scoped — a user grant with no tenant would not
 /// know which tenant's token to issue).
 model PlatformGrant {
-  id           String   @id @default(cuid())
-  subjectType  String   @map("subject_type")
-  subjectId    String   @map("subject_id")
-  platformCode String   @map("platform_code")
-  tenantId     String?  @map("tenant_id")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id           String    @id @default(cuid())
+  subjectType  String    @map("subject_type")
+  subjectId    String    @map("subject_id")
+  platformCode String    @map("platform_code")
+  tenantId     String?   @map("tenant_id")
+  /// ALLOW | DENY. A matching DENY takes precedence over every ALLOW.
+  effect       String    @default("ALLOW")
+  validFrom    DateTime? @map("valid_from")
+  validUntil   DateTime? @map("valid_until")
+  conditions   Json      @default("{}")
+  reason       String?
+  createdBy    String?   @map("created_by")
+  reviewAt     DateTime? @map("review_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
   platform Platform @relation(fields: [platformCode], references: [code], onDelete: Cascade)
 

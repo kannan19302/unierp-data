@@ -34,19 +34,85 @@ model User {
   lockedUntil         DateTime? @map("locked_until")
   passwordChangedAt   DateTime? @map("password_changed_at")
 
-  roles                   UserRole[]
-  userSessions            UserSession[]
-  groupMemberships        UserGroupMember[]
-  identities              UserIdentity[]
-  apiTokens               AuthApiToken[]
-  profile                 UserProfile?
-  directReports           UserProfile[]            @relation("UserProfileManager")
+  roles            UserRole[]
+  userSessions     UserSession[]
+  groupMemberships UserGroupMember[]
+  identities       UserIdentity[]
+  apiTokens        AuthApiToken[]
+  profile          UserProfile?
+  directReports    UserProfile[]     @relation("UserProfileManager")
+  passkeys         Passkey[]
+  accountContacts  AccountContact[]
 
   @@unique([tenantId, email])
+  @@unique([tenantId, id])
   @@index([tenantId])
   @@index([email])
   @@map("users")
 }
+
+model AccountContact {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  userId          String    @map("user_id")
+  type            String    @default("EMAIL")
+  value           String
+  normalizedValue String    @map("normalized_value")
+  label           String    @default("Recovery email")
+  isPrimary       Boolean   @default(false) @map("is_primary")
+  verifiedAt      DateTime? @map("verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user               User                         @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+  verificationTokens AccountContactVerification[]
+
+  @@unique([tenantId, type, normalizedValue])
+  @@unique([tenantId, userId, id])
+  @@index([tenantId, userId])
+  @@map("account_contacts")
+}
+
+model AccountContactVerification {
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  userId    String    @map("user_id")
+  contactId String    @map("contact_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  contact AccountContact @relation(fields: [tenantId, userId, contactId], references: [tenantId, userId, id], onDelete: Cascade)
+
+  @@index([tenantId, userId, contactId])
+  @@index([expiresAt])
+  @@map("account_contact_verifications")
+}
+
+model Passkey {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  userId         String    @map("user_id")
+  credentialId   String    @unique @map("credential_id")
+  publicKey      String    @map("public_key")
+  counter        BigInt    @default(0)
+  transports     String?
+  name           String
+  deviceType     String?   @map("device_type")
+  backupEligible Boolean   @default(false) @map("backup_eligible")
+  backedUp       Boolean   @default(false) @map("backed_up")
+  aaguid         String?
+  lastUsedAt     DateTime? @map("last_used_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+  @@map("passkeys")
+}
+
 model UserProfile {
   id         String @id @default(cuid())
   tenantId   String @map("tenant_id")
@@ -68,8 +134,8 @@ model UserProfile {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  manager    User?       @relation("UserProfileManager", fields: [managerId], references: [id], onDelete: SetNull)
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  manager User? @relation("UserProfileManager", fields: [managerId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, employeeId])
   @@index([tenantId])
@@ -77,6 +143,7 @@ model UserProfile {
   @@index([departmentId])
   @@map("user_profiles")
 }
+
 model UserIdentity {
   id        String   @id @default(cuid())
   tenantId  String   @map("tenant_id")
@@ -92,6 +159,7 @@ model UserIdentity {
   @@index([userId])
   @@map("user_identities")
 }
+
 model Role {
   id          String   @id @default(cuid())
   tenantId    String   @map("tenant_id")
@@ -102,12 +170,13 @@ model Role {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  users          UserRole[]
+  users UserRole[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
   @@map("roles")
 }
+
 model UserRole {
   userId     String   @map("user_id")
   roleId     String   @map("role_id")
@@ -119,6 +188,7 @@ model UserRole {
   @@id([userId, roleId])
   @@map("user_roles")
 }
+
 model ApiKey {
   id          String    @id @default(cuid())
   tenantId    String    @map("tenant_id")
@@ -136,6 +206,7 @@ model ApiKey {
   @@index([tenantId])
   @@map("api_keys")
 }
+
 model AuthApiToken {
   id         String    @id @default(cuid())
   tenantId   String    @map("tenant_id")
@@ -147,12 +218,13 @@ model AuthApiToken {
   lastUsedAt DateTime? @map("last_used_at")
   createdAt  DateTime  @default(now()) @map("created_at")
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([userId])
   @@map("auth_api_tokens")
 }
+
 model UserSession {
   id               String    @id @default(cuid())
   tenantId         String    @map("tenant_id")
@@ -177,11 +249,12 @@ model UserSession {
   platform         String?   @map("platform")
   appVersion       String?   @map("app_version")
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([deviceId])
   @@map("user_sessions")
 }
+
 model UserGroup {
   id          String   @id @default(cuid())
   tenantId    String   @map("tenant_id")
@@ -196,6 +269,7 @@ model UserGroup {
   @@unique([tenantId, name])
   @@map("user_groups")
 }
+
 model UserGroupMember {
   groupId  String   @map("group_id")
   userId   String   @map("user_id")
@@ -207,6 +281,7 @@ model UserGroupMember {
   @@id([groupId, userId])
   @@map("user_group_members")
 }
+
 enum ValuationMethod {
   FIFO
   LIFO
@@ -214,11 +289,13 @@ enum ValuationMethod {
   STANDARD_COST
   ACTUAL_COST
 }
+
 enum ValuationStatus {
   ACTIVE
   SUPERSEDED
   REVALUED
 }
+
 enum TransferOrderStatus {
   DRAFT
   PENDING_APPROVAL
@@ -228,17 +305,20 @@ enum TransferOrderStatus {
   COMPLETED
   CANCELLED
 }
+
 enum DockDoorType {
   INBOUND
   OUTBOUND
   DUAL
 }
+
 enum DockDoorStatus {
   AVAILABLE
   OCCUPIED
   MAINTENANCE
   CLOSED
 }
+
 enum AppointmentStatus {
   SCHEDULED
   CHECKED_IN
@@ -247,12 +327,14 @@ enum AppointmentStatus {
   NO_SHOW
   CANCELLED
 }
+
 enum YardMoveStatus {
   PENDING
   IN_PROGRESS
   COMPLETE
   CANCELLED
 }
+
 enum StockTakeStatus {
   DRAFT
   IN_PROGRESS
@@ -262,6 +344,7 @@ enum StockTakeStatus {
   POSTED
   CANCELLED
 }
+
 enum CountSheetStatus {
   PENDING
   COUNTING
@@ -269,11 +352,13 @@ enum CountSheetStatus {
   APPROVED
   REJECTED
 }
+
 enum StockTakeVarianceStatus {
   PENDING
   APPROVED
   REJECTED
 }
+
 enum HazardClass {
   CLASS_1_EXPLOSIVES
   CLASS_2_GASES
@@ -285,11 +370,13 @@ enum HazardClass {
   CLASS_8_CORROSIVES
   CLASS_9_MISC
 }
+
 enum PackingGroup {
   I
   II
   III
 }
+
 enum HazmatRegulation {
   ADR
   IATA
@@ -297,12 +384,14 @@ enum HazmatRegulation {
   DOT
   REACH
 }
+
 enum SdsStatus {
   CURRENT
   EXPIRED
   PENDING_REVIEW
   SUPERSEDED
 }
+
 enum HazmatManifestStatus {
   DRAFT
   SUBMITTED
@@ -311,17 +400,20 @@ enum HazmatManifestStatus {
   DELIVERED
   CANCELLED
 }
+
 enum StorageCompatibilityResult {
   COMPATIBLE
   INCOMPATIBLE
   CONDITIONAL
 }
+
 enum AslStatus {
   APPROVED
   CONDITIONAL
   DISQUALIFIED
   PENDING_APPROVAL
 }
+
 enum AslChangeType {
   APPROVED
   DISQUALIFIED
@@ -330,12 +422,14 @@ enum AslChangeType {
   LEAD_TIME_UPDATE
   PREFERRED_UPDATE
 }
+
 enum PalletTypeCategory {
   STANDARD
   EURO
   CHEP
   CUSTOM
 }
+
 enum ContainerTypeCategory {
   DRY_VAN
   REEFER
@@ -344,6 +438,7 @@ enum ContainerTypeCategory {
   TANK
   BULK
 }
+
 enum LoadPlanStatus {
   DRAFT
   OPTIMIZING
@@ -353,6 +448,7 @@ enum LoadPlanStatus {
   SHIPPED
   CANCELLED
 }
+
 enum PackingPlanStatus {
   DRAFT
   CONFIRMED
@@ -360,16 +456,19 @@ enum PackingPlanStatus {
   COMPLETED
   CANCELLED
 }
+
 enum CatchWeightVariance {
   WITHIN_TOLERANCE
   OVER_TOLERANCE
   UNDER_TOLERANCE
 }
+
 enum RecallClass {
   CLASS_I
   CLASS_II
   CLASS_III
 }
+
 enum RecallStatus {
   DRAFT
   ISSUED
@@ -377,12 +476,14 @@ enum RecallStatus {
   COMPLETED
   CANCELLED
 }
+
 enum RecallActionType {
   RETURN
   DESTROY
   REWORK
   QUARANTINE
 }
+
 enum PackagingLevel {
   EACH
   INNER
@@ -390,6 +491,7 @@ enum PackagingLevel {
   MASTER_CARTON
   PALLET
 }
+
 enum BarcodeSymbology {
   EAN13
   EAN8
@@ -403,6 +505,7 @@ enum BarcodeSymbology {
   QR_CODE
   GS1_DATAMATRIX
 }
+
 enum LabelTemplateType {
   ITEM
   INNER
@@ -411,15 +514,18 @@ enum LabelTemplateType {
   SHIPPING
   COMPLIANCE
 }
+
 enum TemperatureUnit {
   CELSIUS
   FAHRENHEIT
 }
+
 enum ExcursionSeverity {
   MINOR
   MODERATE
   CRITICAL
 }
+
 enum ExcursionStatus {
   OPEN
   UNDER_REVIEW
@@ -427,6 +533,7 @@ enum ExcursionStatus {
   RELEASED
   DISPOSED
 }
+
 enum WriteDownStatus {
   DRAFT
   PENDING_APPROVAL
@@ -434,6 +541,7 @@ enum WriteDownStatus {
   REJECTED
   WRITTEN_DOWN
 }
+
 enum WriteOffStatus {
   DRAFT
   PENDING_APPROVAL
@@ -441,21 +549,25 @@ enum WriteOffStatus {
   REJECTED
   COMPLETED
 }
+
 enum AbcClass {
   A // top ~20% of products driving ~80% of value
   B // middle tier
   C // bottom tier — low value/volume
 }
+
 enum XyzClass {
   X // highly stable demand (low CV)
   Y // moderate variability
   Z // highly erratic / unpredictable
 }
+
 enum VelocityClassificationStatus {
   DRAFT
   ACTIVE
   SUPERSEDED
 }
+
 enum RmaStatus {
   REQUESTED
   APPROVED
@@ -464,6 +576,7 @@ enum RmaStatus {
   INSPECTED
   CLOSED
 }
+
 enum ReturnDisposition {
   RESTOCK // goes back to inventory
   REFURBISH // needs repair/rework before restock
@@ -471,16 +584,19 @@ enum ReturnDisposition {
   RETURN_TO_VENDOR // send back to supplier
   QUARANTINE // hold for QA decision
 }
+
 enum ReturnCreditStatus {
   PENDING
   ISSUED
   VOIDED
 }
+
 enum ReplenishmentMethod {
   PURCHASE_ORDER // order from supplier
   TRANSFER // transfer from another warehouse
   PRODUCTION // manufacturing order
 }
+
 enum ReplenSuggestionStatus {
   OPEN
   APPROVED
@@ -488,6 +604,7 @@ enum ReplenSuggestionStatus {
   RECEIVED
   CANCELLED
 }
+
 enum DamageReportStatus {
   DRAFT
   SUBMITTED
@@ -496,11 +613,13 @@ enum DamageReportStatus {
   RESOLVED
   CLOSED
 }
+
 enum DamageSeverity {
   MINOR // cosmetic / partial damage; item still usable
   MODERATE // partial loss; item degraded but repairable
   SEVERE // item total loss
 }
+
 enum FreightClaimType {
   DAMAGE // physical damage to cargo
   SHORTAGE // quantity short-delivered
@@ -508,6 +627,7 @@ enum FreightClaimType {
   DELAY // time-sensitive cargo delayed
   CONCEALED // damage discovered after delivery
 }
+
 enum FreightClaimStatus {
   DRAFT
   FILED
@@ -518,17 +638,20 @@ enum FreightClaimStatus {
   REJECTED
   CLOSED
 }
+
 enum VmiAgreementStatus {
   DRAFT
   ACTIVE
   SUSPENDED
   TERMINATED
 }
+
 enum VmiReplenTrigger {
   BELOW_MIN
   SCHEDULE
   MANUAL
 }
+
 enum VmiOrderStatus {
   PENDING
   CONFIRMED
@@ -536,6 +659,7 @@ enum VmiOrderStatus {
   RECEIVED
   CANCELLED
 }
+
 enum CostingMethod {
   FIFO
   LIFO
@@ -543,11 +667,13 @@ enum CostingMethod {
   STANDARD
   SPECIFIC
 }
+
 enum CostLayerStatus {
   OPEN
   PARTIALLY_CONSUMED
   FULLY_CONSUMED
 }
+
 enum CostAdjustmentType {
   PURCHASE_PRICE_VARIANCE
   FREIGHT_ABSORPTION
@@ -555,6 +681,7 @@ enum CostAdjustmentType {
   WRITE_DOWN
   MANUAL
 }
+
 enum LotStatus {
   ACTIVE
   QUARANTINE
@@ -562,11 +689,13 @@ enum LotStatus {
   DISPOSED
   RECALLED
 }
+
 enum ExpiryAlertLevel {
   INFO
   WARNING
   CRITICAL
 }
+
 enum DisposalMethod {
   DESTROY
   RETURN_TO_VENDOR
@@ -574,6 +703,7 @@ enum DisposalMethod {
   REWORK
   OTHER
 }
+
 enum CrossDockStatus {
   PENDING
   RECEIVING
@@ -582,11 +712,13 @@ enum CrossDockStatus {
   COMPLETED
   CANCELLED
 }
+
 enum CrossDockType {
   OPPORTUNISTIC
   PLANNED
   FLOW_THROUGH
 }
+
 enum PickWaveItemStatus {
   PENDING
   IN_PROGRESS
@@ -594,12 +726,14 @@ enum PickWaveItemStatus {
   SHORT
   CANCELLED
 }
+
 enum PickTaskStatus {
   ASSIGNED
   IN_PROGRESS
   COMPLETED
   CANCELLED
 }
+
 enum AsnStatus {
   PENDING
   IN_TRANSIT
@@ -609,22 +743,26 @@ enum AsnStatus {
   PARTIALLY_RECEIVED
   CANCELLED
 }
+
 enum AsnDiscrepancyType {
   OVERAGE
   SHORTAGE
   WRONG_ITEM
   DAMAGED
 }
+
 enum ShipmentDirection {
   INBOUND
   OUTBOUND
 }
+
 enum ShipmentExceptionStatus {
   OPEN
   INVESTIGATING
   RESOLVED
   ESCALATED
 }
+
 enum BlockchainTxStatus {
   PENDING /// Queued, not yet submitted to Fabric
   SUBMITTED /// Submitted to Fabric, awaiting confirmation
@@ -632,12 +770,14 @@ enum BlockchainTxStatus {
   FAILED /// Submission failed (Fabric error)
   RETRYING /// Queued for retry after failure
 }
+
 enum VerificationResult {
   VERIFIED /// On-chain hash matches local data
   TAMPERED /// Hash mismatch — data was modified after anchoring
   NOT_FOUND /// No on-chain record exists yet
   NETWORK_ERROR /// Fabric was unreachable during verification
 }
+
 model PasswordResetToken {
   id        String    @id @default(cuid())
   userId    String    @map("user_id")
@@ -646,7 +786,6 @@ model PasswordResetToken {
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
   createdAt DateTime  @default(now()) @map("created_at")
-
 
   @@index([userId])
   @@index([expiresAt])
@@ -662,10 +801,102 @@ model EmailVerificationToken {
   usedAt    DateTime? @map("used_at")
   createdAt DateTime  @default(now()) @map("created_at")
 
-
   @@index([userId])
   @@index([expiresAt])
   @@map("email_verification_tokens")
+}
+
+/// Privacy-minimised transactional-email ledger. Recipient addresses are
+/// represented only by a keyed HMAC so delivery operations never become a
+/// second plaintext identity store.
+model EmailDelivery {
+  id                 String    @id @default(cuid())
+  tenantId           String    @map("tenant_id")
+  queueJobId         String    @map("queue_job_id")
+  provider           String
+  providerMessageId  String    @map("provider_message_id")
+  recipientHash      String    @map("recipient_hash")
+  template           String?
+  status             String    @default("ACCEPTED")
+  isCanary           Boolean   @default(false) @map("is_canary")
+  attemptedProviders String[]  @default([]) @map("attempted_providers")
+  acceptedAt         DateTime  @default(now()) @map("accepted_at")
+  lastEventAt        DateTime? @map("last_event_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  events EmailDeliveryEvent[]
+
+  @@unique([provider, providerMessageId])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, isCanary, createdAt])
+  @@map("email_deliveries")
+}
+
+/// One authenticated provider callback. The provider event id is globally
+/// idempotent, which makes at-least-once webhook delivery safe.
+model EmailDeliveryEvent {
+  id                String   @id @default(cuid())
+  tenantId          String   @map("tenant_id")
+  deliveryId        String   @map("delivery_id")
+  provider          String
+  providerEventId   String   @map("provider_event_id")
+  providerMessageId String   @map("provider_message_id")
+  type              String
+  reason            String?
+  occurredAt        DateTime @map("occurred_at")
+  receivedAt        DateTime @default(now()) @map("received_at")
+
+  delivery EmailDelivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerEventId])
+  @@index([tenantId, occurredAt])
+  @@index([deliveryId, occurredAt])
+  @@map("email_delivery_events")
+}
+
+/// Permanent or time-bounded delivery exclusion created from authenticated
+/// hard-bounce, complaint, invalid-address, or operator events.
+model EmailSuppression {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  recipientHash  String    @map("recipient_hash")
+  reason         String
+  sourceProvider String    @map("source_provider")
+  sourceEventId  String    @map("source_event_id")
+  active         Boolean   @default(true)
+  expiresAt      DateTime? @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, recipientHash])
+  @@index([tenantId, active])
+  @@map("email_suppressions")
+}
+
+/// Atomic UTC-day send reservations enforce a hard per-tenant ceiling before
+/// any provider call is attempted.
+model EmailUsageDaily {
+  tenantId      String   @map("tenant_id")
+  usageDate     DateTime @map("usage_date") @db.Date
+  reservedCount Int      @default(0) @map("reserved_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@id([tenantId, usageDate])
+  @@map("email_usage_daily")
+}
+
+/// Stable job reservation prevents BullMQ retries from consuming quota twice.
+model EmailSendReservation {
+  tenantId   String   @map("tenant_id")
+  queueJobId String   @map("queue_job_id")
+  usageDate  DateTime @map("usage_date") @db.Date
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@id([tenantId, queueJobId])
+  @@index([tenantId, usageDate])
+  @@map("email_send_reservations")
 }
 
 model PushSubscription {
@@ -710,9 +941,9 @@ model MfaPushChallenge {
 /// A registered relying party: one of the ten first-party platforms, a native
 /// client (mobile/desktop), or a third-party marketplace/developer application.
 model OAuthClient {
-  id        String @id @default(cuid())
-  clientId  String @unique @map("client_id")
-  name      String
+  id               String  @id @default(cuid())
+  clientId         String  @unique @map("client_id")
+  name             String
   /// Null for PUBLIC clients. Native and browser clients cannot keep a secret,
   /// so they are public and rely on PKCE instead.
   clientSecretHash String? @map("client_secret_hash")
@@ -800,12 +1031,12 @@ model RefreshGrant {
   sid      String
   scopes   String[]
 
-  expiresAt DateTime  @map("expires_at")
-  revokedAt DateTime? @map("revoked_at")
+  expiresAt     DateTime  @map("expires_at")
+  revokedAt     DateTime? @map("revoked_at")
   /// Rotation chain. If a already-rotated token is presented again it has been
   /// stolen, and the whole chain is revoked rather than just this row.
-  rotatedFromId String? @map("rotated_from_id")
-  createdAt     DateTime @default(now()) @map("created_at")
+  rotatedFromId String?   @map("rotated_from_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
 
   client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
 
@@ -844,15 +1075,15 @@ model OidcSigningKey {
   id  String @id
   alg String @default("RS256")
 
-  publicJwk          Json   @map("public_jwk")
-  privateKeyPemEnc   String @map("private_key_pem_enc")
+  publicJwk        Json   @map("public_jwk")
+  privateKeyPemEnc String @map("private_key_pem_enc")
 
   /// CURRENT — signs new tokens. PREVIOUS — still verifies during rotation
   /// overlap. RETIRED — no longer published.
   status String @default("CURRENT")
 
-  createdAt  DateTime  @default(now()) @map("created_at")
-  retiredAt  DateTime? @map("retired_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  retiredAt DateTime? @map("retired_at")
 
   @@index([status])
   @@map("oidc_signing_keys")
@@ -874,7 +1105,6 @@ model LoginAttemptCounter {
   @@map("login_attempt_counters")
 }
 
-
 // ════════════════════════════════════════════════════════════════════════════
 // PLATFORM ENTITLEMENT, AGENT DELEGATION (W2)
 //
@@ -887,15 +1117,25 @@ model LoginAttemptCounter {
 /// control-plane authority regardless of any grant below; `PUBLIC` platforms
 /// are reachable subject to entitlement.
 model Platform {
-  code           String   @id
-  name           String
-  port           Int
-  baseUrl        String   @map("base_url")
-  icon           String?
-  audience       String   @default("PUBLIC")
-  requiresTenant Boolean  @default(true) @map("requires_tenant")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  code             String   @id
+  name             String
+  port             Int
+  baseUrl          String   @map("base_url")
+  icon             String?
+  audience         String   @default("PUBLIC")
+  requiresTenant   Boolean  @default(true) @map("requires_tenant")
+  /// ACTIVE | MAINTENANCE | SUSPENDED | RETIRED
+  lifecycle        String   @default("ACTIVE")
+  /// USER_UI | NATIVE_CLIENT | SERVICE | OPERATIONS
+  surfaceType      String   @default("USER_UI") @map("surface_type")
+  isUserFacing     Boolean  @default(true) @map("is_user_facing")
+  /// PUBLIC | ENTITLED | INTERNAL. Controls discovery, never enforcement.
+  discoverability  String   @default("ENTITLED")
+  category         String   @default("WORK")
+  sortWeight       Int      @default(0) @map("sort_weight")
+  minimumAssurance String?  @map("minimum_assurance")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   grants PlatformGrant[]
 
@@ -907,12 +1147,20 @@ model Platform {
 /// User.id (USER, always tenant-scoped — a user grant with no tenant would not
 /// know which tenant's token to issue).
 model PlatformGrant {
-  id           String   @id @default(cuid())
-  subjectType  String   @map("subject_type")
-  subjectId    String   @map("subject_id")
-  platformCode String   @map("platform_code")
-  tenantId     String?  @map("tenant_id")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id           String    @id @default(cuid())
+  subjectType  String    @map("subject_type")
+  subjectId    String    @map("subject_id")
+  platformCode String    @map("platform_code")
+  tenantId     String?   @map("tenant_id")
+  /// ALLOW | DENY. A matching DENY takes precedence over every ALLOW.
+  effect       String    @default("ALLOW")
+  validFrom    DateTime? @map("valid_from")
+  validUntil   DateTime? @map("valid_until")
+  conditions   Json      @default("{}")
+  reason       String?
+  createdBy    String?   @map("created_by")
+  reviewAt     DateTime? @map("review_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
   platform Platform @relation(fields: [platformCode], references: [code], onDelete: Cascade)
 
@@ -931,12 +1179,12 @@ model AgentDefinition {
   id                        String   @id @default(cuid())
   tenantId                  String   @map("tenant_id")
   name                      String
-  description                String?
-  allowedPermissions         String[] @map("allowed_permissions")
-  requiresConfirmationAbove  String?  @map("requires_confirmation_above")
-  status                     String   @default("ACTIVE")
-  createdAt                  DateTime @default(now()) @map("created_at")
-  updatedAt                  DateTime @updatedAt @map("updated_at")
+  description               String?
+  allowedPermissions        String[] @map("allowed_permissions")
+  requiresConfirmationAbove String?  @map("requires_confirmation_above")
+  status                    String   @default("ACTIVE")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
 
   delegations AgentDelegation[]
 
@@ -951,14 +1199,14 @@ model AgentDefinition {
 /// trail must answer "what could this agent do when it acted", not "what could
 /// it do now".
 model AgentDelegation {
-  id                    String   @id @default(cuid())
-  tenantId              String   @map("tenant_id")
-  agentId               String   @map("agent_id")
-  delegatingUserId      String   @map("delegating_user_id")
-  effectivePermissions  String[] @map("effective_permissions")
-  sid                   String
-  expiresAt             DateTime @map("expires_at")
-  createdAt             DateTime @default(now()) @map("created_at")
+  id                   String   @id @default(cuid())
+  tenantId             String   @map("tenant_id")
+  agentId              String   @map("agent_id")
+  delegatingUserId     String   @map("delegating_user_id")
+  effectivePermissions String[] @map("effective_permissions")
+  sid                  String
+  expiresAt            DateTime @map("expires_at")
+  createdAt            DateTime @default(now()) @map("created_at")
 
   agent AgentDefinition @relation(fields: [agentId], references: [id], onDelete: Cascade)
 

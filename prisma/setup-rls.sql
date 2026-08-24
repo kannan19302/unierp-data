@@ -49,7 +49,9 @@ DECLARE
     'invoices',
     'invoice_lines',
     'payments',
-    'audit_logs'
+    'audit_logs',
+    'tenant_onboarding_progress',
+    'master_data_import_jobs'
   ];
 BEGIN
   FOREACH t IN ARRAY tables_to_isolate LOOP

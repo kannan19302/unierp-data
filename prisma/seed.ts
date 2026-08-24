@@ -12,6 +12,10 @@ const idpPrisma = new IdpPrismaClient();
 const DEFAULT_PASSWORD_HASH =
   "$2a$10$QNgJRZXhmjzcu16TQaaR4.EfRNWCFvCxE0Jvqvy/IKIgwq.BgSMJG";
 
+const BOOTSTRAP_TENANT_ADMIN_EMAIL = (
+  process.env.BOOTSTRAP_TENANT_ADMIN_EMAIL ?? "kannan19302@gmail.com"
+).trim().toLowerCase();
+
 const DEFAULT_ROLES = {
   SUPER_ADMIN: {
     name: "Super Admin",
@@ -142,13 +146,13 @@ async function main() {
       where: {
         tenantId_email: {
           tenantId: tenant.id,
-          email: "admin@kannan19302.dev",
+          email: BOOTSTRAP_TENANT_ADMIN_EMAIL,
         },
       },
       update: {},
       create: {
         tenantId: tenant.id,
-        email: "admin@kannan19302.dev",
+        email: BOOTSTRAP_TENANT_ADMIN_EMAIL,
         passwordHash: DEFAULT_PASSWORD_HASH,
         firstName: "System",
         lastName: "Administrator",

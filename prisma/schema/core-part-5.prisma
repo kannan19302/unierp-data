@@ -873,11 +873,20 @@ model DataErasureRequest {
   subjectName  String?   @map("subject_name")
   status       String    @default("PENDING")
   entityTypes  Json      @default("[]") @map("entity_types")
+  requestReason String?  @map("request_reason")
+  eligibleAt   DateTime? @map("eligible_at")
+  cancelledAt  DateTime? @map("cancelled_at")
+  cancellationReason String? @map("cancellation_reason")
+  executionStartedAt DateTime? @map("execution_started_at")
+  executionAttempts Int       @default(0) @map("execution_attempts")
+  executionError    String?   @map("execution_error")
+  legalHoldReason   String?   @map("legal_hold_reason")
   erasedAt     DateTime? @map("erased_at")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
   @@index([tenantId, status])
+  @@index([status, eligibleAt])
   @@map("data_erasure_requests")
 }
 
