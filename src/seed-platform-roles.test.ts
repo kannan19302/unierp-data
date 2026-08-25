@@ -27,7 +27,7 @@ import { hasPermission } from "@kannan19302/shared";
 import { PLATFORM_ROLES } from "../prisma/seed-platform";
 
 /** Mirrors CONTROL_PLANE_NAMESPACES; asserted against it below rather than trusted. */
-const CONTROL_PLANE = ["system", "platform"];
+const CONTROL_PLANE = ["system", "platform", "pcc"];
 
 const isControlPlane = (code: string) =>
   CONTROL_PLANE.some((ns) => code === ns || code.startsWith(`${ns}.`));
@@ -85,6 +85,7 @@ describe("M47 · control-plane seed roles (D046)", () => {
       "system.release.rollback",
       "system.clusters.read",
       "system.soc.execute",
+      "pcc.security.access",
     ]) {
       expect(hasPermission(owner, code), `owner must hold ${code}`).toBe(true);
     }

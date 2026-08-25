@@ -2,11 +2,16 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaClient as IdpPrismaClient } from "../src/idp-client/index.js";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
+import {
+  PROVIDER_REALM_TENANT_ID,
+  PROVIDER_REALM_TENANT_SLUG,
+} from "@kannan19302/shared";
+import { ensureProviderRealm } from "./provider-realm.js";
 
 /**
  * Control-plane provisioning — platform staff, not customers.
  *
- * The `system.*` / `platform.*` namespaces are reserved for the control plane,
+ * The `system.*` / `platform.*` / `pcc.*` namespaces are reserved for the control plane,
  * and `hasPermission` deliberately refuses to satisfy them from a tenant grant:
  * not from `finance.*`, and not even from the global `*` that Super Admin
  * carries. That is what closes the confirmed escalation in
@@ -43,8 +48,8 @@ const prisma = new PrismaClient();
 const idpPrisma = new IdpPrismaClient();
 
 /** Reserved control-plane tenant. Never a customer; never billed or listed. */
-export const PLATFORM_TENANT_ID = "platform";
-export const PLATFORM_TENANT_SLUG = "platform-control-plane";
+export const PLATFORM_TENANT_ID = PROVIDER_REALM_TENANT_ID;
+export const PLATFORM_TENANT_SLUG = PROVIDER_REALM_TENANT_SLUG;
 
 export const PLATFORM_ROLES = {
   PLATFORM_OWNER: {
@@ -54,7 +59,7 @@ export const PLATFORM_ROLES = {
     // Scoped to the control-plane namespaces only. This role deliberately
     // carries no tenant-business grants — reading a customer's ledger is a
     // separate, auditable act, not a side effect of being platform staff.
-    permissions: ["system.*", "platform.*"],
+    permissions: ["system.*", "platform.*", "pcc.*"],
   },
   PLATFORM_SUPPORT: {
     name: "Platform Support",
@@ -107,22 +112,7 @@ export const PLATFORM_ROLES = {
 async function main() {
   console.log("Provisioning the control plane…\n");
 
-  const tenant = await prisma.tenant.upsert({
-    where: { id: PLATFORM_TENANT_ID },
-    update: {},
-    create: {
-      id: PLATFORM_TENANT_ID,
-      name: "UniERP Platform (control plane)",
-      slug: PLATFORM_TENANT_SLUG,
-      // `status` is deliberately not ACTIVE: nothing that iterates customer
-      // tenants (billing runs, trial expiry, usage metering, tenant listings)
-      // should ever pick this row up as a customer.
-      status: "SYSTEM",
-      plan: "system",
-      settings: { isControlPlane: true },
-      onboardingComplete: true,
-    },
-  });
+  const tenant = await ensureProviderRealm(prisma);
   console.log(`  reserved tenant: ${tenant.name} (${tenant.id})`);
 
   const roleIds: Record<string, string> = {};

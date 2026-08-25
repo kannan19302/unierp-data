@@ -189,6 +189,80 @@ model UserRole {
   @@map("user_roles")
 }
 
+/// A certification campaign for either the provider workforce (PCC-03) or a
+/// single organization (OCC-03). Principal, role, and package references stay
+/// scalar deliberately: an access review is evidence and must survive removal
+/// of the reviewed assignment.
+model AccessReviewCampaign {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  scope            String   @default("ORGANIZATION") // PROVIDER | ORGANIZATION
+  name             String
+  description      String?
+  status           String   @default("DRAFT") // DRAFT | ACTIVE | COMPLETED | CANCELLED
+  reviewerStrategy Json     @default("{}") @map("reviewer_strategy")
+  startsAt         DateTime? @map("starts_at")
+  dueAt            DateTime? @map("due_at")
+  launchedAt       DateTime? @map("launched_at")
+  completedAt      DateTime? @map("completed_at")
+  createdBy        String   @map("created_by")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  items AccessReviewItem[]
+
+  @@index([tenantId, scope, status])
+  @@index([tenantId, dueAt])
+  @@map("access_review_campaigns")
+}
+
+/// One immutable grant snapshot within a campaign. `grantFingerprint` makes a
+/// campaign idempotent even when a role and package are discovered repeatedly
+/// from joins during launch/retry.
+model AccessReviewItem {
+  id                String   @id @default(cuid())
+  tenantId          String   @map("tenant_id")
+  campaignId        String   @map("campaign_id")
+  principalId       String   @map("principal_id")
+  roleId            String?  @map("role_id")
+  accessPackageId   String?  @map("access_package_id")
+  grantFingerprint  String   @map("grant_fingerprint")
+  reviewerId        String?  @map("reviewer_id")
+  decision          String   @default("PENDING") // PENDING | CERTIFIED | REVOKE | EXCEPTION
+  decisionReason    String?  @map("decision_reason")
+  decidedAt         DateTime? @map("decided_at")
+  remediationStatus String   @default("NOT_REQUIRED") @map("remediation_status") // NOT_REQUIRED | PENDING | COMPLETED | FAILED
+  remediatedAt      DateTime? @map("remediated_at")
+  snapshot          Json     @default("{}")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  campaign  AccessReviewCampaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  decisions AccessReviewDecisionHistory[]
+
+  @@unique([campaignId, grantFingerprint])
+  @@index([tenantId, campaignId, decision])
+  @@index([tenantId, principalId])
+  @@map("access_review_items")
+}
+
+/// Append-only decision evidence. The mutable item is a current projection;
+/// this history is the certification record needed for audit and recertifying.
+model AccessReviewDecisionHistory {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  itemId      String   @map("item_id")
+  actorId     String   @map("actor_id")
+  decision    String
+  reason      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  item AccessReviewItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, itemId, createdAt])
+  @@map("access_review_decision_history")
+}
+
 model ApiKey {
   id          String    @id @default(cuid())
   tenantId    String    @map("tenant_id")
@@ -1171,7 +1245,7 @@ model PlatformGrant {
 
 /// A tenant's registry of AI agents that may ever be exchanged a token for.
 /// `allowedPermissions` is a CEILING, checked against the CHECK constraint that
-/// bans system.* and platform.* namespaces and the "*" wildcard outright,
+/// bans system.*, platform.*, and pcc.* namespaces and the "*" wildcard outright,
 /// enforced twice — once here, once in AgentDelegationService — because a
 /// delegated agent obtaining control-plane authority is not a bug to catch
 /// later, it is the one outcome this whole design exists to make impossible.

@@ -235,6 +235,52 @@ exports.Prisma.UserRoleScalarFieldEnum = {
   assignedAt: 'assignedAt'
 };
 
+exports.Prisma.AccessReviewCampaignScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  scope: 'scope',
+  name: 'name',
+  description: 'description',
+  status: 'status',
+  reviewerStrategy: 'reviewerStrategy',
+  startsAt: 'startsAt',
+  dueAt: 'dueAt',
+  launchedAt: 'launchedAt',
+  completedAt: 'completedAt',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AccessReviewItemScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  campaignId: 'campaignId',
+  principalId: 'principalId',
+  roleId: 'roleId',
+  accessPackageId: 'accessPackageId',
+  grantFingerprint: 'grantFingerprint',
+  reviewerId: 'reviewerId',
+  decision: 'decision',
+  decisionReason: 'decisionReason',
+  decidedAt: 'decidedAt',
+  remediationStatus: 'remediationStatus',
+  remediatedAt: 'remediatedAt',
+  snapshot: 'snapshot',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AccessReviewDecisionHistoryScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  itemId: 'itemId',
+  actorId: 'actorId',
+  decision: 'decision',
+  reason: 'reason',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.ApiKeyScalarFieldEnum = {
   id: 'id',
   tenantId: 'tenantId',
@@ -569,6 +615,9 @@ exports.Prisma.ModelName = {
   UserIdentity: 'UserIdentity',
   Role: 'Role',
   UserRole: 'UserRole',
+  AccessReviewCampaign: 'AccessReviewCampaign',
+  AccessReviewItem: 'AccessReviewItem',
+  AccessReviewDecisionHistory: 'AccessReviewDecisionHistory',
   ApiKey: 'ApiKey',
   AuthApiToken: 'AuthApiToken',
   UserSession: 'UserSession',

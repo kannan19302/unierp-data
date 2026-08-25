@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@kannan19302/config": "^1.0.2",
-    "@kannan19302/shared": "^1.0.5",
+    "@kannan19302/shared": "file:../shared",
     "@nestjs/common": "^11.1.28",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^2.1.0",

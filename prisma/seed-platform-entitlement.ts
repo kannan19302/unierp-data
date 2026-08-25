@@ -31,7 +31,7 @@ interface PlatformSeed {
 
 const PLATFORMS: PlatformSeed[] = [
   { code: "P1", name: "Marketing Site", port: 4001, audience: "PUBLIC", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "PUBLIC", category: "DISCOVER", sortWeight: 10 },
-  { code: "P2", name: "Provider Admin OS", port: 4002, audience: "INTERNAL", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "OPERATIONS", isUserFacing: true, discoverability: "INTERNAL", category: "OPERATIONS", sortWeight: 20, minimumAssurance: "aal2" },
+  { code: "P2", name: "Provider Control Center (PCC)", port: 4002, audience: "INTERNAL", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "OPERATIONS", isUserFacing: true, discoverability: "INTERNAL", category: "OPERATIONS", sortWeight: 20, minimumAssurance: "aal2" },
   { code: "P3", name: "Tenant Applications", port: 4003, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "WORK", sortWeight: 30 },
   { code: "P4", name: "Tenant Websites", port: 4004, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "WORK", sortWeight: 40 },
   // P5 is RETIRED — Web Studio is now a pillar of P8, not a platform of its own.
@@ -40,7 +40,7 @@ const PLATFORMS: PlatformSeed[] = [
   // a path-preserving redirect to :4008. It is granted to nobody (see
   // PLAN_GATED_PLATFORMS below), so it no longer appears in the wizard.
   { code: "P5", name: "Web Studio (merged into P8)", port: 4005, audience: "PUBLIC", requiresTenant: true, lifecycle: "RETIRED", surfaceType: "USER_UI", isUserFacing: false, discoverability: "ENTITLED", category: "BUILD", sortWeight: 50 },
-  { code: "P6", name: "Tenant Admin Console", port: 4006, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "OPERATIONS", sortWeight: 60 },
+  { code: "P6", name: "Organization Control Center (OCC)", port: 4006, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "OPERATIONS", sortWeight: 60 },
   { code: "P7", name: "Marketplace", port: 4007, audience: "PUBLIC", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "DISCOVER", sortWeight: 70 },
   { code: "P8", name: "Developer Platform", port: 4008, audience: "PUBLIC", requiresTenant: false, lifecycle: "ACTIVE", surfaceType: "USER_UI", isUserFacing: true, discoverability: "ENTITLED", category: "BUILD", sortWeight: 80 },
   { code: "P9", name: "Mobile", port: 4009, audience: "PUBLIC", requiresTenant: true, lifecycle: "ACTIVE", surfaceType: "NATIVE_CLIENT", isUserFacing: true, discoverability: "ENTITLED", category: "WORK", sortWeight: 90 },
@@ -61,7 +61,6 @@ const BASELINE_TENANT_PLATFORMS = ["P3", "P4", "P6", "P7", "P8", "P9", "P10"];
  * Platforms a paid plan unlocks. **Empty, and correctly so.**
  *
  * P5 (Web Studio) was the only entry. It was plan-gated in this comment for a
- * long time while no PLAN grant was ever seeded, so `platform_grants` held ROLE
  * rows only, `tenantPlanGrantsPlatform` could never return true, and P5 was
  * unreachable for every tenant on every plan — signing in to :4005 returned
  * `access_denied`, indistinguishable from the platform being withheld
