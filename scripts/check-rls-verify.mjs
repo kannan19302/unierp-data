@@ -19,7 +19,7 @@
  * carry a policy named `tenant_isolation_<table>` referencing its tenant column.
  * The 364 tables named in ARCHITECTURE_REVIEW § F5 are individually confirmed.
  *
- *   DATABASE_URL=... node scripts/check-rls-verify.mjs
+ *   DATABASE_APP_URL=... node scripts/check-rls-verify.mjs
  *
  * Exit 0: every expected table verified. Exit 1: any single table failed, listed.
  */
@@ -86,12 +86,32 @@ function expectedTenantTables() {
   return expected;
 }
 
-const prisma = new PrismaClient();
+if (!process.env.DATABASE_APP_URL) {
+  throw new Error(
+    "DATABASE_APP_URL is required. RLS verification must use the NOBYPASSRLS application role, not a migration-owner connection.",
+  );
+}
+
+const prisma = new PrismaClient({
+  datasources: { db: { url: process.env.DATABASE_APP_URL } },
+});
 const failures = [];
 const confirmed = [];
 
 async function main() {
   const expected = expectedTenantTables();
+
+  const [currentRole] = await prisma.$queryRawUnsafe(
+    `SELECT current_user::text AS name, rolsuper, rolbypassrls
+       FROM pg_roles WHERE rolname = current_user`,
+  );
+  if (!currentRole) {
+    failures.push("could not determine the role used for RLS verification");
+  } else if (currentRole.rolsuper || currentRole.rolbypassrls) {
+    failures.push(
+      `RLS verifier is connected as privileged role ${currentRole.name}; verification requires NOSUPERUSER NOBYPASSRLS application credentials`,
+    );
+  }
 
   const rows = await prisma.$queryRawUnsafe(
     `SELECT c.relname::text as table_name,

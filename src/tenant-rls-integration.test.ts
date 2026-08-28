@@ -19,12 +19,10 @@ import { prisma, runWithTenantSession } from "./index";
  * proof now supplies its own non-bypass connection and asserts on that,
  * independent of the ambient DATABASE_URL.
  */
-const appRoleUrl =
-  process.env.DATABASE_APP_URL ??
-  process.env.DATABASE_URL?.replace(
-    /\/\/[^:]+:[^@]+@/,
-    "//unerp_api:unerp_api_password@",
-  );
+// Test credentials are supplied by the isolated test environment. Never
+// synthesize an application URL from a migration-owner URL or embed a runtime
+// credential in this proof suite.
+const appRoleUrl = process.env.DATABASE_APP_URL;
 
 const appPrisma = appRoleUrl
   ? new PrismaClient({ datasources: { db: { url: appRoleUrl } } })
@@ -387,22 +385,11 @@ describeDb("RLS: Two-tenant data isolation", () => {
 
 describeDb("RLS: No-context returns no rows", () => {
   it("returns no rows when querying outside a tenant session", async () => {
-    // Without a tenant session, the Prisma extension does NOT set
-    // app.current_tenant_id. When connected as the non-bypass role
-    // (unerp_api), the RLS policy evaluates current_tenant_id() → NULL,
-    // and no rows match tenant_id = NULL — proving the policy is active.
-    // NOTE: This test only passes under a non-bypass role. When connected
-    // as superuser (unerp), RLS is bypassed and count returns all rows.
-    const [role] = await prisma.$queryRawUnsafe<Array<{ rolsuper: boolean }>>(
-      `SELECT rolsuper FROM pg_roles WHERE rolname = current_user`,
-    );
-    if (role?.rolsuper) {
-      console.warn(
-        "SKIP: connected as superuser — RLS bypassed, no-context count is unrestricted",
-      );
-      return;
-    }
-    const customerCount = await prisma.customer.count();
+    // This must execute using the dedicated NOBYPASSRLS client established by
+    // the suite. No tenant GUC is set on this connection, so the policy must
+    // return zero rows. A migration-owner/superuser connection would not be
+    // proof and is rejected by the baseline test above.
+    const customerCount = await appPrisma!.customer.count();
     expect(customerCount).toBe(0);
   });
 });
