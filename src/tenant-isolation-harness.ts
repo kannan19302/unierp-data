@@ -27,7 +27,7 @@
 // be missed by a stale hardcoded list.
 // ─────────────────────────────────────────────────
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./main-client/index.js";
 import { randomUUID } from "node:crypto";
 
 export const TENANT_A = "j03-iso-tenant-a";

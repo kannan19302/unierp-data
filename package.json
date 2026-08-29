@@ -1,17 +1,32 @@
 {
   "name": "@kannan19302/database",
   "version": "1.0.14",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "description": "Prisma ORM schema, client, and migrations",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "prisma": [
+        "dist/prisma.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./prisma": {
+      "types": "./dist/prisma.d.ts",
+      "default": "./dist/prisma.js"
     }
   },
   "scripts": {
-    "build": "node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc && node scripts/copy-prisma-clients.mjs",
+    "build": "pnpm db:generate && node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc && node scripts/copy-prisma-clients.mjs",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate --schema prisma/schema && prisma generate --schema prisma/idp-schema.prisma",
     "db:migrate": "prisma migrate dev --schema prisma/schema && prisma migrate dev --schema prisma/idp-schema.prisma",

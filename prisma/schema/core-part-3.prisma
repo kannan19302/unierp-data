@@ -2132,6 +2132,10 @@ model TenantDomain {
   @@map("tenant_domains")
 }
 
+/// RETIRED RUNTIME MODEL (FND-P0-003): retained only so an explicitly
+/// authorized data-convergence migration can inspect/archive old rows before
+/// dropping tenant_sso_configs. Active identity, administration and analytics
+/// code must use SsoConfig and must not read or write this model.
 model TenantSsoConfig {
   id               String   @id @default(cuid())
   tenantId         String   @unique @map("tenant_id")

@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const clients = ["idp-client"]; // add further generator outputs here as they appear
+const clients = ["main-client", "idp-client"]; // add further generator outputs here as they appear
 
 for (const client of clients) {
   const src = path.join(root, "src", client);

@@ -2,7 +2,7 @@
 // Database Package — Prisma Client Export
 // ─────────────────────────────────────────────────
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./main-client/index.js";
 import { PrismaClient as IdpPrismaClient } from "./idp-client/index.js";
 import { getTenantSession } from "./tenant-context.js";
 import { applyTenantScope, MODELS_WITHOUT_TENANT } from "./tenant-scope.js";
@@ -164,8 +164,8 @@ if (process.env.NODE_ENV !== "production") {
 
 export type PrismaClientType = typeof prisma;
 export { PrismaClient };
-export type { Prisma } from "@prisma/client";
-export * from "@prisma/client";
+export { Prisma } from "./main-client/index.js";
+export * from "./main-client/index.js";
 export {
   getTenantSession,
   runWithTenantSession,

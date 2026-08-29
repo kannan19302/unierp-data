@@ -981,13 +981,18 @@ model SsoConfig {
   samlEntryPoint   String?  @map("saml_entry_point")
   samlIssuer       String?  @map("saml_issuer")
   samlCert         String?  @map("saml_cert")
-  isActive         Boolean  @default(true) @map("is_active")
+  isActive         Boolean  @default(false) @map("is_active")
+  verificationStatus String @default("UNVERIFIED") @map("verification_status") // UNVERIFIED, VERIFIED, FAILED
+  lastVerifiedAt     DateTime? @map("last_verified_at")
+  lastVerifiedBy     String? @map("last_verified_by")
+  lastVerificationError String? @map("last_verification_error")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, providerType])
+  @@index([tenantId, verificationStatus, isActive])
   @@map("sso_configs")
 }
 

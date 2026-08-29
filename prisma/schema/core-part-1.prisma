@@ -54,6 +54,7 @@ model Tenant {
   supportTickets                  TenantSupportTicket[]
   serviceTickets                  ServiceTicket[]
   domains                         TenantDomain[]
+  /// Legacy relation retained only for the authorized TenantSsoConfig retirement migration.
   ssoConfig                       TenantSsoConfig?
   branding                        TenantBranding?
   dataExportJobs                  DataExportJob[]

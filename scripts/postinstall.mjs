@@ -72,6 +72,12 @@ const run = (args) => {
 try {
   if (existsSync(join(root, "prisma", "schema"))) {
     run("generate --schema prisma/schema");
+    const from = join(root, "src", "main-client");
+    const to = join(root, "dist", "main-client");
+    if (existsSync(from) && existsSync(join(root, "dist"))) {
+      rmSync(to, { recursive: true, force: true });
+      cpSync(from, to, { recursive: true });
+    }
   }
 
   const idpSchema = join(root, "prisma", "idp-schema.prisma");
