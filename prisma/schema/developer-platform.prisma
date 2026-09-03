@@ -248,6 +248,7 @@ model ArtifactRevision {
   @@unique([artifactId, revision])
   @@unique([artifactId, contentHash])
   @@index([tenantId, artifactId, createdAt(sort: Desc)])
+  @@index([parentRevisionId])
   @@map("artifact_revisions")
 }
 
@@ -385,6 +386,7 @@ model DevPackageItem {
   @@unique([packageVersionId, exportName])
   @@unique([packageVersionId, artifactId])
   @@index([tenantId, artifactId])
+  @@index([revisionId])
   @@map("dev_package_items")
 }
 
@@ -432,6 +434,7 @@ model ProjectInstallation {
 
   @@unique([projectId, packageId])
   @@index([tenantId, projectId, status])
+  @@index([packageVersionId])
   @@map("project_installations")
 }
 
@@ -580,6 +583,7 @@ model ArtifactOverlay {
 
   @@unique([artifactId, targetPackageVersionId, contentHash])
   @@index([tenantId, targetPackageVersionId])
+  @@index([sourceRevisionId])
   @@map("artifact_overlays")
 }
 

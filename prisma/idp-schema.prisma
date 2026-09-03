@@ -1091,6 +1091,7 @@ model AuthorizationCode {
 
   @@index([userId])
   @@index([expiresAt])
+  @@index([clientId])
   @@map("oauth_authorization_codes")
 }
 
@@ -1117,6 +1118,7 @@ model RefreshGrant {
   @@index([userId])
   @@index([sid])
   @@index([expiresAt])
+  @@index([clientId])
   @@map("oauth_refresh_grants")
 }
 

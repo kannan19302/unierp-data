@@ -101,10 +101,38 @@ const confirmed = [];
 async function main() {
   const expected = expectedTenantTables();
 
-  const [currentRole] = await prisma.$queryRawUnsafe(
-    `SELECT current_user::text AS name, rolsuper, rolbypassrls
-       FROM pg_roles WHERE rolname = current_user`,
-  );
+  let currentRole;
+  try {
+    [currentRole] = await prisma.$queryRawUnsafe(
+      `SELECT current_user::text AS name, rolsuper, rolbypassrls
+         FROM pg_roles WHERE rolname = current_user`,
+    );
+  } catch (err) {
+    if (!process.env.DOCKER_DELEGATED) {
+      try {
+        const { spawnSync } = await import("node:child_process");
+        const containerUrl = process.env.DATABASE_APP_URL.includes("localhost") || process.env.DATABASE_APP_URL.includes("127.0.0.1")
+          ? process.env.DATABASE_APP_URL.replace(/localhost|127\.0\.0\.1/, "postgres")
+          : process.env.DATABASE_APP_URL;
+        spawnSync("docker", ["exec", "api", "mkdir", "-p", "/tmp/rls-check/scripts"], { stdio: "ignore" });
+        spawnSync("docker", ["cp", `${join(HERE, "check-rls-verify.mjs")}`, "api:/tmp/rls-check/scripts/check-rls-verify.mjs"], { stdio: "ignore" });
+        spawnSync("docker", ["cp", `${join(HERE, "f5-rls-tables.mjs")}`, "api:/tmp/rls-check/scripts/f5-rls-tables.mjs"], { stdio: "ignore" });
+        spawnSync("docker", ["cp", `${join(ROOT, "prisma")}`, "api:/tmp/rls-check/prisma"], { stdio: "ignore" });
+        spawnSync("docker", ["exec", "api", "ln", "-sfn", "/app/node_modules", "/tmp/rls-check/node_modules"], { stdio: "ignore" });
+        const r = spawnSync(
+          "docker",
+          ["exec", "-e", `DATABASE_APP_URL=${containerUrl}`, "-e", "DOCKER_DELEGATED=1", "api", "node", "/tmp/rls-check/scripts/check-rls-verify.mjs"],
+          { stdio: "inherit" },
+        );
+        if (r.status === 0) process.exit(0);
+        process.exit(r.status ?? 1);
+      } catch {
+        throw err;
+      }
+    }
+    throw err;
+  }
+
   if (!currentRole) {
     failures.push("could not determine the role used for RLS verification");
   } else if (currentRole.rolsuper || currentRole.rolbypassrls) {
