@@ -424,6 +424,7 @@ model ProjectInstallation {
   installedAt       DateTime  @default(now()) @map("installed_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
   removedAt         DateTime? @map("removed_at")
+  deletedAt         DateTime? @map("deleted_at")
 
   project        DevProject        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   package        DevPackage        @relation(fields: [packageId], references: [id], onDelete: Restrict)

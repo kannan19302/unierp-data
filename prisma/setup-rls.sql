@@ -10,59 +10,42 @@ CREATE OR REPLACE FUNCTION current_tenant_id() RETURNS VARCHAR AS $$
 $$ LANGUAGE sql STABLE;
 
 -- Helper to enable RLS and apply policies to a table
--- Parameters: table_name (text)
-CREATE OR REPLACE PROCEDURE enable_tenant_rls(table_name text) AS $$
+-- Parameters: table_name (text), tenant_col (text)
+CREATE OR REPLACE PROCEDURE enable_tenant_rls(table_name text, tenant_col text DEFAULT 'tenant_id') AS $$
 BEGIN
-  -- Enable RLS
-  EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
+  -- Enable RLS and Force it even for table owners
+  EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', table_name);
+  EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', table_name);
   
   -- Drop existing policy if any
-  EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_policy ON %I', table_name);
+  EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_policy ON public.%I', table_name);
+  EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', 'tenant_isolation_' || table_name, table_name);
   
-  -- Create policy for Select/Insert/Update/Delete
+  -- Create RESTRICTIVE policy for Select/Insert/Update/Delete
   EXECUTE format(
-    'CREATE POLICY tenant_isolation_policy ON %I USING (tenant_id = current_tenant_id()) WITH CHECK (tenant_id = current_tenant_id())',
-    table_name
+    'CREATE POLICY tenant_isolation_policy ON public.%I USING (%I = current_tenant_id()) WITH CHECK (%I = current_tenant_id())',
+    table_name, tenant_col, tenant_col
   );
 END;
 $$ LANGUAGE plpgsql;
 
--- Apply RLS to all multi-tenant tables
+-- Apply RLS universally to all multi-tenant tables in the public schema
 DO $$
 DECLARE
-  t text;
-  tables_to_isolate text[] := ARRAY[
-    'users',
-    'roles',
-    'organizations',
-    'departments',
-    'employees',
-    'customers',
-    'vendors',
-    'products',
-    'warehouses',
-    'inventory_items',
-    'sales_orders',
-    'sales_order_lines',
-    'purchase_orders',
-    'purchase_order_lines',
-    'invoices',
-    'invoice_lines',
-    'payments',
-    'audit_logs',
-    'tenant_onboarding_progress',
-    'master_data_import_jobs'
-  ];
+  r RECORD;
+  isolated_count integer := 0;
 BEGIN
-  FOREACH t IN ARRAY tables_to_isolate LOOP
-    -- Only apply if table exists
-    IF EXISTS (
-      SELECT FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-        AND table_name = t
-    ) THEN
-      CALL enable_tenant_rls(t);
-    END IF;
+  FOR r IN (
+    SELECT DISTINCT table_name, column_name 
+    FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND column_name IN ('tenant_id', 'tenantId')
+    ORDER BY table_name
+  ) LOOP
+    CALL enable_tenant_rls(r.table_name, r.column_name);
+    isolated_count := isolated_count + 1;
   END LOOP;
+  
+  RAISE NOTICE 'Universal RLS applied successfully to % multi-tenant tables.', isolated_count;
 END;
 $$;

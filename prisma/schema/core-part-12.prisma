@@ -1015,8 +1015,8 @@ model ReverseLogisticsItem {
   returnOrderId String   @map("return_order_id")
   productId     String?  @map("product_id")
   productName   String?  @map("product_name")
-  quantity      Float
-  returnedQty   Float?   @map("returned_qty")
+  quantity      Decimal  @db.Decimal(19,4)
+  returnedQty   Decimal? @map("returned_qty") @db.Decimal(19,4)
   unitCost      Decimal? @db.Decimal(19,4)   @map("unit_cost")
   condition     String?
   disposition   String?
@@ -1123,9 +1123,9 @@ model SmartReplenishmentOrder {
   productId       String   @map("product_id")
   warehouseId     String?  @map("warehouse_id")
   triggeredBy     String   @map("triggered_by")
-  currentStock    Float    @map("current_stock")
-  reorderPoint    Float    @map("reorder_point")
-  suggestedQty    Float    @map("suggested_qty")
+  currentStock    Decimal  @map("current_stock") @db.Decimal(19,4)
+  reorderPoint    Decimal  @map("reorder_point") @db.Decimal(19,4)
+  suggestedQty    Decimal  @map("suggested_qty") @db.Decimal(19,4)
   supplierId      String?  @map("supplier_id")
   status          String   @default("SUGGESTED")
   approvedBy      String?  @map("approved_by")
@@ -1483,9 +1483,9 @@ model FormulaIngredient {
   formulaId     String   @map("formula_id")
   productId     String   @map("product_id")
   ingredientType String  @default("RAW_MATERIAL") @map("ingredient_type")
-  quantity      Float
+  quantity      Decimal  @db.Decimal(19,4)
   unit          String
-  scrapFactor   Float?   @map("scrap_factor")
+  scrapFactor   Decimal? @map("scrap_factor") @db.Decimal(9,6)
   isOptional    Boolean  @default(false) @map("is_optional")
   substitutes   Json?
   formula       ProductionFormula @relation(fields: [formulaId], references: [id])
@@ -1499,7 +1499,7 @@ model CoProduct {
   formulaId   String   @map("formula_id")
   productId   String   @map("product_id")
   productType String   @default("CO_PRODUCT") @map("product_type")
-  quantity    Float
+  quantity    Decimal  @db.Decimal(19,4)
   unit        String
   valueFactor Decimal? @db.Decimal(9, 6) @map("value_factor")
   formula     ProductionFormula @relation(fields: [formulaId], references: [id])
@@ -1627,8 +1627,8 @@ model SparePart {
   description     String?  @db.Text
   machineTypes    Json?    @map("machine_types")
   location        String?
-  quantity        Float    @default(0)
-  reorderPoint    Float?   @map("reorder_point")
+  quantity        Decimal  @default(0) @db.Decimal(19,4)
+  reorderPoint    Decimal? @map("reorder_point") @db.Decimal(19,4)
   unitCost        Decimal? @db.Decimal(19,4)   @map("unit_cost")
   supplierId      String?  @map("supplier_id")
   leadTimeDays    Int?     @map("lead_time_days")
@@ -1703,12 +1703,12 @@ model ShopFloorTransaction {
   workOrderId     String?  @map("work_order_id")
   machineId       String?  @map("machine_id")
   operatorId      String?  @map("operator_id")
-  quantity        Float?
+  quantity        Decimal? @db.Decimal(19,4)
   unit            String?
   startTime       DateTime? @map("start_time")
   endTime         DateTime? @map("end_time")
   duration        Float?
-  scrapQty        Float?   @map("scrap_qty")
+  scrapQty        Decimal? @map("scrap_qty") @db.Decimal(19,4)
   scrapReason     String?  @map("scrap_reason")
   barcodeScanned  String?  @map("barcode_scanned")
   deviceId        String?  @map("device_id")
@@ -2002,7 +2002,7 @@ model PpmProcurementRequisition {
   projectId       String   @map("project_id")
   title           String
   description     String?  @db.Text
-  quantity        Float?
+  quantity        Decimal? @db.Decimal(19,4)
   estimatedCost   Decimal? @db.Decimal(19,4)   @map("estimated_cost")
   requiredDate    DateTime? @map("required_date")
   status          String   @default("DRAFT")
@@ -2057,8 +2057,8 @@ model PpmTimesheet {
   submittedAt     DateTime? @map("submitted_at")
   approvedBy      String?  @map("approved_by")
   approvedAt      DateTime? @map("approved_at")
-  totalHours      Float?   @map("total_hours")
-  billableHours   Float?   @map("billable_hours")
+  totalHours      Decimal? @map("total_hours") @db.Decimal(19,4)
+  billableHours   Decimal? @map("billable_hours") @db.Decimal(19,4)
   notes           String?  @db.Text
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -2074,7 +2074,7 @@ model PpmTimesheetEntry {
   projectId     String?  @map("project_id")
   taskId        String?  @map("task_id")
   date          DateTime
-  hours         Float
+  hours         Decimal  @db.Decimal(19,4)
   isBillable    Boolean  @default(true) @map("is_billable")
   description   String?  @db.Text
   activityType  String?  @map("activity_type")

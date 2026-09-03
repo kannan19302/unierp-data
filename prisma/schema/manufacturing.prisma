@@ -82,7 +82,7 @@ model MfgCostEntry {
   costSheetId String   @map("cost_sheet_id")
   costType    String   @map("cost_type")
   description String?
-  quantity    Float?
+  quantity    Decimal? @db.Decimal(19,4)
   unitCost    Decimal? @db.Decimal(19,4)   @map("unit_cost")
   amount      Decimal @db.Decimal(19,4)
   currency    String   @default("USD")
