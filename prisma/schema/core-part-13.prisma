@@ -1517,245 +1517,419 @@ model SaasPortalFeatureVote {
 }
 
 model AnalyticsCustomDashboard {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  name           String   @map("name")
-  description    String?  @map("description")
-  isPublic       Boolean  @default(false) @map("is_public")
-  creatorId      String   @map("creator_id")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  orgId       String?   @map("org_id")
+  name        String    @map("name")
+  description String?   @map("description")
+  isPublic    Boolean   @default(false) @map("is_public")
+  creatorId   String    @map("creator_id")
+  version     Int       @default(1)
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  widgets AnalyticsDashboardWidgetDeep[]
+
+  @@index([tenantId])
   @@map("analytics_custom_dashboards")
 }
 
 model AnalyticsDashboardWidgetDeep {
-  id             String   @id @default(cuid())
-  dashboardId    String   @map("dashboard_id")
-  title          String   @map("title")
-  widgetType     String   @map("widget_type")
-  queryConfig    Json     @map("query_config")
-  layoutGrid     Json     @map("layout_grid")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  orgId       String?   @map("org_id")
+  dashboardId String    @map("dashboard_id")
+  title       String    @map("title")
+  widgetType  String    @map("widget_type")
+  queryConfig Json      @map("query_config")
+  layoutGrid  Json      @map("layout_grid")
+  version     Int       @default(1)
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  dashboard AnalyticsCustomDashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([dashboardId])
   @@map("analytics_dashboard_widgets_deep")
 }
 
 model AnalyticsDataDataset {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  name           String   @map("name")
-  sourceType     String   @map("source_type")
-  schemaJson     Json     @map("schema_json")
-  refreshInterval String  @default("HOURLY") @map("refresh_interval")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  orgId           String?   @map("org_id")
+  name            String    @map("name")
+  sourceType      String    @map("source_type")
+  schemaJson      Json      @map("schema_json")
+  refreshInterval String    @default("HOURLY") @map("refresh_interval")
+  version         Int       @default(1)
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
+  sourcePipelines AnalyticsDataPipeline[] @relation("SourceDataset")
+  targetPipelines AnalyticsDataPipeline[] @relation("TargetDataset")
+
+  @@index([tenantId])
   @@map("analytics_data_datasets")
 }
 
 model AnalyticsDataPipeline {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  pipelineName   String   @map("pipeline_name")
-  sourceDatasetId String  @map("source_dataset_id")
-  targetDatasetId String  @map("target_dataset_id")
-  transformationSql String? @map("transformation_sql")
-  status         String   @default("ACTIVE") @map("status")
-  lastRunAt      DateTime? @map("last_run_at")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id                String    @id @default(cuid())
+  tenantId          String    @map("tenant_id")
+  orgId             String?   @map("org_id")
+  pipelineName      String    @map("pipeline_name")
+  sourceDatasetId   String    @map("source_dataset_id")
+  targetDatasetId   String    @map("target_dataset_id")
+  transformationSql String?   @map("transformation_sql")
+  status            String    @default("ACTIVE") @map("status")
+  lastRunAt         DateTime? @map("last_run_at")
+  version           Int       @default(1)
+  isDeleted         Boolean   @default(false) @map("is_deleted")
+  deletedAt         DateTime? @map("deleted_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
+  sourceDataset AnalyticsDataDataset @relation("SourceDataset", fields: [sourceDatasetId], references: [id], onDelete: Cascade)
+  targetDataset AnalyticsDataDataset @relation("TargetDataset", fields: [targetDatasetId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([sourceDatasetId])
+  @@index([targetDatasetId])
   @@map("analytics_data_pipelines")
 }
 
 model AnalyticsPredictiveModel {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  modelName      String   @map("model_name")
-  algorithm      String   @map("algorithm")
-  targetMetric   String   @map("target_metric")
-  accuracyScore  Decimal  @map("accuracy_score") @db.Decimal(5, 2)
-  status         String   @default("TRAINED") @map("status")
-  trainedAt      DateTime @default(now()) @map("trained_at")
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  orgId         String?   @map("org_id")
+  modelName     String    @map("model_name")
+  algorithm     String    @map("algorithm")
+  targetMetric  String    @map("target_metric")
+  accuracyScore Decimal   @map("accuracy_score") @db.Decimal(19, 4)
+  status        String    @default("TRAINED") @map("status")
+  version       Int       @default(1)
+  isDeleted     Boolean   @default(false) @map("is_deleted")
+  deletedAt     DateTime? @map("deleted_at")
+  trainedAt     DateTime  @default(now()) @map("trained_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
+  forecastRuns AnalyticsForecastRun[]
+
+  @@index([tenantId])
   @@map("analytics_predictive_models")
 }
 
 model AnalyticsForecastRun {
-  id             String   @id @default(cuid())
-  modelId        String   @map("model_id")
-  tenantId       String   @map("tenant_id")
-  forecastHorizon String  @map("forecast_horizon")
-  resultMetrics  Json     @map("result_metrics")
-  executedAt     DateTime @default(now()) @map("executed_at")
+  id              String    @id @default(cuid())
+  modelId         String    @map("model_id")
+  tenantId        String    @map("tenant_id")
+  orgId           String?   @map("org_id")
+  forecastHorizon String    @map("forecast_horizon")
+  resultMetrics   Json      @map("result_metrics")
+  version         Int       @default(1)
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  deletedAt       DateTime? @map("deleted_at")
+  executedAt      DateTime  @default(now()) @map("executed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
+  model AnalyticsPredictiveModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([modelId])
   @@map("analytics_forecast_runs")
 }
 
 model AnalyticsCohortAnalysis {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  cohortName     String   @map("cohort_name")
-  groupingRule   String   @map("grouping_rule")
-  timeGranularity String  @default("MONTHLY") @map("time_granularity")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  orgId           String?   @map("org_id")
+  cohortName      String    @map("cohort_name")
+  groupingRule    String    @map("grouping_rule")
+  timeGranularity String    @default("MONTHLY") @map("time_granularity")
+  version         Int       @default(1)
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
+  cohortGroups AnalyticsCohortGroup[]
+
+  @@index([tenantId])
   @@map("analytics_cohort_analyses")
 }
 
 model AnalyticsCohortGroup {
-  id             String   @id @default(cuid())
-  analysisId     String   @map("analysis_id")
-  tenantId       String   @map("tenant_id")
-  cohortDate     String   @map("cohort_date")
-  initialUsers   Int      @map("initial_users")
-  retentionRates Json     @map("retention_rates")
+  id             String    @id @default(cuid())
+  analysisId     String    @map("analysis_id")
+  tenantId       String    @map("tenant_id")
+  orgId          String?   @map("org_id")
+  cohortDate     String    @map("cohort_date")
+  initialUsers   Int       @map("initial_users")
+  retentionRates Json      @map("retention_rates")
+  version        Int       @default(1)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
+  cohortAnalysis AnalyticsCohortAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([analysisId])
   @@map("analytics_cohort_groups")
 }
 
 model AnalyticsFunnelStep {
-  id             String   @id @default(cuid())
-  funnelName     String   @map("funnel_name")
-  tenantId       String   @map("tenant_id")
-  stepOrder      Int      @map("step_order")
-  eventName      String   @map("event_name")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id         String    @id @default(cuid())
+  funnelName String    @map("funnel_name")
+  tenantId   String    @map("tenant_id")
+  orgId      String?   @map("org_id")
+  stepOrder  Int       @map("step_order")
+  eventName  String    @map("event_name")
+  version    Int       @default(1)
+  isDeleted  Boolean   @default(false) @map("is_deleted")
+  deletedAt  DateTime? @map("deleted_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
+  @@unique([tenantId, funnelName, stepOrder])
+  @@index([tenantId])
+  @@index([tenantId, funnelName])
   @@map("analytics_funnel_steps")
 }
 
 model AnalyticsFunnelConversion {
-  id             String   @id @default(cuid())
-  funnelName     String   @map("funnel_name")
-  tenantId       String   @map("tenant_id")
-  period         String   @map("period")
-  stepConversions Json    @map("step_conversions")
-  overallDropoff Decimal  @map("overall_dropoff") @db.Decimal(5, 2)
-  calculatedAt   DateTime @default(now()) @map("calculated_at")
+  id              String    @id @default(cuid())
+  funnelName      String    @map("funnel_name")
+  tenantId        String    @map("tenant_id")
+  orgId           String?   @map("org_id")
+  period          String    @map("period")
+  stepConversions Json      @map("step_conversions")
+  overallDropoff  Decimal   @map("overall_dropoff") @db.Decimal(19, 4)
+  conversionRate  Decimal?  @map("conversion_rate") @db.Decimal(19, 4)
+  version         Int       @default(1)
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  deletedAt       DateTime? @map("deleted_at")
+  calculatedAt    DateTime  @default(now()) @map("calculated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
+  @@index([tenantId])
+  @@index([tenantId, funnelName, period])
   @@map("analytics_funnel_conversions")
 }
 
 model ReportingTemplateDeep {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  title          String   @map("title")
-  category       String   @map("category")
-  layoutHtml     String   @map("layout_html") @db.Text
-  headerFooter   Json?    @map("header_footer")
-  isSystem       Boolean  @default(false) @map("is_system")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id           String    @id @default(cuid())
+  tenantId     String    @map("tenant_id")
+  orgId        String?   @map("org_id")
+  title        String    @map("title")
+  category     String    @map("category")
+  layoutHtml   String    @map("layout_html") @db.Text
+  headerFooter Json?     @map("header_footer")
+  isSystem     Boolean   @default(false) @map("is_system")
+  version      Int       @default(1)
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  deletedAt    DateTime? @map("deleted_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
+  sections      ReportingTemplateSection[]
+  scheduledJobs ReportingScheduledJobDeep[]
+
+  @@index([tenantId])
   @@map("reporting_templates_deep")
 }
 
 model ReportingTemplateSection {
-  id             String   @id @default(cuid())
-  templateId     String   @map("template_id")
-  sectionName    String   @map("section_name")
-  sectionOrder   Int      @map("section_order")
-  dataSourceSql  String?  @map("data_source_sql") @db.Text
-  chartConfig    Json?    @map("chart_config")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  orgId         String?   @map("org_id")
+  templateId    String    @map("template_id")
+  sectionName   String    @map("section_name")
+  sectionOrder  Int       @map("section_order")
+  dataSourceSql String?   @map("data_source_sql") @db.Text
+  chartConfig   Json?     @map("chart_config")
+  version       Int       @default(1)
+  isDeleted     Boolean   @default(false) @map("is_deleted")
+  deletedAt     DateTime? @map("deleted_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
+  template ReportingTemplateDeep @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([templateId])
   @@map("reporting_template_sections")
 }
 
 model ReportingScheduledJobDeep {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  jobName        String   @map("job_name")
-  templateId     String   @map("template_id")
-  cronSchedule   String   @map("cron_schedule")
-  outputFormat   String   @default("PDF") @map("output_format")
-  recipients     Json     @map("recipients")
-  isEnabled      Boolean  @default(true) @map("is_enabled")
-  lastRunAt      DateTime? @map("last_run_at")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id           String    @id @default(cuid())
+  tenantId     String    @map("tenant_id")
+  orgId        String?   @map("org_id")
+  jobName      String    @map("job_name")
+  templateId   String    @map("template_id")
+  cronSchedule String    @map("cron_schedule")
+  outputFormat String    @default("PDF") @map("output_format")
+  recipients   Json      @map("recipients")
+  isEnabled    Boolean   @default(true) @map("is_enabled")
+  lastRunAt    DateTime? @map("last_run_at")
+  version      Int       @default(1)
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  deletedAt    DateTime? @map("deleted_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
+  template ReportingTemplateDeep   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  logs     ReportingExecutionLog[]
+
+  @@index([tenantId])
+  @@index([templateId])
   @@map("reporting_scheduled_jobs_deep")
 }
 
 model ReportingExecutionLog {
-  id             String   @id @default(cuid())
-  jobId          String   @map("job_id")
-  tenantId       String   @map("tenant_id")
-  status         String   @map("status")
-  executionMs    Int      @map("execution_ms")
-  fileSizeKb     Int?     @map("file_size_kb")
-  errorMessage   String?  @map("error_message")
-  executedAt     DateTime @default(now()) @map("executed_at")
+  id           String   @id @default(cuid())
+  jobId        String   @map("job_id")
+  tenantId     String   @map("tenant_id")
+  orgId        String?  @map("org_id")
+  status       String   @map("status")
+  executionMs  Int      @map("execution_ms")
+  fileSizeKb   Int?     @map("file_size_kb")
+  errorMessage String?  @map("error_message")
+  version      Int      @default(1)
+  executedAt   DateTime @default(now()) @map("executed_at")
 
+  job ReportingScheduledJobDeep @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([jobId])
   @@map("reporting_execution_logs")
 }
 
 model ReportingExportJob {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  requestedBy    String   @map("requested_by")
-  reportType     String   @map("report_type")
-  exportFormat   String   @map("export_format")
-  filterParams   Json     @map("filter_params")
-  status         String   @default("QUEUED") @map("status")
-  downloadUrl    String?  @map("download_url")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id           String    @id @default(cuid())
+  tenantId     String    @map("tenant_id")
+  orgId        String?   @map("org_id")
+  requestedBy  String    @map("requested_by")
+  reportType   String    @map("report_type")
+  exportFormat String    @map("export_format")
+  filterParams Json      @map("filter_params")
+  status       String    @default("QUEUED") @map("status")
+  downloadUrl  String?   @map("download_url")
+  expiresAt    DateTime? @map("expires_at")
+  sha256Checksum String? @map("sha256_checksum")
+  version      Int       @default(1)
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  deletedAt    DateTime? @map("deleted_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
+  files ReportingExportFile[]
+
+  @@index([tenantId])
   @@map("reporting_export_jobs")
 }
 
 model ReportingExportFile {
-  id             String   @id @default(cuid())
-  exportJobId    String   @map("export_job_id")
-  fileName       String   @map("file_name")
-  fileSizeBytes  Int      @map("file_size_bytes")
-  mimeType       String   @map("mime_type")
-  expiresAt      DateTime @map("expires_at")
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  orgId          String?   @map("org_id")
+  exportJobId    String    @map("export_job_id")
+  fileName       String    @map("file_name")
+  fileSizeBytes  Int       @map("file_size_bytes")
+  mimeType       String    @map("mime_type")
+  sha256Checksum String?   @map("sha256_checksum")
+  expiresAt      DateTime  @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
+  exportJob ReportingExportJob @relation(fields: [exportJobId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([exportJobId])
   @@map("reporting_export_files")
 }
 
 model ReportingComplianceAudit {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  reportName     String   @map("report_name")
-  complianceType String   @map("compliance_type")
-  signoffStatus  String   @default("PENDING") @map("signoff_status")
-  auditorId      String?  @map("auditor_id")
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  orgId          String?   @map("org_id")
+  reportName     String    @map("report_name")
+  complianceType String    @map("compliance_type")
+  signoffStatus  String    @default("PENDING") @map("signoff_status")
+  auditorId      String?   @map("auditor_id")
   signedAt       DateTime? @map("signed_at")
-  createdAt      DateTime @default(now()) @map("created_at")
+  version        Int       @default(1)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
+  signoffs ReportingSignoffHistory[]
+
+  @@index([tenantId])
   @@map("reporting_compliance_audits")
 }
 
 model ReportingSignoffHistory {
-  id             String   @id @default(cuid())
-  auditId        String   @map("audit_id")
-  signerUserId   String   @map("signer_user_id")
-  signatureHash  String   @map("signature_hash")
-  comments       String?  @map("comments")
-  signedAt       DateTime @default(now()) @map("signed_at")
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  orgId         String?   @map("org_id")
+  auditId       String    @map("audit_id")
+  signerUserId  String    @map("signer_user_id")
+  signatureHash String    @map("signature_hash")
+  comments      String?   @map("comments")
+  version       Int       @default(1)
+  signedAt      DateTime  @default(now()) @map("signed_at")
 
+  audit ReportingComplianceAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([auditId])
   @@map("reporting_signoff_history")
 }
 
 model ReportingDistributionList {
-  id             String   @id @default(cuid())
-  tenantId       String   @map("tenant_id")
-  listName       String   @map("list_name")
-  description    String?  @map("description")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  orgId       String?   @map("org_id")
+  listName    String    @map("list_name")
+  description String?   @map("description")
+  version     Int       @default(1)
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  recipients ReportingDistributionRecipient[]
+
+  @@index([tenantId])
   @@map("reporting_distribution_lists")
 }
 
 model ReportingDistributionRecipient {
   id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  orgId          String?  @map("org_id")
   listId         String   @map("list_id")
   recipientEmail String   @map("recipient_email")
   recipientName  String   @map("recipient_name")
+  version        Int      @default(1)
   createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
+  list ReportingDistributionList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([listId])
   @@map("reporting_distribution_recipients")
 }
 

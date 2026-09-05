@@ -1365,38 +1365,48 @@ model BOMItem {
 }
 
 model Dashboard {
-  id          String   @id @default(cuid())
-  tenantId    String   @map("tenant_id")
-  orgId       String   @map("org_id")
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  orgId       String    @map("org_id")
   name        String
   description String?
-  isSystem    Boolean  @default(false) @map("is_system")
-  layout      Json     @default("[]")
-  createdBy   String?  @map("created_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  isSystem    Boolean   @default(false) @map("is_system")
+  layout      Json      @default("[]")
+  createdBy   String?   @map("created_by")
+  version     Int       @default(1)
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   analyticsWidgets AnalyticsDashboardWidget[]
 
   @@index([tenantId])
+  @@index([tenantId, orgId])
+  @@index([tenantId, createdAt])
   @@map("dashboards")
 }
 
 model Report {
-  id          String   @id @default(cuid())
-  tenantId    String   @map("tenant_id")
-  orgId       String   @map("org_id")
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  orgId       String    @map("org_id")
   name        String
   description String?
-  query       Json     @default("{}")
-  type        String   @default("BUILDER") // BUILDER, SQL
-  createdBy   String?  @map("created_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  query       Json      @default("{}")
+  type        String    @default("BUILDER") // BUILDER, SQL
+  createdBy   String?   @map("created_by")
+  version     Int       @default(1)
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   analyticsFilters AnalyticsReportFilter[]
 
   @@index([tenantId])
+  @@index([tenantId, orgId])
+  @@index([tenantId, createdAt])
   @@map("reports")
 }
 
@@ -1408,7 +1418,13 @@ model KPI {
   code            String
   value           String
   unit            String?
+  numericValue    Decimal?            @map("numeric_value") @db.Decimal(19, 4)
+  targetValue     Decimal?            @map("target_value") @db.Decimal(19, 4)
+  currency        String?
   trend           Json                @default("[]")
+  version         Int                 @default(1)
+  isDeleted       Boolean             @default(false) @map("is_deleted")
+  deletedAt       DateTime?           @map("deleted_at")
   lastUpdated     DateTime            @default(now()) @map("last_updated")
   createdAt       DateTime            @default(now()) @map("created_at")
   updatedAt       DateTime            @updatedAt @map("updated_at")
@@ -1416,6 +1432,7 @@ model KPI {
 
   @@unique([tenantId, orgId, code])
   @@index([tenantId])
+  @@index([tenantId, orgId, isDeleted])
   @@map("kpis")
 }
 

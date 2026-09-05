@@ -289,13 +289,18 @@ model DdmrpRecommendation {
 }
 
 model AnalyticsReportFilter {
-  id        String   @id @default(cuid())
-  tenantId  String   @map("tenant_id")
-  reportId  String   @map("report_id")
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  orgId     String?   @map("org_id")
+  reportId  String    @map("report_id")
   field     String
   operator  String // eq, neq, gt, gte, lt, lte, contains, in, between
   value     String
-  createdAt DateTime @default(now()) @map("created_at")
+  version   Int       @default(1)
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
@@ -305,17 +310,21 @@ model AnalyticsReportFilter {
 }
 
 model AnalyticsDashboardWidget {
-  id          String   @id @default(cuid())
-  tenantId    String   @map("tenant_id")
-  dashboardId String   @map("dashboard_id")
-  widgetType  String   @map("widget_type") // CHART, TABLE, KPI, METRIC, TEXT
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  orgId       String?   @map("org_id")
+  dashboardId String    @map("dashboard_id")
+  widgetType  String    @map("widget_type") // CHART, TABLE, KPI, METRIC, TEXT
   title       String
-  config      Json     @default("{}")
-  position    Json     @default("{}")
-  width       Int      @default(4)
-  height      Int      @default(3)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  config      Json      @default("{}")
+  position    Json      @default("{}")
+  width       Int       @default(4)
+  height      Int       @default(3)
+  version     Int       @default(1)
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
 
@@ -327,12 +336,16 @@ model AnalyticsDashboardWidget {
 model AnalyticsKpiValue {
   id          String   @id @default(cuid())
   tenantId    String   @map("tenant_id")
+  orgId       String?  @map("org_id")
   kpiId       String   @map("kpi_id")
-  value       Decimal  @db.Decimal(15, 2)
+  value       Decimal  @db.Decimal(19, 4)
+  currency    String?
   periodStart DateTime @map("period_start")
   periodEnd   DateTime @map("period_end")
   metadata    Json?
+  version     Int      @default(1)
   createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   kpi KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
 
@@ -343,20 +356,28 @@ model AnalyticsKpiValue {
 }
 
 model AnalyticsScheduledExport {
-  id          String    @id @default(cuid())
-  tenantId    String    @map("tenant_id")
-  name        String
-  description String?
-  dataset     String // invoices, products, employees, custom
-  format      String    @default("CSV") // CSV, XLSX, JSON, PDF
-  schedule    String    @default("DAILY") // DAILY, WEEKLY, MONTHLY, QUARTERLY
-  recipients  Json      @default("[]")
-  filters     Json?
-  lastRunAt   DateTime? @map("last_run_at")
-  nextRunAt   DateTime? @map("next_run_at")
-  isActive    Boolean   @default(true) @map("is_active")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  orgId          String?   @map("org_id")
+  name           String
+  description    String?
+  dataset        String // invoices, products, employees, custom
+  format         String    @default("CSV") // CSV, XLSX, JSON, PDF
+  schedule       String    @default("DAILY") // DAILY, WEEKLY, MONTHLY, QUARTERLY
+  recipients     Json      @default("[]")
+  filters        Json?
+  lastRunAt      DateTime? @map("last_run_at")
+  nextRunAt      DateTime? @map("next_run_at")
+  expiresAt      DateTime? @map("expires_at")
+  sha256Checksum String?   @map("sha256_checksum")
+  artifactUri    String?   @map("artifact_uri")
+  fileSizeBytes  Int?      @map("file_size_bytes")
+  isActive       Boolean   @default(true) @map("is_active")
+  version        Int       @default(1)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@index([tenantId])
   @@index([isActive, nextRunAt])
@@ -945,25 +966,31 @@ model AiModelAccuracyMetric {
 }
 
 model AnalyticsKpiDefinition {
-  id              String   @id @default(cuid())
-  tenantId        String   @map("tenant_id")
-  name            String
-  code            String
-  description     String?
-  formula         String   // e.g. "SUM(revenue) / COUNT(orders)"
-  target          Float?
-  unit            String?  // %, $, count, days
-  visualization   String   @default("NUMBER") // NUMBER, GAUGE, BAR, LINE, PIE
-  category        String?
-  sourceTable     String?  // e.g. "invoices", "orders"
-  sourceColumn    String?
-  isActive        Boolean  @default(true) @map("is_active")
-  config          Json?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  orgId         String?   @map("org_id")
+  name          String
+  code          String
+  description   String?
+  formula       String // e.g. "SUM(revenue) / COUNT(orders)"
+  target        Float?
+  targetValue   Decimal?  @map("target_value") @db.Decimal(19, 4)
+  unit          String? // %, $, count, days
+  currency      String?
+  visualization String    @default("NUMBER") // NUMBER, GAUGE, BAR, LINE, PIE
+  category      String?
+  sourceTable   String? // e.g. "invoices", "orders"
+  sourceColumn  String?
+  isActive      Boolean   @default(true) @map("is_active")
+  config        Json?
+  version       Int       @default(1)
+  isDeleted     Boolean   @default(false) @map("is_deleted")
+  deletedAt     DateTime? @map("deleted_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  trendResults    AnalyticsTrendResult[]
-  tenant          Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  trendResults AnalyticsTrendResult[]
+  tenant       Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -972,19 +999,25 @@ model AnalyticsKpiDefinition {
 }
 
 model AnalyticsTrendResult {
-  id              String   @id @default(cuid())
-  tenantId        String   @map("tenant_id")
-  kpiDefinitionId String   @map("kpi_definition_id")
-  period          String   // MONTHLY, QUARTERLY, YEARLY
-  periodStart     DateTime @map("period_start")
-  periodEnd       DateTime @map("period_end")
-  value           Float
-  previousValue   Float?
-  changePercent   Float?
-  trend           String?  // UP, DOWN, FLAT
-  metadata        Json?
-  computedAt      DateTime @default(now()) @map("computed_at")
-  createdAt       DateTime @default(now()) @map("created_at")
+  id                 String   @id @default(cuid())
+  tenantId           String   @map("tenant_id")
+  orgId              String?  @map("org_id")
+  kpiDefinitionId    String   @map("kpi_definition_id")
+  period             String // MONTHLY, QUARTERLY, YEARLY
+  periodStart        DateTime @map("period_start")
+  periodEnd          DateTime @map("period_end")
+  value              Float
+  exactValue         Decimal? @map("exact_value") @db.Decimal(19, 4)
+  previousValue      Float?
+  exactPreviousValue Decimal? @map("exact_previous_value") @db.Decimal(19, 4)
+  changePercent      Float?
+  currency           String?
+  trend              String? // UP, DOWN, FLAT
+  metadata           Json?
+  version            Int      @default(1)
+  computedAt         DateTime @default(now()) @map("computed_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   kpiDefinition AnalyticsKpiDefinition @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
 
@@ -996,17 +1029,21 @@ model AnalyticsTrendResult {
 }
 
 model AnalyticsCrossFilterDashboard {
-  id          String   @id @default(cuid())
-  tenantId    String   @map("tenant_id")
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  orgId       String?   @map("org_id")
   name        String
   description String?
-  layout      Json     @default("[]")   // widget layout config
-  filters     Json     @default("[]")   // linked filter definitions
-  widgets     Json     @default("[]")   // chart/widget configs
-  isActive    Boolean  @default(true) @map("is_active")
-  createdBy   String?  @map("created_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  layout      Json      @default("[]") // widget layout config
+  filters     Json      @default("[]") // linked filter definitions
+  widgets     Json      @default("[]") // chart/widget configs
+  isActive    Boolean   @default(true) @map("is_active")
+  createdBy   String?   @map("created_by")
+  version     Int       @default(1)
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -1015,22 +1052,41 @@ model AnalyticsCrossFilterDashboard {
 }
 
 model AnalyticsBiMetricDefinition {
-  id              String   @id @default(cuid())
-  tenantId        String   @map("tenant_id")
-  name            String
-  code            String
-  description     String?
-  sourceTable     String   // schema.table_name
-  sourceColumn    String   // column_name
-  aggregation     String   @default("SUM") // SUM, COUNT, AVG, MIN, MAX, DISTINCT_COUNT
-  dataType        String   @default("NUMBER") // NUMBER, CURRENCY, PERCENTAGE, STRING, DATE
-  unit            String?
-  category        String?
-  formula         String?  // custom SQL expression
-  isActive        Boolean  @default(true) @map("is_active")
-  metadata        Json?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id                    String    @id @default(cuid())
+  tenantId              String    @map("tenant_id")
+  orgId                 String?   @map("org_id")
+  name                  String
+  code                  String
+  description           String?
+  sourceTable           String // schema.table_name
+  sourceColumn          String // column_name
+  aggregation           String    @default("SUM") // SUM, COUNT, AVG, MIN, MAX, DISTINCT_COUNT
+  dataType              String    @default("NUMBER") // NUMBER, CURRENCY, PERCENTAGE, STRING, DATE
+  unit                  String?
+  currency              String?
+  category              String?
+  formula               String? // custom SQL expression
+  isActive              Boolean   @default(true) @map("is_active")
+  version               String    @default("1.0.0")
+  versionNumber         Int       @default(1) @map("version_number")
+  ownerId               String?   @map("owner_id")
+  ownerEmail            String?   @map("owner_email")
+  certificationLevel    String    @default("UNCERTIFIED") @map("certification_level") // UNCERTIFIED, BRONZE, SILVER, GOLD
+  certifiedBy           String?   @map("certified_by")
+  certifiedAt           DateTime? @map("certified_at")
+  lineageSources        Json?     @map("lineage_sources")
+  freshnessSchedule     String?   @map("freshness_schedule")
+  freshnessSlaMinutes   Int?      @map("freshness_sla_minutes")
+  lastRefreshedAt       DateTime? @map("last_refreshed_at")
+  privacyClassification String    @default("INTERNAL") @map("privacy_classification") // PUBLIC, INTERNAL, CONFIDENTIAL, RESTRICTED
+  qualityScore          Decimal?  @map("quality_score") @db.Decimal(5, 2)
+  effectiveFrom         DateTime  @default(now()) @map("effective_from")
+  effectiveTo           DateTime? @map("effective_to")
+  metadata              Json?
+  isDeleted             Boolean   @default(false) @map("is_deleted")
+  deletedAt             DateTime? @map("deleted_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 

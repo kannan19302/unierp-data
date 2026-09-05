@@ -264,6 +264,18 @@ export async function seedMinimalRow(
       // Nullable non-unique columns can stay NULL.
       if (!isUnique && c.is_nullable === "YES") continue;
 
+      if (table === "dev_projects") {
+        if (c.column_name === "site_id") continue;
+        if (c.column_name === "kind") {
+          push("kind", "", "APP");
+          continue;
+        }
+      }
+      if (table === "platform_grants" && c.column_name === "subject_type") {
+        push("subject_type", "", "ROLE");
+        continue;
+      }
+
       const udt = c.udt_name as string;
       const name = c.column_name as string;
       const unique = isUnique;
