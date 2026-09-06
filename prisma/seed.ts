@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { PrismaClient, Prisma } from "@prisma/client";
 import { seedWebTemplates } from "./seed-web-templates";
+import { seedEnterpriseFinance } from "./seed-finance-enterprise";
 
 import { PrismaClient as IdpPrismaClient } from "../src/idp-client/index.js";
 
@@ -3071,6 +3072,7 @@ async function main() {
   }
 
   console.log("Fixed Asset Management data seeded.");
+  await seedEnterpriseFinance(prisma, tenant.id, org.id);
 
   console.log("🚀 Database seeding complete!");
 }
