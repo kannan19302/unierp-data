@@ -173,7 +173,6 @@ export async function seedEnterpriseFinance(prisma: PrismaClient, tenantId: stri
         tenantId,
         orgId,
         name: "CloudScale Infrastructure Corp",
-        code: "VEND-001",
         email: "billing@cloudscale.io",
       },
     });

@@ -13,6 +13,11 @@ const idpPrisma = new IdpPrismaClient();
 const DEFAULT_PASSWORD_HASH =
   "$2a$10$QNgJRZXhmjzcu16TQaaR4.EfRNWCFvCxE0Jvqvy/IKIgwq.BgSMJG";
 
+// Universal AI Agent / E2E Testing Account ('TestAgent123!')
+const UNIVERSAL_TEST_AGENT_EMAIL = "test.agent@unierp.com";
+const UNIVERSAL_TEST_AGENT_PASSWORD_HASH =
+  "$2a$10$EKREbiE1.Z.uEdkapt2bMusYgL7LM2ghWb/xZGwmenCNV4Bgv/omC";
+
 const BOOTSTRAP_TENANT_ADMIN_EMAIL = (
   process.env.BOOTSTRAP_TENANT_ADMIN_EMAIL ?? "kannan19302@gmail.com"
 ).trim().toLowerCase();
@@ -197,6 +202,47 @@ async function main() {
       update: {},
       create: {
         userId: adminUser.id,
+        roleId: superAdminRoleId,
+      },
+    });
+  }
+
+  // Upsert Universal Testing Account for AI Agents, Browser Automation, and MCP Testing
+  const testAgentUser = await withIdpTenantContext(tenant.id, (tx) =>
+    tx.user.upsert({
+      where: {
+        tenantId_email: {
+          tenantId: tenant.id,
+          email: UNIVERSAL_TEST_AGENT_EMAIL,
+        },
+      },
+      update: {
+        passwordHash: UNIVERSAL_TEST_AGENT_PASSWORD_HASH,
+        status: "ACTIVE",
+      },
+      create: {
+        tenantId: tenant.id,
+        email: UNIVERSAL_TEST_AGENT_EMAIL,
+        passwordHash: UNIVERSAL_TEST_AGENT_PASSWORD_HASH,
+        firstName: "Enterprise",
+        lastName: "Test Agent",
+        status: "ACTIVE",
+      },
+    }),
+  );
+  console.log(`Universal Test Agent verified: ${testAgentUser.email}`);
+
+  if (superAdminRoleId) {
+    await idpPrisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: testAgentUser.id,
+          roleId: superAdminRoleId,
+        },
+      },
+      update: {},
+      create: {
+        userId: testAgentUser.id,
         roleId: superAdminRoleId,
       },
     });
