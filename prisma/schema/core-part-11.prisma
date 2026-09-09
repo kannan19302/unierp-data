@@ -1599,7 +1599,18 @@ model CloseTaskSla {
   status          String    @default("ACTIVE")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
+  policyVersionId String?   @map("policy_version_id")
+  startedAt       DateTime? @map("started_at")
+  responseDeadlineAt DateTime? @map("response_deadline_at")
+  responseTimeMs  BigInt?   @map("response_time_ms")
+  resolutionTimeMs BigInt?  @map("resolution_time_ms")
+  idempotencyKey  String?   @map("idempotency_key")
+  assignmentFingerprint String? @map("assignment_fingerprint")
+  policyVersion CloseSlaPolicyVersion? @relation(fields: [tenantId, policyVersionId], references: [tenantId, id], onDelete: Restrict, onUpdate: Restrict)
+  task CloseTask @relation(fields: [tenantId, taskId], references: [tenantId, id], onDelete: Restrict, onUpdate: Restrict)
 
+  @@unique([tenantId, idempotencyKey])
+  @@index([tenantId, policyVersionId])
   @@index([tenantId, taskId])
   @@index([tenantId, status])
   @@map("close_task_slas")
@@ -1636,7 +1647,9 @@ model CloseEscalationRule {
   isActive          Boolean  @default(true) @map("is_active")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
+  policyVersions    CloseSlaPolicyEscalation[]
 
+  @@unique([tenantId, id])
   @@index([tenantId, isActive])
   @@map("close_escalation_rules")
 }

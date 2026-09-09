@@ -1,0 +1,51 @@
+// Finance-owned reusable close policies. Existing CloseTaskSla rows remain task instances.
+model CloseSlaPolicy {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  currentVersion Int      @default(1) @map("current_version")
+  status         String   @default("ACTIVE")
+  createdBy      String   @map("created_by")
+  updatedBy      String   @map("updated_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  versions       CloseSlaPolicyVersion[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, status])
+  @@map("close_sla_policies")
+}
+
+model CloseSlaPolicyVersion {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  policyId         String   @map("policy_id")
+  version          Int
+  name             String
+  description      String?  @db.Text
+  taskType         String   @map("task_type")
+  priority         String
+  timeBasis        String   @default("ELAPSED") @map("time_basis")
+  responseTimeMs   BigInt   @map("response_time_ms")
+  resolutionTimeMs BigInt   @map("resolution_time_ms")
+  createdBy        String   @map("created_by")
+  createdAt        DateTime @default(now()) @map("created_at")
+  policy           CloseSlaPolicy @relation(fields: [tenantId, policyId], references: [tenantId, id], onDelete: Restrict, onUpdate: Restrict)
+  escalationRules  CloseSlaPolicyEscalation[]
+  taskSlas         CloseTaskSla[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, policyId, version])
+  @@map("close_sla_policy_versions")
+}
+
+model CloseSlaPolicyEscalation {
+  tenantId        String @map("tenant_id")
+  policyVersionId String @map("policy_version_id")
+  ruleId          String @map("rule_id")
+  policyVersion   CloseSlaPolicyVersion @relation(fields: [tenantId, policyVersionId], references: [tenantId, id], onDelete: Restrict, onUpdate: Restrict)
+  rule            CloseEscalationRule @relation(fields: [tenantId, ruleId], references: [tenantId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([tenantId, policyVersionId, ruleId])
+  @@index([tenantId, ruleId])
+  @@map("close_sla_policy_escalations")
+}

@@ -306,7 +306,9 @@ model CloseTask {
   updatedAt         DateTime  @updatedAt @map("updated_at")
   createdBy         String    @map("created_by")
   updatedBy         String    @map("updated_by")
+  slas              CloseTaskSla[]
 
+  @@unique([tenantId, id])
   @@index([tenantId, financialPeriodId, status])
   @@index([tenantId, assigneeId])
   @@map("close_tasks")
