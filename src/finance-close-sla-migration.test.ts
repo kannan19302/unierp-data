@@ -20,7 +20,7 @@ describe("Finance close SLA expansion migration", () => {
       "close_escalation_rules", "close_analytics_snapshots", "close_sla_policies",
       "close_sla_policy_versions", "close_sla_policy_escalations",
     ];
-    for (const table of tables) expect(migration).toContain(`'${table}'`);
+    for (const table of tables) expect(migration).toMatch(new RegExp(`['"]${table}['"]`));
     expect(migration).toContain("ENABLE ROW LEVEL SECURITY");
     expect(migration).toContain("FORCE ROW LEVEL SECURITY");
     expect(migration).toContain("tenant_id = current_tenant_id()");

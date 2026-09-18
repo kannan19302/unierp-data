@@ -46,3 +46,9 @@ storybook-static/
 # Repository-specific
 .env.local
 /src/main-client/
+
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/coverage

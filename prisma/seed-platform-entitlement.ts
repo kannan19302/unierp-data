@@ -11,6 +11,9 @@
  *
  *   pnpm tsx prisma/seed-platform-entitlement.ts
  */
+process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://unerp:unerp_password@localhost:5432/unerp_dev";
+process.env.IDP_DATABASE_URL = process.env.IDP_DATABASE_URL || "postgresql://unerp:unerp_password@localhost:5432/unerp_dev";
+
 import { idpPrisma } from "../src/index.js";
 import { prisma } from "../src/index.js";
 
@@ -127,7 +130,7 @@ async function main() {
 
   // Explicit user-level grant for primary admin email if present
   const adminUsers = await idpPrisma.user.findMany({
-    where: { email: { in: ["kannan19302@gmail.com", "admin@unierp.com"] } },
+    where: { email: { in: ["kannan19302@gmail.com", "admin@unierp.com", "test.agent@unierp.com"] } },
     select: { id: true, email: true, tenantId: true },
   });
   for (const u of adminUsers) {

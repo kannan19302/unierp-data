@@ -37,6 +37,9 @@ import { PrismaClient as IdpPrismaClient } from "../src/idp-client/index.js";
 import { PERMISSION_REGISTRY } from "@kannan19302/shared";
 import { ensureProviderRealm } from "./provider-realm.js";
 
+process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://unerp:unerp_password@localhost:5432/unerp_dev";
+process.env.IDP_DATABASE_URL = process.env.IDP_DATABASE_URL || "postgresql://unerp:unerp_password@localhost:5432/unerp_dev";
+
 // Two clients, same split as seed.ts: Tenant lives in the core schema, while
 // User/Role/UserRole live in idp-schema.prisma. Raw clients rather than the
 // tenant-context wrappers exported from src/index.ts — this seed is creating
@@ -44,28 +47,6 @@ import { ensureProviderRealm } from "./provider-realm.js";
 const prisma = new PrismaClient();
 const idpPrisma = new IdpPrismaClient();
 
-/**
- * Must match a role named in PROVIDER_STAFF_ROLES in seed-platform-entitlement.ts
- * — those are the roles `platform_grants` gives P2 to. A provider user with no
- * such role authenticates but is then refused the platform, which is correct and
- * also indistinguishable from a broken seed, so grant the strongest one here.
- */
-const STAFF_ROLE = "platform.admin";
-
-/**
- * The role NAME is not what admits this account to the control plane.
- * PlatformEntitlementService.holdsControlPlaneAuthority requires
- * realm === "provider" AND at least one PERMISSION in the `system.`,
- * `platform.`, or `pcc.` namespace — deliberately, so that a mis-seeded ROLE grant against
- * "*" can never open P2 to every tenant. A provider user whose role carries an
- * empty permissions array authenticates fine and is then refused the platform
- * with `access_denied`, which looks identical to a missing grant.
- *
- * Concrete permissions only. The dev-bypass route in provider-admin-os
- * (app/api/v1/auth/provider/login/route.ts) mints "*", "system.*", "platform.*"
- * and "admin.*"; those wildcards are exactly what control-plane.guard.ts and
- * the jwt-auth guard tests exist to distrust, so they are not seeded here.
- */
 export const PROVIDER_STAFF_PERMISSIONS = [
   "system.tenant.read",
   "system.tenant.view",
@@ -80,6 +61,8 @@ export const PROVIDER_STAFF_PERMISSIONS = [
   "system.operations.backup",
   "system.superadmin.access",
   "system.security.admin",
+  "platform.admin",
+  "platform.overview.read",
   // Canonical application-entry permissions are concrete rather than a pcc.*
   // wildcard so a newly introduced PCC application is not silently granted
   // before its access policy is reviewed.
@@ -89,77 +72,110 @@ export const PROVIDER_STAFF_PERMISSIONS = [
   ).map((permission) => permission.code),
 ];
 
-const STAFF_EMAIL = (
-  process.env.BOOTSTRAP_PLATFORM_ADMIN_EMAIL ??
-  process.env.PROVIDER_SEED_EMAIL ??
-  "kannan19302@gmail.com"
-).trim().toLowerCase();
+
+const STAFF_ROLES = ["platform.admin", "SUPER_ADMIN"];
+
+const STAFF_ACCOUNTS = [
+  {
+    email: (
+      process.env.BOOTSTRAP_PLATFORM_ADMIN_EMAIL ??
+      process.env.PROVIDER_SEED_EMAIL ??
+      "kannan19302@gmail.com"
+    ).trim().toLowerCase(),
+    passwordHash:
+      process.env.BOOTSTRAP_PLATFORM_ADMIN_PASSWORD_HASH?.trim() ||
+      "$2a$10$QNgJRZXhmjzcu16TQaaR4.EfRNWCFvCxE0Jvqvy/IKIgwq.BgSMJG",
+    firstName: "Platform",
+    lastName: "Administrator",
+  },
+  {
+    email: "test.agent@unierp.com",
+    passwordHash: "$2a$10$EKREbiE1.Z.uEdkapt2bMusYgL7LM2ghWb/xZGwmenCNV4Bgv/omC", // TestAgent123!
+    firstName: "Universal Test",
+    lastName: "Agent",
+  },
+];
 
 async function main(): Promise<void> {
   const tenant = await ensureProviderRealm(prisma);
 
-  // Provider principals live only in the reserved provider realm. Reusing a
-  // customer identity row would let customer account lifecycle and provider
-  // authority share one principal, defeating the realm boundary.
-  let user = await idpPrisma.user.findFirst({
-    where: {
-      email: { equals: STAFF_EMAIL, mode: "insensitive" },
-      tenantId: tenant.id,
-      status: "ACTIVE",
-      deletedAt: null,
-    },
-    orderBy: { createdAt: "asc" },
-  });
-
-  const passwordHash =
-    process.env.BOOTSTRAP_PLATFORM_ADMIN_PASSWORD_HASH?.trim() ||
-    "$2a$10$QNgJRZXhmjzcu16TQaaR4.EfRNWCFvCxE0Jvqvy/IKIgwq.BgSMJG";
-
-  if (!user) {
-    user = await idpPrisma.user.create({
-      data: {
-        id: `usr-${randomUUID()}`,
-        tenantId: tenant.id,
-        email: STAFF_EMAIL,
-        passwordHash,
-        firstName: "Platform",
-        lastName: "Administrator",
-        status: "ACTIVE",
-      },
+  // Ensure both platform.admin and SUPER_ADMIN roles exist in the provider realm
+  const roleIds: string[] = [];
+  for (const roleName of STAFF_ROLES) {
+    const existingRole = await idpPrisma.role.findFirst({
+      where: { tenantId: tenant.id, name: roleName },
     });
+    if (existingRole) {
+      await idpPrisma.role.update({
+        where: { id: existingRole.id },
+        data: { permissions: PROVIDER_STAFF_PERMISSIONS },
+      });
+      roleIds.push(existingRole.id);
+    } else {
+      const roleId = `role-${tenant.id}-${roleName}`;
+      await idpPrisma.role.create({
+        data: {
+          id: roleId,
+          tenantId: tenant.id,
+          name: roleName,
+          isSystem: true,
+          permissions: PROVIDER_STAFF_PERMISSIONS,
+        },
+      });
+      roleIds.push(roleId);
+    }
   }
 
-  const existingRole = await idpPrisma.role.findFirst({
-    where: { tenantId: tenant.id, name: STAFF_ROLE },
-  });
-  let roleId = existingRole?.id;
-  if (existingRole) {
-    await idpPrisma.role.update({
-      where: { id: existingRole.id },
-      data: { permissions: PROVIDER_STAFF_PERMISSIONS },
-    });
-  } else {
-    roleId = `role-${tenant.id}-${STAFF_ROLE}`;
-    await idpPrisma.role.create({
-      data: {
-        id: roleId,
+  // Provision each staff account
+  for (const account of STAFF_ACCOUNTS) {
+    let user = await idpPrisma.user.findFirst({
+      where: {
+        email: { equals: account.email, mode: "insensitive" },
         tenantId: tenant.id,
-        name: STAFF_ROLE,
-        isSystem: true,
-        permissions: PROVIDER_STAFF_PERMISSIONS,
       },
+      orderBy: { createdAt: "asc" },
     });
+
+    if (!user) {
+      user = await idpPrisma.user.create({
+        data: {
+          id: `usr-${randomUUID()}`,
+          tenantId: tenant.id,
+          email: account.email,
+          passwordHash: account.passwordHash,
+          firstName: account.firstName,
+          lastName: account.lastName,
+          status: "ACTIVE",
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+        },
+      });
+    } else {
+      user = await idpPrisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordHash: account.passwordHash,
+          status: "ACTIVE",
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+          deletedAt: null,
+        },
+      });
+    }
+
+    // Assign all staff roles to user
+    for (const roleId of roleIds) {
+      await idpPrisma.userRole.upsert({
+        where: { userId_roleId: { userId: user.id, roleId } },
+        update: {},
+        create: { userId: user.id, roleId },
+      });
+    }
+
+    console.log(
+      `provider realm ready — catalog tenant ${tenant.id}, principal ${user.id}, ${account.email} (${STAFF_ROLES.join(", ")})`,
+    );
   }
-
-  await idpPrisma.userRole.upsert({
-    where: { userId_roleId: { userId: user.id, roleId: roleId! } },
-    update: {},
-    create: { userId: user.id, roleId: roleId! },
-  });
-
-  console.log(
-    `provider realm ready — catalog tenant ${tenant.id}, principal ${user.id}, ${STAFF_EMAIL} (${STAFF_ROLE})`,
-  );
 }
 
 const isEntryPoint =
