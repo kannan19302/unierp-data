@@ -30,21 +30,22 @@ interface ClientSeed {
   name: string;
   platformCode: string | null;
   port?: number;
+  ports?: number[];
   /** Native clients redirect to a custom scheme, not an http origin. */
   nativeRedirect?: boolean;
   scopes: string[];
 }
 
 const CLIENTS: ClientSeed[] = [
-  { clientId: "unierp-platform-wizard", name: "UniERP Platform Wizard", platformCode: null, port: 4000, scopes: BASE_SCOPES },
-  { clientId: "unierp-marketing-site", name: "UniERP Marketing Site", platformCode: "P1", port: 4001, scopes: BASE_SCOPES },
-  { clientId: "unierp-provider-admin-os", name: "Provider Admin OS", platformCode: "P2", port: 4002, scopes: BASE_SCOPES },
-  { clientId: "unierp-tenant-apps", name: "Tenant Applications", platformCode: "P3", port: 4003, scopes: ERP_SCOPES },
-  { clientId: "unierp-tenant-sites", name: "Tenant Websites", platformCode: "P4", port: 4004, scopes: BASE_SCOPES },
-  { clientId: "unierp-web-studio", name: "Web Studio", platformCode: "P5", port: 4005, scopes: ERP_SCOPES },
-  { clientId: "unierp-tenant-admin", name: "Tenant Admin Console", platformCode: "P6", port: 4006, scopes: ERP_SCOPES },
-  { clientId: "unierp-marketplace", name: "UniERP Marketplace", platformCode: "P7", port: 4007, scopes: [...BASE_SCOPES, "marketplace.install"] },
-  { clientId: "unierp-developer-platform", name: "Developer Platform", platformCode: "P8", port: 4008, scopes: ERP_SCOPES },
+  { clientId: "unierp-platform-wizard", name: "UniERP Platform Wizard", platformCode: null, ports: [4000], scopes: BASE_SCOPES },
+  { clientId: "unierp-marketing-site", name: "UniERP Marketing Site", platformCode: "P1", ports: [4000, 4001], scopes: BASE_SCOPES },
+  { clientId: "unierp-provider-admin-os", name: "Provider Admin OS", platformCode: "P2", ports: [4001, 4002], scopes: BASE_SCOPES },
+  { clientId: "unierp-tenant-apps", name: "Tenant Applications", platformCode: "P3", ports: [4002, 4003], scopes: ERP_SCOPES },
+  { clientId: "unierp-tenant-sites", name: "Tenant Websites", platformCode: "P4", ports: [4004], scopes: BASE_SCOPES },
+  { clientId: "unierp-web-studio", name: "Web Studio", platformCode: "P5", ports: [4005], scopes: ERP_SCOPES },
+  { clientId: "unierp-tenant-admin", name: "Tenant Admin Console", platformCode: "P6", ports: [4003, 4006], scopes: ERP_SCOPES },
+  { clientId: "unierp-marketplace", name: "UniERP Marketplace", platformCode: "P7", ports: [4005, 4007], scopes: [...BASE_SCOPES, "marketplace.install"] },
+  { clientId: "unierp-developer-platform", name: "Developer Platform", platformCode: "P8", ports: [4004, 4008], scopes: ERP_SCOPES },
   { clientId: "unierp-mobile", name: "UniERP Mobile", platformCode: "P9", nativeRedirect: true, scopes: ERP_SCOPES },
   { clientId: "unierp-desktop", name: "UniERP Desktop", platformCode: "P10", nativeRedirect: true, scopes: ERP_SCOPES },
 ];
@@ -60,13 +61,10 @@ function redirectUris(seed: ClientSeed): string[] {
       "http://127.0.0.1:8765/auth/callback",
     ];
   }
-  const origin = `http://localhost:${seed.port}`;
-  return [
-    `${origin}/auth/callback`,
-    // The *.unierp.local hostnames the plan introduces so cookies stop relying
-    // on localhost ignoring port numbers.
-    `http://${seed.clientId.replace("unierp-", "")}.unierp.local/auth/callback`,
-  ];
+  const ports = seed.ports ?? (seed.port ? [seed.port] : []);
+  const uris = ports.map((p) => `http://localhost:${p}/auth/callback`);
+  uris.push(`http://${seed.clientId.replace("unierp-", "")}.unierp.local/auth/callback`);
+  return uris;
 }
 
 function postLogoutUris(seed: ClientSeed): string[] {
@@ -74,7 +72,10 @@ function postLogoutUris(seed: ClientSeed): string[] {
   // that makes sense with no session.
   const wizard = "http://localhost:4000/";
   if (seed.nativeRedirect) return ["unierp://auth/logout", wizard];
-  return [`http://localhost:${seed.port}/`, wizard];
+  const ports = seed.ports ?? (seed.port ? [seed.port] : []);
+  const uris = ports.map((p) => `http://localhost:${p}/`);
+  uris.push(wizard);
+  return Array.from(new Set(uris));
 }
 
 async function main() {

@@ -89,7 +89,7 @@ const STAFF_ACCOUNTS = [
     lastName: "Administrator",
   },
   {
-    email: "test.agent@unierp.com",
+    email: "provider.test.agent@unierp.com",
     passwordHash: "$2a$10$EKREbiE1.Z.uEdkapt2bMusYgL7LM2ghWb/xZGwmenCNV4Bgv/omC", // TestAgent123!
     firstName: "Universal Test",
     lastName: "Agent",
