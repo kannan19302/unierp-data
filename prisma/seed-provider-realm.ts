@@ -48,6 +48,9 @@ const prisma = new PrismaClient();
 const idpPrisma = new IdpPrismaClient();
 
 export const PROVIDER_STAFF_PERMISSIONS = [
+  "system.*",
+  "platform.*",
+  "pcc.*",
   "system.tenant.read",
   "system.tenant.view",
   "system.tenant.update",
@@ -61,14 +64,18 @@ export const PROVIDER_STAFF_PERMISSIONS = [
   "system.operations.backup",
   "system.superadmin.access",
   "system.security.admin",
+  "system.soc.read",
+  "system.soc.execute",
+  "system.isolation.read",
+  "system.isolation.write",
   "platform.admin",
   "platform.overview.read",
-  // Canonical application-entry permissions are concrete rather than a pcc.*
-  // wildcard so a newly introduced PCC application is not silently granted
-  // before its access policy is reviewed.
+  "pcc.security.view",
   ...PERMISSION_REGISTRY.filter(
     (permission) =>
-      permission.code.startsWith("pcc.") && permission.action === "access",
+      permission.code.startsWith("pcc.") ||
+      permission.code.startsWith("system.") ||
+      permission.code.startsWith("platform."),
   ).map((permission) => permission.code),
 ];
 
